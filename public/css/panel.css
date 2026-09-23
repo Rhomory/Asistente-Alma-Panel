@@ -1,0 +1,91 @@
+/* Panel Asistente Alma — paleta del mockup del Proyecto de Mejora */
+:root {
+    --cream: #FBF7EC; --panel: #F3EDDF; --ink: #171717; --gray: #5F5F5F;
+    --line: #E2DCCC; --ora: #F2915F; --orad: #C9622B; --lav: #DCD2F0;
+    --lavd: #6B5CA8; --grow: #ECECEC; --ok: #2F7D32; --okbg: #DFF2DC;
+}
+* { box-sizing: border-box; margin: 0; }
+body { font-family: Poppins, 'Segoe UI', Arial, sans-serif; background: var(--cream); color: var(--ink); font-size: 14px; }
+.app { display: flex; min-height: 100vh; }
+
+aside { width: 250px; background: var(--panel); padding: 22px 14px; flex-shrink: 0; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; }
+.logo { font-weight: 700; font-size: 17px; padding: 0 10px 18px; }
+.logo small { display: block; font-weight: 400; color: var(--gray); font-size: 11px; margin-top: 2px; }
+nav a { display: block; padding: 10px 12px; margin: 2px 0; border-radius: 5px; color: var(--ink); text-decoration: none; transition: background-color 150ms ease-out, color 150ms ease-out; }
+nav a:hover { background: #EAE2CF; }
+nav a.on { background: var(--ora); color: #fff; font-weight: 600; }
+nav a:focus-visible, .btn:focus-visible, .filtros select:focus-visible, .filtros input:focus-visible { outline: 2px solid var(--orad); outline-offset: 2px; }
+.nav-sep { font-size: 10.5px; color: var(--gray); text-transform: uppercase; letter-spacing: .5px; padding: 14px 12px 4px; }
+.side-note { margin-top: auto; font-size: 11px; color: var(--gray); padding: 12px 10px; border-top: 1px solid var(--line); }
+
+main { flex: 1; padding: 28px 34px; min-width: 0; }
+h1 { font-size: 22px; margin-bottom: 4px; }
+.sub { color: var(--gray); margin-bottom: 22px; font-size: 13px; }
+footer { margin-top: 26px; color: var(--gray); font-size: 11px; border-top: 1px solid var(--line); padding-top: 10px; }
+
+.kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 18px; }
+.kpi { border-radius: 8px; padding: 18px 20px; }
+.kpi.lav { background: var(--lav); }
+.kpi.ora { background: var(--ora); color: #fff; }
+.kpi.gris { background: var(--grow); }
+.kpi .v { font-size: 26px; font-weight: 700; }
+.kpi .l { font-size: 12px; margin-top: 4px; }
+.kpi.lav .l { color: #45406B; }   /* sombra del propio matiz, no gris sobre color */
+.kpi.gris .l { color: #4A4A4A; }
+.kpi.ora .l { color: rgba(255, 255, 255, .92); }
+.kpi .delta { font-size: 12px; font-weight: 600; color: var(--ok); margin-top: 8px; }
+.kpi .delta.ok { color: var(--ok); }
+.kpi.ora .delta { color: #fff; }
+.stack { height: 10px; border-radius: 5px; background: rgba(255, 255, 255, .35); margin-top: 12px; }
+.stack i { display: block; height: 10px; background: #fff; border-radius: 5px; }
+
+.charts { display: grid; grid-template-columns: 1.6fr 1fr; gap: 14px; margin-bottom: 18px; }
+.card { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 18px 20px; margin-bottom: 16px; }
+.card h3 { font-size: 14.5px; margin-bottom: 12px; }
+.fila-titulo { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+.mini-kpis { display: flex; gap: 18px; font-size: 12px; color: var(--gray); }
+.mini-kpis b { color: var(--ink); }
+
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th { text-align: left; padding: 9px 12px; background: var(--ink); color: #fff; font-weight: 600; }
+th.n, td.n { text-align: right; }
+td { border-bottom: 1px solid var(--line); padding: 9px 12px; }
+tbody tr:nth-child(even) td { background: #FAF6EC; }
+tbody tr { transition: background-color 150ms ease-out; }
+tbody tr:hover td { background: #F3ECDA; }
+td.mut { color: var(--gray); }
+td.vacio { color: var(--gray); font-style: italic; text-align: center; padding: 22px; }
+
+.tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 12px; background: var(--grow); }
+.tag.asistente { background: #FCEBD9; color: var(--orad); }
+.tag.mixto { background: var(--lav); color: var(--lavd); }
+.tag.desarrollador { background: var(--grow); color: var(--gray); }
+.tag.estado-aprobada { background: var(--okbg); color: var(--ok); }
+.tag.estado-construyendo { background: #FCEBD9; color: var(--orad); }
+.tag.estado-pendiente { background: var(--grow); color: var(--gray); }
+
+.filtros { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.filtros select, .filtros input { font: inherit; padding: 9px 12px; border: 1px solid var(--line); border-radius: 5px; background: #fff; }
+.btn { display: inline-block; border: 0; font: inherit; font-weight: 600; padding: 9px 18px; border-radius: 5px; cursor: pointer; text-decoration: none; transition: background-color 150ms ease-out, transform 100ms ease-out; }
+.btn:active { transform: translateY(1px); }
+.btn.p { background: var(--ora); color: #fff; }
+.btn.p:hover { background: var(--orad); }
+.btn.s { background: #fff; border: 1.5px solid var(--ink); color: var(--ink); }
+.btn.s:hover { background: var(--grow); }
+
+/* Paginador de Laravel (plantilla Tailwind sin Tailwind): contener y estilar lo esencial */
+.card nav[role="navigation"] { margin-top: 12px; font-size: 13px; }
+.card nav[role="navigation"] svg { width: 18px; height: 18px; }
+.card nav[role="navigation"] a, .card nav[role="navigation"] span[aria-current] > span { padding: 5px 10px; border: 1px solid var(--line); border-radius: 5px; margin: 0 2px; color: var(--ink); text-decoration: none; display: inline-flex; align-items: center; }
+.card nav[role="navigation"] span[aria-current] > span { background: var(--ora); color: #fff; border-color: var(--ora); }
+.card nav[role="navigation"] p { color: var(--gray); font-size: 12px; }
+
+@media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+}
+
+@media (max-width: 900px) {
+    .app { flex-direction: column; }
+    aside { width: 100%; height: auto; position: static; }
+    .kpis, .charts { grid-template-columns: 1fr; }
+}

@@ -9,6 +9,7 @@ class Evento extends Model
 {
     protected $table = 'eventos';
     protected $guarded = [];
+    protected $casts = ['resuelto' => 'boolean'];
 
     public function seccion(): BelongsTo
     {

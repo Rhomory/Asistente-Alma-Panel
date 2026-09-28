@@ -30,7 +30,7 @@
                     <td class="n">{{ $s->minutos }}</td>
                     <td><span class="tag {{ $s->ejecuto }}">{{ $s->ejecuto }}</span></td>
                     <td class="n">{{ $s->correcciones }}</td>
-                    <td>{{ $s->aprobada ? '✓ aprobada' : 'en revisión' }}</td>
+                    <td><span class="tag estado-{{ $s->estado }}">{{ $s->estado }}</span></td>
                 </tr>
             @empty
                 <tr><td colspan="8" class="vacio">Sin registros con ese filtro.</td></tr>

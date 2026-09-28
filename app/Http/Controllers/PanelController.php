@@ -46,11 +46,10 @@ class PanelController extends Controller
 
     public function proyecto(Proyecto $proyecto)
     {
+        $proyecto->load('tokens');
         $paginas = DB::table('reporte_pagina')->where('proyecto_id', $proyecto->id)->get();
-        $secciones = Seccion::whereHas('pagina', fn ($q) => $q->where('proyecto_id', $proyecto->id))
-            ->with('pagina')->orderBy('pagina_id')->orderBy('inicio')->get()->groupBy('pagina_id');
 
-        return view('panel.proyecto', compact('proyecto', 'paginas', 'secciones'));
+        return view('panel.proyecto', compact('proyecto', 'paginas'));
     }
 
     public function registro(Request $request)
@@ -70,13 +69,13 @@ class PanelController extends Controller
 
         return response()->streamDownload(function () use ($filas) {
             $out = fopen('php://output', 'w');
-            fputcsv($out, ['fecha', 'proyecto', 'pagina', 'seccion', 'minutos', 'min_asistente', 'min_dev', 'ejecuto', 'correcciones', 'aprobada']);
+            fputcsv($out, ['fecha', 'proyecto', 'pagina', 'seccion', 'estado', 'minutos', 'min_estimado', 'min_asistente', 'min_dev', 'ejecuto', 'correcciones']);
             foreach ($filas as $s) {
                 fputcsv($out, [
                     optional($s->inicio)->format('Y-m-d'),
-                    $s->pagina->proyecto->nombre, $s->pagina->nombre, $s->nombre,
-                    $s->minutos, $s->min_asistente, $s->min_dev, $s->ejecuto,
-                    $s->correcciones, $s->aprobada ? 'si' : 'no',
+                    $s->pagina->proyecto->nombre, $s->pagina->nombre, $s->nombre, $s->estado,
+                    $s->minutos, $s->min_estimado, $s->min_asistente, $s->min_dev, $s->ejecuto,
+                    $s->correcciones,
                 ]);
             }
             fclose($out);

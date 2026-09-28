@@ -65,8 +65,27 @@ class DemoSeeder extends Seeder
             ['Proceso de trabajo',  'Timeline / Icon List',             29, 22,  7, 0],
         ], aprobadas: true);
 
-        $bodega->paginas()->create(['nombre' => 'Portafolio', 'secciones_total' => 4]);
-        $bodega->paginas()->create(['nombre' => 'Contacto',   'secciones_total' => 3]);
+        // Servicios: lo que falta queda PLANIFICADO (pantalla Plan del panel).
+        foreach ([['Testimonios de clientes', 'Carousel', 8], ['Llamado a la acción', 'Contenedor + Button', 5], ['Pie de página', 'Template de sitio (footer)', 5]] as [$n, $w, $e]) {
+            $servicios->secciones()->create(['nombre' => $n, 'widget_plan' => $w, 'min_estimado' => $e, 'estado' => 'planificada']);
+        }
+
+        // Portafolio: página con plan completo, aún sin construir.
+        $portafolio = $bodega->paginas()->create(['nombre' => 'Portafolio', 'secciones_total' => 4]);
+        foreach ([['Hero', 'Contenedor + Heading', 10], ['Galería principal', 'Gallery', 12], ['Casos destacados', 'Grid + Image Box', 10], ['Pie de página', 'Template de sitio (footer)', 5]] as [$n, $w, $e]) {
+            $portafolio->secciones()->create(['nombre' => $n, 'widget_plan' => $w, 'min_estimado' => $e, 'estado' => 'planificada']);
+        }
+        $bodega->paginas()->create(['nombre' => 'Contacto', 'secciones_total' => 3]);
+
+        // Tokens de diseño del proyecto (pantalla P2).
+        foreach ([
+            ['color', '#7A3E2E', 'primario'], ['color', '#C9622B', 'acento'],
+            ['color', '#DCD2F0', 'suave'], ['color', '#1C1C1C', 'texto'],
+            ['tipografia', 'Poppins', 'títulos'], ['tipografia', 'Lora', 'cuerpo'],
+            ['espaciado', '8 px · contenedor 1140 px', 'base'],
+        ] as [$tipo, $valor, $nota]) {
+            $bodega->tokens()->create(['tipo' => $tipo, 'valor' => $valor, 'nota' => $nota]);
+        }
 
         // ---------- Proyecto 2: recién iniciado ----------
         $cafe = Proyecto::create([
@@ -81,8 +100,16 @@ class DemoSeeder extends Seeder
         $this->secciones($inicioCafe, '2026-09-22 11:20', [
             ['Hero con carrusel',  'Carousel + Heading',   36, 28, 8, 0],
             ['Nuestra carta',      'Grid + Image Box',     31, 24, 7, 1],
-        ], aprobadas: true);
+        ], aprobadas: false); // construidas, esperando aprobación en el panel
         $cafe->paginas()->create(['nombre' => 'Carta', 'secciones_total' => 5]);
+
+        // Una corrección pedida desde el panel, pendiente en la cola de la consola.
+        $carta = $inicioCafe->secciones()->where('nombre', 'Nuestra carta')->first();
+        $carta->update(['estado' => 'construyendo']);
+        Evento::create([
+            'seccion_id' => $carta->id, 'tipo' => 'solicitud_correccion', 'resuelto' => false,
+            'detalle' => 'Las fotos de la carta deben usar la proporción 4:3 de la guía técnica',
+        ]);
     }
 
     /** Crea secciones consecutivas con eventos, partiendo de una hora inicial. */
@@ -104,6 +131,7 @@ class DemoSeeder extends Seeder
                 'inicio' => $inicio, 'fin' => $fin, 'minutos' => $min,
                 'min_asistente' => $asis, 'min_dev' => $dev,
                 'correcciones' => $corr, 'aprobada' => $aprobadas,
+                'estado' => $aprobadas ? 'aprobada' : 'construida',
             ]);
 
             Evento::create(['seccion_id' => $s->id, 'tipo' => 'construccion', 'detalle' => "Sección construida en {$min} min", 'created_at' => $fin]);

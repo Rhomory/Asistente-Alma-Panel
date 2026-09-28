@@ -14,15 +14,20 @@
         </div>
         <nav>
             <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'on' : '' }}">Dashboard</a>
+            <a href="{{ route('conexion') }}" class="{{ request()->routeIs('conexion') ? 'on' : '' }}">Conexión</a>
             <a href="{{ route('registro') }}" class="{{ request()->routeIs('registro') ? 'on' : '' }}">Registro</a>
             <div class="nav-sep">Proyectos</div>
             @foreach (\App\Models\Proyecto::orderBy('nombre')->get() as $p)
                 <a href="{{ route('proyecto', $p) }}" class="{{ request()->fullUrlIs(route('proyecto', $p)) ? 'on' : '' }}">{{ $p->nombre }}</a>
             @endforeach
+            <a href="{{ route('proyecto.nuevo') }}" class="nuevo {{ request()->routeIs('proyecto.nuevo') ? 'on' : '' }}">+ Nuevo proyecto</a>
         </nav>
-        <div class="side-note">Panel de solo lectura: la consola construye y escribe el registro; nada se publica sin aprobación.</div>
+        <div class="side-note">La consola construye y escribe el registro; el panel supervisa y administra el catálogo. Nada se publica sin aprobación.</div>
     </aside>
     <main>
+        @if (session('ok'))
+            <div class="flash-ok">{{ session('ok') }}</div>
+        @endif
         @yield('contenido')
         <footer>Proyecto de Mejora · Alma Industria Creativa E.I.R.L. · datos de demostración del piloto</footer>
     </main>

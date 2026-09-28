@@ -43,8 +43,7 @@ class RegistroAdd extends Command
             $asis = $min; // por defecto se asume ejecución del asistente
         }
 
-        $s = $pagina->secciones()->create([
-            'nombre'        => $this->argument('seccion'),
+        $valores = [
             'widget_plan'   => $this->option('widget'),
             'ejecuto'       => $dev === 0 ? 'asistente' : ($asis === 0 ? 'desarrollador' : 'mixto'),
             'inicio'        => now()->subMinutes($min),
@@ -52,11 +51,37 @@ class RegistroAdd extends Command
             'minutos'       => $min,
             'min_asistente' => $asis,
             'min_dev'       => $dev,
-            'correcciones'  => (int) $this->option('correcciones'),
+            'estado'        => $this->option('aprobada') ? 'aprobada' : 'construida',
             'aprobada'      => (bool) $this->option('aprobada'),
-        ]);
+        ];
 
-        Evento::create(['seccion_id' => $s->id, 'tipo' => 'construccion', 'detalle' => "Registrada vía consola ({$min} min)"]);
+        // Si la sección ya estaba en el plan (planificada) o en corrección
+        // (construyendo), se ACTUALIZA en lugar de duplicarse.
+        $s = $pagina->secciones()
+            ->whereRaw('LOWER(nombre) = ?', [mb_strtolower($this->argument('seccion'))])
+            ->whereIn('estado', ['planificada', 'construyendo'])
+            ->first();
+
+        if ($s) {
+            $reconstruccion = $s->estado === 'construyendo';
+            if ($valores['widget_plan'] === null) {
+                unset($valores['widget_plan']); // conserva el mapeo del plan
+            }
+            $s->update($valores + ['correcciones' => $s->correcciones + (int) $this->option('correcciones')]);
+            Evento::create(['seccion_id' => $s->id, 'tipo' => 'construccion', 'detalle' => $reconstruccion ? "Corrección aplicada vía consola ({$min} min)" : "Construida según el plan ({$min} min)"]);
+            // La corrección atendida sale de la cola.
+            Evento::where('seccion_id', $s->id)->where('tipo', 'solicitud_correccion')->where('resuelto', false)->update(['resuelto' => true]);
+        } else {
+            $s = $pagina->secciones()->create($valores + [
+                'nombre'       => $this->argument('seccion'),
+                'correcciones' => (int) $this->option('correcciones'),
+            ]);
+            Evento::create(['seccion_id' => $s->id, 'tipo' => 'construccion', 'detalle' => "Registrada vía consola ({$min} min)"]);
+        }
+
+        if ($pagina->estado === 'pendiente') {
+            $pagina->update(['estado' => 'construyendo']); // el panel refleja el avance real
+        }
 
         $this->info("Sección registrada: {$proyecto->nombre} / {$pagina->nombre} / {$s->nombre} — {$min} min");
 

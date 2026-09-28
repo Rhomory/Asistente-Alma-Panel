@@ -49,7 +49,7 @@
                     <td class="n">{{ $s->minutos }}</td>
                     <td><span class="tag {{ $s->ejecuto }}">{{ $s->ejecuto }}</span></td>
                     <td class="n">{{ $s->correcciones }}</td>
-                    <td>{{ $s->aprobada ? '✓ aprobada' : 'en revisión' }}</td>
+                    <td><span class="tag estado-{{ $s->estado }}">{{ $s->estado }}</span></td>
                 </tr>
             @empty
                 <tr><td colspan="7" class="vacio">Aún no hay secciones registradas. Usa <code>php artisan registro:add</code> o importa la plantilla CSV.</td></tr>

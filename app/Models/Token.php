@@ -1,0 +1,17 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class Token extends Model
+{
+    protected $table = 'tokens';
+    protected $guarded = [];
+
+    public function proyecto(): BelongsTo
+    {
+        return $this->belongsTo(Proyecto::class);
+    }
+}

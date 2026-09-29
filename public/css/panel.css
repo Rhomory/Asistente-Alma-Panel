@@ -80,6 +80,62 @@ td.vacio { color: var(--gray); font-style: italic; text-align: center; padding: 
 .card nav[role="navigation"] span[aria-current] > span { background: var(--ora); color: #fff; border-color: var(--ora); }
 .card nav[role="navigation"] p { color: var(--gray); font-size: 12px; }
 
+/* Gestión: formularios, avisos y pantalla Conexión */
+nav a.nuevo { color: var(--orad); font-weight: 600; }
+.flash-ok { background: var(--okbg); color: var(--ok); border: 1px solid #BFE3BC; border-radius: 6px; padding: 11px 16px; margin-bottom: 16px; font-weight: 600; }
+.form-card { max-width: 640px; }
+.campo { margin-bottom: 14px; }
+.campo label { display: block; font-weight: 600; font-size: 12.5px; margin-bottom: 5px; }
+.campo input { width: 100%; font: inherit; padding: 10px 12px; border: 1px solid var(--line); border-radius: 5px; background: #fff; transition: border-color 150ms ease-out; }
+.campo input:hover { border-color: #CFC7B2; }
+.campo input:focus-visible { outline: 2px solid var(--orad); outline-offset: 1px; border-color: var(--orad); }
+.campo input::placeholder { color: #767061; }
+.campo .error { display: block; color: #A63A2B; font-size: 12px; margin-top: 4px; font-weight: 600; }
+.acciones { display: flex; gap: 10px; margin-top: 18px; }
+.form-inline { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
+.form-inline .campo { flex: 1; min-width: 220px; margin-bottom: 0; }
+.form-inline .campo.corto { flex: 0 0 150px; min-width: 150px; }
+.form-inline .acciones { margin-top: 23px; }
+.nota-pie { color: var(--gray); font-size: 12px; margin-top: 10px; }
+.card.aviso { background: var(--panel); border-color: var(--line); font-size: 13px; }
+.kpi.srv { background: #fff; border: 1px solid var(--line); }
+.srv-cab { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
+.srv-cab b { font-size: 13.5px; }
+.tag.estado-srv-ok { background: var(--okbg); color: var(--ok); }
+.tag.estado-srv-demo { background: var(--lav); color: var(--lavd); }
+.tag.estado-srv-off { background: #F6E0DC; color: #A63A2B; }
+
+/* Flujo de página (P3 Plan + P4 Construcción) y tokens (P2) */
+.miga { margin-bottom: 6px; }
+.miga a { color: var(--gray); text-decoration: none; font-size: 12.5px; }
+.miga a:hover { color: var(--orad); }
+.dos-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+.btn.chico { padding: 6px 12px; font-size: 12px; }
+.inline { display: inline-block; margin: 0; }
+.c-estado { text-align: center; }
+.dot { font-size: 14px; }
+.dot.ok { color: var(--ok); } .dot.rev { color: var(--orad); }
+.dot.run { color: var(--lavd); } .dot.plan { color: #A8A192; }
+.solicitud { font-size: 11.5px; color: var(--warn, #A65212); background: #FCEBD9; border-radius: 4px; padding: 3px 8px; margin-top: 4px; display: inline-block; }
+details.corr { display: inline-block; position: relative; }
+details.corr summary { list-style: none; cursor: pointer; display: inline-block; }
+details.corr summary::-webkit-details-marker { display: none; }
+details.corr[open] form { display: flex; gap: 6px; margin-top: 8px; }
+details.corr input { flex: 1; min-width: 190px; font: inherit; font-size: 12px; padding: 7px 9px; border: 1px solid var(--line); border-radius: 5px; }
+.tag.estado-construida { background: #FCEBD9; color: var(--orad); }
+.tag.estado-planificada { background: var(--grow); color: var(--gray); }
+.tag.estado-construyendo { background: var(--lav); color: var(--lavd); }
+.tag.estado-en_qc { background: #DCE9F5; color: #2B5C8A; }
+.fichas-token { display: flex; flex-wrap: wrap; gap: 8px; }
+.ficha-token { display: flex; align-items: center; gap: 8px; background: #FAF6EC; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 12.5px; }
+.ficha-token small { display: block; color: var(--gray); font-size: 11px; }
+.ficha-token .sw { width: 22px; height: 22px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, .15); flex-shrink: 0; }
+.ficha-token .quitar { border: 0; background: none; color: var(--gray); font-size: 15px; cursor: pointer; padding: 0 2px; }
+.ficha-token .quitar:hover { color: #A63A2B; }
+select.como-input { width: 100%; font: inherit; padding: 10px 12px; border: 1px solid var(--line); border-radius: 5px; background: #fff; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+@media (max-width: 1100px) { .dos-col { grid-template-columns: 1fr; } }
+
 @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
 }

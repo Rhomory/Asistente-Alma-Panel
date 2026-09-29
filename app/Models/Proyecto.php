@@ -14,4 +14,9 @@ class Proyecto extends Model
     {
         return $this->hasMany(Pagina::class);
     }
+
+    public function tokens(): HasMany
+    {
+        return $this->hasMany(Token::class);
+    }
 }

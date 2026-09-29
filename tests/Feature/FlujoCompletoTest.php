@@ -122,6 +122,50 @@ class FlujoCompletoTest extends TestCase
             ->assertHeader('content-type', 'text/csv; charset=UTF-8');
     }
 
+    public function test_registro_paginas_detecta_sin_duplicar_y_el_check_las_excluye(): void
+    {
+        $proyecto = Proyecto::create(['nombre' => 'Sitio Detectado']);
+        $proyecto->paginas()->create(['nombre' => 'Inicio', 'secciones_total' => 3]);
+
+        $this->artisan('registro:paginas', [
+            'proyecto' => 'Sitio Detectado',
+            'paginas'  => ['Inicio|7', 'Nosotros|5', 'Contacto'],
+        ])->assertSuccessful();
+
+        $this->assertSame(3, $proyecto->paginas()->count());
+        $inicio = $proyecto->paginas()->where('nombre', 'Inicio')->first();
+        $this->assertSame(7, $inicio->secciones_total);
+        $this->assertSame('detectada', $inicio->origen);
+
+        $this->post("/paginas/{$inicio->id}/incluir", ['incluida' => 0])->assertRedirect();
+        $this->assertFalse($inicio->fresh()->incluida);
+    }
+
+    public function test_registro_tokens_detecta_sin_repetir(): void
+    {
+        Proyecto::create(['nombre' => 'Con Diseño']);
+
+        $this->artisan('registro:tokens', [
+            'proyecto' => 'Con Diseño',
+            'tokens'   => ['color|#7A3E2E|primario', 'tipografia|Poppins|títulos', 'color|#7a3e2e|repetido'],
+        ])->assertSuccessful();
+
+        $this->assertSame(2, Proyecto::where('nombre', 'Con Diseño')->first()->tokens()->count());
+    }
+
+    public function test_tokens_editables_solo_si_no_son_color(): void
+    {
+        $proyecto = Proyecto::create(['nombre' => 'Editable']);
+        $tipografia = $proyecto->tokens()->create(['tipo' => 'tipografia', 'valor' => 'Popins', 'nota' => 'títulos']);
+        $color = $proyecto->tokens()->create(['tipo' => 'color', 'valor' => '#7A3E2E']);
+
+        $this->put("/tokens/{$tipografia->id}", ['valor' => 'Poppins', 'nota' => 'títulos'])->assertRedirect();
+        $this->assertSame('Poppins', $tipografia->fresh()->valor);
+
+        $this->put("/tokens/{$color->id}", ['valor' => '#000000'])->assertStatus(422);
+        $this->assertSame('#7A3E2E', $color->fresh()->valor);
+    }
+
     private function pagina(): Pagina
     {
         $proyecto = Proyecto::create(['nombre' => 'Sitio Demo Test']);

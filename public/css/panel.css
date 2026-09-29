@@ -106,9 +106,30 @@ nav a.nuevo { color: var(--orad); font-weight: 600; }
 .tag.estado-srv-off { background: #F6E0DC; color: #A63A2B; }
 
 /* Flujo de página (P3 Plan + P4 Construcción) y tokens (P2) */
-.miga { margin-bottom: 6px; }
+.miga { margin-bottom: 6px; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
 .miga a { color: var(--gray); text-decoration: none; font-size: 12.5px; }
 .miga a:hover { color: var(--orad); }
+.cliente-lateral { font-size: 11.5px; color: var(--gray); background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 3px 12px; white-space: nowrap; }
+
+/* Curaduría: check "maquetar/usar", origen, edición de tokens, formulario plegado */
+tr.excluida td { opacity: .5; }
+tr.excluida td:first-child { opacity: 1; }
+.check-maquetar { width: 17px; height: 17px; accent-color: var(--ora); cursor: pointer; }
+.check-maquetar.chico { width: 14px; height: 14px; }
+.ficha-token.apagado { opacity: .45; }
+.ficha-token.apagado form:first-child { opacity: 1; }
+.tag.origen-detectada, .tag.origen-detectado { background: #DCE9F5; color: #2B5C8A; }
+.tag.origen-manual { background: var(--grow); color: var(--gray); }
+details.plegado summary { cursor: pointer; list-style: none; }
+details.plegado summary::-webkit-details-marker { display: none; }
+details.plegado summary::before { content: "▸ "; color: var(--orad); }
+details.plegado[open] summary::before { content: "▾ "; }
+details.editar-token { position: relative; }
+details.editar-token summary { list-style: none; cursor: pointer; color: var(--gray); padding: 0 3px; }
+details.editar-token summary::-webkit-details-marker { display: none; }
+details.editar-token summary:hover { color: var(--orad); }
+details.editar-token[open] form { display: flex; gap: 6px; margin-left: 8px; align-items: center; }
+details.editar-token input { font: inherit; font-size: 12px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 5px; width: 130px; }
 .dos-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
 .btn.chico { padding: 6px 12px; font-size: 12px; }
 .inline { display: inline-block; margin: 0; }

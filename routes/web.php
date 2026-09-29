@@ -16,7 +16,10 @@ Route::get('/proyectos/nuevo', [GestionController::class, 'crear'])->name('proye
 Route::post('/proyectos', [GestionController::class, 'guardar'])->name('proyecto.guardar');
 Route::get('/proyectos/{proyecto}', [PanelController::class, 'proyecto'])->name('proyecto');
 Route::post('/proyectos/{proyecto}/paginas', [GestionController::class, 'guardarPagina'])->name('pagina.guardar');
+Route::post('/paginas/{pagina}/incluir', [GestionController::class, 'incluirPagina'])->name('pagina.incluir');
 Route::post('/proyectos/{proyecto}/tokens', [GestionController::class, 'guardarToken'])->name('token.guardar');
+Route::post('/tokens/{token}/incluir', [GestionController::class, 'incluirToken'])->name('token.incluir');
+Route::put('/tokens/{token}', [GestionController::class, 'actualizarToken'])->name('token.actualizar');
 Route::delete('/tokens/{token}', [GestionController::class, 'eliminarToken'])->name('token.eliminar');
 
 // Flujo de una página (P3 Plan + P4 Construcción)

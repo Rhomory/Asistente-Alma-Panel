@@ -9,6 +9,7 @@ class Token extends Model
 {
     protected $table = 'tokens';
     protected $guarded = [];
+    protected $casts = ['incluido' => 'boolean'];
 
     public function proyecto(): BelongsTo
     {

@@ -47,7 +47,12 @@ class PanelController extends Controller
     public function proyecto(Proyecto $proyecto)
     {
         $proyecto->load('tokens');
-        $paginas = DB::table('reporte_pagina')->where('proyecto_id', $proyecto->id)->get();
+        $paginas = DB::table('reporte_pagina')
+            ->join('paginas', 'paginas.id', '=', 'reporte_pagina.id')
+            ->select('reporte_pagina.*', 'paginas.incluida', 'paginas.origen')
+            ->where('reporte_pagina.proyecto_id', $proyecto->id)
+            ->orderByDesc('paginas.incluida')->orderBy('paginas.id')
+            ->get();
 
         return view('panel.proyecto', compact('proyecto', 'paginas'));
     }

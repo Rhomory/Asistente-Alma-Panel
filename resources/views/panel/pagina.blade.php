@@ -6,7 +6,10 @@
         <meta http-equiv="refresh" content="15">
     @endif
 
-    <p class="miga"><a href="{{ route('proyecto', $pagina->proyecto) }}">← {{ $pagina->proyecto->nombre }}</a></p>
+    <p class="miga">
+        <a href="{{ route('proyecto', $pagina->proyecto) }}">← {{ $pagina->proyecto->nombre }}</a>
+        <span class="cliente-lateral">{{ $pagina->proyecto->cliente ?: $pagina->proyecto->nombre }}</span>
+    </p>
     <div class="fila-titulo">
         <h1>{{ $pagina->nombre }} <span class="tag estado-{{ $pagina->estado }}">{{ str_replace('_', ' ', $pagina->estado) }}</span></h1>
         <div class="mini-kpis">

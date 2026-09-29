@@ -10,6 +10,7 @@ class Pagina extends Model
 {
     protected $table = 'paginas';
     protected $guarded = [];
+    protected $casts = ['incluida' => 'boolean'];
 
     public function proyecto(): BelongsTo
     {

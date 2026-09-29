@@ -24,12 +24,16 @@ class GestionController extends Controller
         $datos = $request->validate([
             'nombre'        => 'required|string|max:120|unique:proyectos,nombre',
             'cliente'       => 'nullable|string|max:160',
-            'archivo_figma' => 'nullable|string|max:160',
+            'archivo_figma' => ['nullable', 'string', 'max:255', function ($attr, $valor, $falla) {
+                if (str_starts_with($valor, 'http') && ! preg_match('#^https://(www\.)?figma\.com/#', $valor)) {
+                    $falla('Si pegas un enlace, debe ser de figma.com (https://www.figma.com/…).');
+                }
+            }],
             'sitio_wp'      => 'nullable|url|max:200',
         ], [
             'nombre.required' => 'El proyecto necesita un nombre.',
             'nombre.unique'   => 'Ya existe un proyecto con ese nombre.',
-            'sitio_wp.url'    => 'El staging debe ser una URL completa (https://…).',
+            'sitio_wp.url'    => 'El sitio debe ser una URL completa (https://… o http://localhost/…).',
         ]);
 
         $proyecto = Proyecto::create($datos);
@@ -57,6 +61,16 @@ class GestionController extends Controller
             ->with('ok', "Página \"{$datos['nombre']}\" agregada como pendiente.");
     }
 
+    /** Marca o desmarca una página para maquetar (check del catálogo). */
+    public function incluirPagina(Request $request, Pagina $pagina)
+    {
+        $pagina->update(['incluida' => $request->boolean('incluida')]);
+
+        return back()->with('ok', $pagina->incluida
+            ? "\"{$pagina->nombre}\" entra al alcance: se maquetará."
+            : "\"{$pagina->nombre}\" marcada como no maquetar (queda fuera del alcance).");
+    }
+
     public function guardarToken(Request $request, Proyecto $proyecto)
     {
         $datos = $request->validate([
@@ -65,9 +79,35 @@ class GestionController extends Controller
             'nota'  => 'nullable|string|max:160',
         ], ['valor.required' => 'El token necesita un valor (ej.: #7A3E2E o "Poppins").']);
 
-        $proyecto->tokens()->create($datos);
+        $proyecto->tokens()->create($datos + ['origen' => 'manual']);
+        \App\Models\Evento::create(['tipo' => 'token', 'detalle' => "Token {$datos['tipo']} \"{$datos['valor']}\" registrado manualmente en {$proyecto->nombre}"]);
 
         return back()->with('ok', 'Token de diseño registrado.');
+    }
+
+    /** El check decide si el token se aplica como estilo global. */
+    public function incluirToken(Request $request, Token $token)
+    {
+        $token->update(['incluido' => $request->boolean('incluido')]);
+
+        return back()->with('ok', $token->incluido
+            ? "Token \"{$token->valor}\" activado: se aplicará como estilo global."
+            : "Token \"{$token->valor}\" desactivado: no se usará en la construcción.");
+    }
+
+    /** Solo tipografías, espaciados y otros son editables; los colores se reemplazan (agregar + eliminar). */
+    public function actualizarToken(Request $request, Token $token)
+    {
+        abort_if($token->tipo === 'color', 422, 'Los colores no se editan: elimina el token y registra el color correcto.');
+
+        $datos = $request->validate([
+            'valor' => 'required|string|max:120',
+            'nota'  => 'nullable|string|max:160',
+        ], ['valor.required' => 'El token necesita un valor.']);
+
+        $token->update($datos);
+
+        return back()->with('ok', 'Token actualizado.');
     }
 
     public function eliminarToken(Token $token)

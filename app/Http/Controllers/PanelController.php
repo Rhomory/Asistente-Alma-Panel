@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Evento;
 use App\Models\Proyecto;
 use App\Models\Seccion;
 use Illuminate\Http\Request;
@@ -16,31 +17,33 @@ class PanelController extends Controller
     public function dashboard()
     {
         $reportes = DB::table('reporte_pagina')
-            ->join('proyectos', 'proyectos.id', '=', 'reporte_pagina.proyecto_id')
-            ->select('reporte_pagina.*', 'proyectos.nombre as proyecto')
+            ->join('paginas', 'paginas.id', '=', 'reporte_pagina.id')
+            ->where('paginas.incluida', true)
+            ->select('reporte_pagina.*')
             ->get();
-
         $medidas = $reportes->where('min_total', '>', 0);
-        // El promedio solo considera páginas terminadas; las que están en
-        // construcción entran a los gráficos pero no distorsionan el KPI.
-        $terminadas = $medidas->where('estado', 'aprobada');
+        // El promedio solo considera páginas cerradas; las que están en obra lo distorsionarían.
+        $terminadas = $medidas->whereIn('estado', ['aprobada', 'en_qc']);
 
-        $kpis = [
+        $stats = [
             'promedio_min'  => $terminadas->count() ? round($terminadas->avg('min_total')) : 0,
             'linea_base'    => 480,
             'pct_asistente' => $this->pctAsistente($medidas),
             'correcciones'  => $terminadas->count() ? round($terminadas->avg('correcciones'), 1) : 0,
-            'paginas_medidas' => $terminadas->count(),
+            'en_obra'       => $reportes->where('estado', 'construyendo')->count(),
+            'en_qa'         => $reportes->where('estado', 'en_qc')->count(),
         ];
 
-        $ultimas = Seccion::with('pagina.proyecto')->orderByDesc('fin')->limit(8)->get();
+        $pendientes = Evento::with('seccion.pagina.proyecto')
+            ->where('tipo', 'solicitud_correccion')->where('resuelto', false)
+            ->orderByDesc('created_at')->get();
 
         return view('panel.dashboard', [
-            'kpis'     => $kpis,
-            'reportes' => $medidas->values(),
-            'donut'    => ['asistente' => $medidas->sum('min_asistente'), 'dev' => $medidas->sum('min_dev')],
-            'ultimas'  => $ultimas,
-            'proyectos' => Proyecto::withCount('paginas')->get(),
+            'stats'      => $stats,
+            'pendientes' => $pendientes,
+            'actividad'  => Evento::with('seccion.pagina.proyecto')->orderByDesc('created_at')->orderByDesc('id')->limit(8)->get(),
+            'ultimas'    => Seccion::with('pagina.proyecto')->where('estado', '!=', 'planificada')->orderByDesc('updated_at')->limit(5)->get(),
+            'proyectos'  => Proyecto::with('paginas')->orderByDesc('updated_at')->get(),
         ]);
     }
 

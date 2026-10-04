@@ -66,7 +66,7 @@ class FlujoCompletoTest extends TestCase
         $this->assertSame('construyendo', $pagina->fresh()->estado);   // pendiente → construyendo
     }
 
-    public function test_aprobar_todas_las_secciones_aprueba_la_pagina_y_permite_enviarla_a_qc(): void
+    public function test_aprobar_todas_las_secciones_aprueba_la_pagina_y_copiar_el_mensaje_solicita_qa(): void
     {
         $pagina = $this->pagina();
         $s = $pagina->secciones()->create(['nombre' => 'Hero', 'estado' => 'construida', 'minutos' => 15, 'min_asistente' => 12, 'min_dev' => 3]);
@@ -75,8 +75,30 @@ class FlujoCompletoTest extends TestCase
         $this->assertSame('aprobada', $s->fresh()->estado);
         $this->assertSame('aprobada', $pagina->fresh()->estado);
 
-        $this->post("/paginas/{$pagina->id}/enviar-qc")->assertRedirect();
+        $this->postJson("/paginas/{$pagina->id}/qa")->assertOk()->assertJson(['estado' => 'en_qc', 'completa' => true]);
         $this->assertSame('en_qc', $pagina->fresh()->estado);
+        $this->assertSame(1, Evento::where('tipo', 'qa_solicitado')->count());
+    }
+
+    public function test_mensaje_qa_usa_sitio_figma_y_trello_y_no_cambia_estado_si_falta_aprobar(): void
+    {
+        $proyecto = Proyecto::create([
+            'nombre' => 'Sitio QA', 'sitio_wp' => 'https://qa-staging.ejemplo.pe',
+            'archivo_figma' => 'https://www.figma.com/design/abc123/Sitio-QA',
+        ]);
+        $pagina = $proyecto->paginas()->create(['nombre' => 'Inicio', 'estado' => 'construyendo']);
+        $pagina->secciones()->create(['nombre' => 'Hero', 'estado' => 'construida', 'minutos' => 10, 'min_asistente' => 10]);
+
+        $this->post("/paginas/{$pagina->id}/trello", ['trello_url' => 'https://example.com/no-es-trello'])->assertSessionHasErrors('trello_url');
+        $this->post("/paginas/{$pagina->id}/trello", ['trello_url' => 'https://trello.com/c/AbC123/inicio'])->assertRedirect();
+
+        $this->get("/paginas/{$pagina->id}")->assertOk()->assertSee(
+            '@canal Solicito QA para https://qa-staging.ejemplo.pe aquí archivo Figma: https://www.figma.com/design/abc123/Sitio-QA y link de Trello: https://trello.com/c/AbC123/inicio',
+            false
+        );
+
+        $this->postJson("/paginas/{$pagina->id}/qa")->assertOk()->assertJson(['completa' => false]);
+        $this->assertSame('construyendo', $pagina->fresh()->estado);
     }
 
     public function test_pedir_correccion_encola_y_registro_add_la_resuelve(): void

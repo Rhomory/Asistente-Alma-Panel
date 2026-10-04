@@ -120,14 +120,44 @@ class FlujoController extends Controller
         return back()->with('ok', "Corrección solicitada para \"{$seccion->nombre}\"; quedó en la cola de la consola (registro:cola).");
     }
 
-    public function enviarQC(Pagina $pagina)
+    /** Mensaje estándar del canal para pedir QA, con el sitio y el Figma del proyecto y el Trello de la página. */
+    public static function mensajeQA(Pagina $pagina): string
     {
-        $sinAprobar = $pagina->secciones()->whereNotIn('estado', ['aprobada'])->count();
-        abort_unless($pagina->secciones()->count() > 0 && $sinAprobar === 0, 422, 'Aprueba todas las secciones antes de enviar a control de calidad.');
+        $p = $pagina->proyecto;
+        $sitio = $p->sitio_wp ?: '[falta la URL del sitio]';
+        $figma = $p->archivo_figma ?: '[falta el archivo de Figma]';
+        $trello = $pagina->trello_url ?: '[falta el link de Trello]';
 
-        $pagina->update(['estado' => 'en_qc']);
-        Evento::create(['tipo' => 'envio_qc', 'detalle' => "Página {$pagina->nombre} enviada a control de calidad"]);
+        return "@canal Solicito QA para {$sitio} aquí archivo Figma: {$figma} y link de Trello: {$trello}";
+    }
 
-        return back()->with('ok', "\"{$pagina->nombre}\" enviada a control de calidad.");
+    public function guardarTrello(Request $request, Pagina $pagina)
+    {
+        $datos = $request->validate(
+            ['trello_url' => ['nullable', 'url', 'max:255', 'regex:#^https://(www\.)?trello\.com/#']],
+            ['trello_url.url' => 'Pega el enlace completo de la tarjeta (https://trello.com/c/…).',
+             'trello_url.regex' => 'El enlace debe ser de trello.com.']
+        );
+        $pagina->update(['trello_url' => $datos['trello_url'] ?? null]);
+
+        return back()->with('ok', 'Enlace de Trello guardado: el mensaje de QA ya lo incluye.');
+    }
+
+    /**
+     * Se llama al copiar el mensaje: deja constancia de la solicitud en la actividad y,
+     * si todas las secciones están aprobadas, pasa la página a "QA solicitado" (en_qc).
+     */
+    public function qaSolicitado(Pagina $pagina)
+    {
+        $pagina->load('proyecto');
+        $total = $pagina->secciones()->count();
+        $completa = $total > 0 && $pagina->secciones()->where('estado', '!=', 'aprobada')->count() === 0;
+
+        if ($completa && $pagina->estado !== 'en_qc') {
+            $pagina->update(['estado' => 'en_qc']);
+        }
+        Evento::create(['tipo' => 'qa_solicitado', 'detalle' => self::mensajeQA($pagina)]);
+
+        return response()->json(['estado' => $pagina->fresh()->estado, 'completa' => $completa]);
     }
 }

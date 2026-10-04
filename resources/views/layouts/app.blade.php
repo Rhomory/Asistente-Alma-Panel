@@ -22,14 +22,14 @@
             @endforeach
             <a href="{{ route('proyecto.nuevo') }}" class="nuevo {{ request()->routeIs('proyecto.nuevo') ? 'on' : '' }}">+ Nuevo proyecto</a>
         </nav>
-        <div class="side-note">La consola construye y escribe el registro; el panel supervisa y administra el catálogo. Nada se publica sin aprobación.</div>
+        <div class="side-note">El asistente construye vía MCP y registra cada sección; el panel supervisa, aprueba y administra el catálogo. Nada se publica sin aprobación.</div>
     </aside>
     <main>
         @if (session('ok'))
             <div class="flash-ok">{{ session('ok') }}</div>
         @endif
         @yield('contenido')
-        <footer>Proyecto de Mejora · Alma Industria Creativa E.I.R.L. · datos de demostración del piloto</footer>
+        <footer>Asistente Alma · Panel de operaciones · Alma Industria Creativa E.I.R.L. — Arequipa</footer>
     </main>
 </div>
 @stack('scripts')

@@ -77,7 +77,7 @@
 
     <div class="dos-col">
         <div class="card form-card">
-            <h3>Plan de construcción (P3)</h3>
+            <h3>Plan de construcción</h3>
             <form method="post" action="{{ route('pagina.plan.estandar', $pagina) }}" class="inline">@csrf
                 <button class="btn s" type="submit">Aplicar plan estándar de la guía técnica</button>
             </form>
@@ -89,14 +89,50 @@
             </form>
         </div>
         <div class="card">
-            <h3>Cierre de la página</h3>
-            <p>Cuando las {{ $resumen['total'] }} secciones estén aprobadas, la página puede pasar al control de calidad del área.</p>
-            <form method="post" action="{{ route('pagina.qc', $pagina) }}">@csrf
-                <button class="btn p" type="submit" @disabled($resumen['total'] === 0 || $resumen['aprobadas'] !== $resumen['total'] || $pagina->estado === 'en_qc')>
-                    {{ $pagina->estado === 'en_qc' ? 'Ya está en control de calidad' : 'Enviar a control de calidad' }}
-                </button>
+            <h3>Solicitud de QA</h3>
+            <p class="nota-pie" style="margin:0 0 6px">Mensaje estándar para el canal, armado con el sitio y el Figma del proyecto. Agrega el link de Trello de esta página y cópialo.</p>
+
+            <form method="post" action="{{ route('pagina.trello', $pagina) }}" class="campo-linea">@csrf
+                <div class="campo">
+                    <label for="trello_url">Link de Trello</label>
+                    <input id="trello_url" name="trello_url" type="url" value="{{ old('trello_url', $pagina->trello_url) }}" placeholder="https://trello.com/c/…" maxlength="255">
+                </div>
+                <button class="btn s" type="submit">Guardar</button>
             </form>
-            <p class="nota-pie">Las correcciones pedidas aquí las lee la consola con <code>php artisan registro:cola</code>; al re-registrar la sección, salen de la cola solas.</p>
+            @error('trello_url')<span class="error">{{ $message }}</span>@enderror
+
+            <textarea id="qa-mensaje" class="qa-mensaje" readonly>{{ \App\Http\Controllers\FlujoController::mensajeQA($pagina) }}</textarea>
+
+            @if ($resumen['total'] === 0 || $resumen['aprobadas'] !== $resumen['total'])
+                <div class="qa-aviso">Aún hay secciones sin aprobar ({{ $resumen['aprobadas'] }}/{{ $resumen['total'] }}). Puedes copiar el mensaje, pero la página no cambiará a "QA solicitado" hasta aprobarlas todas.</div>
+            @endif
+
+            <div style="margin-top:10px">
+                <button class="btn p" type="button" id="qa-copiar" data-url="{{ route('pagina.qa', $pagina) }}">Copiar mensaje</button>
+                <span class="qa-ok" id="qa-ok" hidden>✓ Copiado y registrado en la actividad</span>
+            </div>
+            <p class="nota-pie">Las correcciones pedidas arriba quedan en la cola de trabajo de la consola (<code>registro:cola</code>); al reconstruirse la sección, se marcan atendidas automáticamente.</p>
         </div>
     </div>
+
+    <script>
+    document.getElementById('qa-copiar').addEventListener('click', async function () {
+        const area = document.getElementById('qa-mensaje');
+        const texto = area.value;
+        try {
+            await navigator.clipboard.writeText(texto);
+        } catch (e) {
+            area.select(); document.execCommand('copy');   // respaldo si el portapapeles no está disponible
+        }
+        const r = await fetch(this.dataset.url, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+        });
+        document.getElementById('qa-ok').hidden = false;
+        if (r.ok) {
+            const datos = await r.json();
+            if (datos.completa && '{{ $pagina->estado }}' !== 'en_qc') { setTimeout(() => location.reload(), 1200); }
+        }
+    });
+    </script>
 @endsection

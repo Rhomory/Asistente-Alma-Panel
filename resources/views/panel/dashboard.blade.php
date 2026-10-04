@@ -1,91 +1,103 @@
 @extends('layouts.app')
-@section('titulo', 'Dashboard')
+@section('titulo', 'Panel')
 
 @section('contenido')
-    <h1>Dashboard del piloto</h1>
-    <p class="sub">Avance del asistente frente a la línea base del proceso manual (480 min por página).</p>
+    <h1>Panel de operaciones</h1>
+    <p class="sub">Lo importante primero: qué pide atención, qué se movió y cómo van los sitios en trabajo.</p>
 
-    <div class="kpis">
-        <div class="kpi lav">
-            <div class="v">{{ intdiv($kpis['promedio_min'], 60) }} h {{ str_pad($kpis['promedio_min'] % 60, 2, '0', STR_PAD_LEFT) }} min</div>
-            <div class="l">promedio por página terminada ({{ $kpis['paginas_medidas'] }} {{ $kpis['paginas_medidas'] === 1 ? 'página' : 'páginas' }})</div>
-            @if ($kpis['promedio_min'] > 0)
-                <div class="delta">▼ {{ round(100 - 100 * $kpis['promedio_min'] / $kpis['linea_base']) }} % frente a la línea base (8 h)</div>
-            @endif
+    <div class="stats-mini">
+        <div class="stat">
+            <b>{{ $stats['promedio_min'] ? intdiv($stats['promedio_min'], 60) . ' h ' . str_pad($stats['promedio_min'] % 60, 2, '0', STR_PAD_LEFT) : '—' }}</b>
+            <span>promedio por página @if ($stats['promedio_min'])· ▼ {{ round(100 - 100 * $stats['promedio_min'] / $stats['linea_base']) }} % vs manual @endif</span>
         </div>
-        <div class="kpi ora">
-            <div class="v">{{ $kpis['pct_asistente'] }} % / {{ 100 - $kpis['pct_asistente'] }} %</div>
-            <div class="l">minutos asistente / desarrollador</div>
-            <div class="stack"><i style="width: {{ $kpis['pct_asistente'] }}%"></i></div>
-        </div>
-        <div class="kpi gris">
-            <div class="v">{{ str_replace('.', ',', (string) $kpis['correcciones']) }}</div>
-            <div class="l">correcciones promedio por página</div>
-            <div class="delta ok">verificación por secciones activa ✓</div>
-        </div>
+        <div class="stat"><b>{{ $stats['pct_asistente'] }} %</b><span>del trabajo lo ejecuta el asistente</span></div>
+        <div class="stat"><b>{{ str_replace('.', ',', (string) $stats['correcciones']) }}</b><span>correcciones por página</span></div>
+        <div class="stat {{ $pendientes->count() ? 'alerta' : '' }}"><b>{{ $pendientes->count() }}</b><span>correcciones en cola</span></div>
+        <div class="stat"><b>{{ $stats['en_obra'] }}</b><span>páginas en construcción</span></div>
+        <div class="stat"><b>{{ $stats['en_qa'] }}</b><span>páginas con QA solicitado</span></div>
     </div>
 
-    <div class="charts">
-        <div class="card">
-            <h3>Minutos por página frente a la línea base</h3>
-            <canvas id="chartPaginas" height="210"></canvas>
+    @if ($pendientes->isNotEmpty())
+        <div class="card atencion">
+            <h3>Requiere atención: correcciones en cola de la consola</h3>
+            @foreach ($pendientes as $e)
+                <div class="item-cola">
+                    <div>
+                        <b>{{ $e->seccion?->nombre }}</b> · {{ $e->seccion?->pagina?->proyecto?->nombre }} / {{ $e->seccion?->pagina?->nombre }}
+                        <div class="mut-chico">"{{ $e->detalle }}" · pedida el {{ $e->created_at->format('d/m H:i') }}</div>
+                    </div>
+                    @if ($e->seccion)
+                        <a class="btn s chico" href="{{ route('pagina', $e->seccion->pagina_id) }}">Ver página →</a>
+                    @endif
+                </div>
+            @endforeach
         </div>
-        <div class="card">
-            <h3>¿Quién ejecuta el trabajo?</h3>
-            <canvas id="chartDonut" height="210"></canvas>
-        </div>
-    </div>
+    @endif
 
-    <div class="card">
-        <h3>Últimas secciones registradas</h3>
-        <table>
-            <thead><tr><th>Sección</th><th>Página</th><th>Proyecto</th><th class="n">Min</th><th>Ejecutó</th><th class="n">Correcc.</th><th>Estado</th></tr></thead>
-            <tbody>
-            @forelse ($ultimas as $s)
-                <tr>
-                    <td>{{ $s->nombre }}</td>
-                    <td>{{ $s->pagina->nombre }}</td>
-                    <td>{{ $s->pagina->proyecto->nombre }}</td>
-                    <td class="n">{{ $s->minutos }}</td>
-                    <td><span class="tag {{ $s->ejecuto }}">{{ $s->ejecuto }}</span></td>
-                    <td class="n">{{ $s->correcciones }}</td>
-                    <td><span class="tag estado-{{ $s->estado }}">{{ $s->estado }}</span></td>
-                </tr>
+    <div class="dos-col">
+        <div class="card">
+            <h3>Actividad reciente</h3>
+            @php
+                $rotulos = [
+                    'construccion'         => ['●', 'Sección construida'],
+                    'aprobacion'           => ['✓', 'Sección aprobada'],
+                    'solicitud_correccion' => ['↺', 'Corrección solicitada'],
+                    'correccion'           => ['↺', 'Corrección registrada'],
+                    'envio_qc'             => ['➜', 'QA solicitado'],
+                    'qa_solicitado'        => ['➜', 'QA solicitado'],
+                    'token'                => ['◆', 'Token de diseño'],
+                ];
+            @endphp
+            @forelse ($actividad as $e)
+                @php [$icono, $rotulo] = $rotulos[$e->tipo] ?? ['·', ucfirst(str_replace('_', ' ', $e->tipo))]; @endphp
+                <div class="evento">
+                    <span class="ev-icono ev-{{ $e->tipo }}">{{ $icono }}</span>
+                    <div>
+                        <b>{{ $rotulo }}</b>@if ($e->seccion) — {{ $e->seccion->nombre }} <span class="mut">({{ $e->seccion->pagina?->proyecto?->nombre }} / {{ $e->seccion->pagina?->nombre }})</span>@endif
+                        <div class="mut-chico">{{ $e->created_at->format('d/m H:i') }}@if ($e->detalle) · {{ \Illuminate\Support\Str::limit($e->detalle, 80) }}@endif</div>
+                    </div>
+                </div>
             @empty
-                <tr><td colspan="7" class="vacio">Aún no hay secciones registradas. Usa <code>php artisan registro:add</code> o importa la plantilla CSV.</td></tr>
+                <p class="vacio">Sin actividad todavía: cuando la consola construya la primera sección, aparecerá aquí.</p>
             @endforelse
-            </tbody>
-        </table>
+        </div>
+
+        <div>
+            <div class="card">
+                <h3>Proyectos</h3>
+                @forelse ($proyectos as $p)
+                    @php $alcance = $p->paginas->where('incluida', true); @endphp
+                    <div class="fila-proy">
+                        <a href="{{ route('proyecto', $p) }}"><b>{{ $p->nombre }}</b></a>
+                        <span class="mut-chico">
+                            {{ $alcance->count() }} pág. en alcance ·
+                            {{ $alcance->whereIn('estado', ['aprobada', 'en_qc'])->count() }} listas ·
+                            {{ $alcance->where('estado', 'construyendo')->count() }} en obra
+                        </span>
+                    </div>
+                @empty
+                    <p class="vacio">Crea tu primer proyecto con "+ Nuevo proyecto".</p>
+                @endforelse
+            </div>
+
+            <div class="card">
+                <div class="fila-titulo"><h3>Últimos registros</h3><a class="mut-chico" href="{{ route('registro') }}">ver todo →</a></div>
+                <table class="compacta">
+                    <thead><tr><th>Sección</th><th>Página</th><th class="n">Min</th><th>Estado</th></tr></thead>
+                    <tbody>
+                    @forelse ($ultimas as $s)
+                        <tr>
+                            <td>{{ \Illuminate\Support\Str::limit($s->nombre, 26) }}</td>
+                            <td class="mut">{{ $s->pagina->proyecto->nombre }} / {{ $s->pagina->nombre }}</td>
+                            <td class="n">{{ $s->minutos }}</td>
+                            <td><span class="tag estado-{{ $s->estado }}">{{ $s->estado }}</span></td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="4" class="vacio">Aún no hay secciones registradas.</td></tr>
+                    @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 @endsection
-
-@push('scripts')
-<script src="{{ asset('js/chart.umd.min.js') }}"></script>
-<script>
-const C = { ora: '#F2915F', orad: '#C9622B', lav: '#B9A8E0', ink: '#171717', gris: '#8A8578' };
-Chart.defaults.font.family = "Poppins, 'Segoe UI', Arial, sans-serif";
-Chart.defaults.animation = false; // los datos llegan por recarga; el movimiento no comunica estado
-
-new Chart(document.getElementById('chartPaginas'), {
-    data: {
-        labels: @json($reportes->map(fn ($r) => $r->nombre . ' · ' . preg_replace('/^(Sitio|Portal)\s+/u', '', $r->proyecto))),
-        datasets: [
-            { type: 'bar', label: 'Minutos reales', data: @json($reportes->pluck('min_total')), backgroundColor: C.ora, borderRadius: 4, maxBarThickness: 56 },
-            { type: 'line', label: 'Línea base (480 min)', data: @json($reportes->map(fn () => 480)), borderColor: C.gris, borderDash: [7, 6], borderWidth: 2, pointRadius: 0, fill: false },
-        ],
-    },
-    options: {
-        plugins: { legend: { position: 'bottom' } },
-        scales: { y: { beginAtZero: true, suggestedMax: 500 }, x: { ticks: { maxRotation: 20, minRotation: 0 } } },
-    },
-});
-new Chart(document.getElementById('chartDonut'), {
-    type: 'doughnut',
-    data: {
-        labels: ['Asistente', 'Desarrollador'],
-        datasets: [{ data: [@json($donut['asistente']), @json($donut['dev'])], backgroundColor: [C.ora, C.lav], borderWidth: 0 }],
-    },
-    options: { plugins: { legend: { position: 'bottom' } }, cutout: '62%' },
-});
-</script>
-@endpush

@@ -30,9 +30,13 @@ class JevSugerencias extends Command
             $s->nombre, $s->widget_plan ?? 'sin mapear', $s->estado, $s->minutos, $s->correcciones
         ))->implode("\n");
 
-        $widgets = $pagina->secciones->pluck('widget_plan')->filter()->unique()->values()->all();
-        if (count($widgets) < 2) {
-            $widgets = array_merge($widgets, ['(ninguno)']);
+        // choice: cada opción va como clave con su descripción (cuántas veces aparece el widget)
+        $conteo = $pagina->secciones->pluck('widget_plan')->filter()->countBy();
+        $criteriosWidgets = $conteo->mapWithKeys(fn ($veces, $widget) => [
+            $widget => "Aparece en {$veces} " . ($veces === 1 ? 'sección' : 'secciones') . ' de esta página.',
+        ])->all();
+        if (count($criteriosWidgets) < 2) {
+            $criteriosWidgets['ninguno'] = 'No hay un candidato claro a componente reutilizable.';
         }
 
         $payload = [
@@ -41,9 +45,28 @@ class JevSugerencias extends Command
                 . "(constructor: Elementor, flujo: diseño de Figma → construcción supervisada por secciones).\n"
                 . "Secciones:\n{$lineas}",
             'questions' => [
-                ['type' => 'noul', 'text' => '¿Hay widgets que se repiten en varias secciones y convendría convertirlos en un componente o estilo global reutilizable?'],
-                ['type' => 'choice', 'text' => '¿Cuál de estos widgets es el mejor candidato a componente reutilizable?', 'options' => $widgets],
-                ['type' => 'score', 'text' => '¿Qué riesgo hay de perder fidelidad al diseño original en esta página?', 'options' => ['bajo', 'medio', 'alto']],
+                'widgets_repetidos' => [
+                    'type' => 'noul',
+                    'instructions' => '¿Hay widgets que se repiten en varias secciones y convendría convertirlos en un componente o estilo global reutilizable?',
+                    'criteria' => [
+                        'true'  => 'Al menos un widget o patrón aparece en dos o más secciones y se beneficiaría de ser componente o estilo global.',
+                        'false' => 'Cada sección usa widgets distintos; no hay repetición aprovechable.',
+                    ],
+                ],
+                'mejor_candidato' => [
+                    'type' => 'choice',
+                    'instructions' => '¿Cuál de estos widgets es el mejor candidato a convertirse en componente reutilizable?',
+                    'criteria' => $criteriosWidgets,
+                ],
+                'riesgo_fidelidad' => [
+                    'type' => 'score',
+                    'instructions' => '¿Qué riesgo hay de perder fidelidad al diseño original al construir esta página?',
+                    'criteria' => [
+                        'Riesgo bajo: secciones simples, mapeadas en la guía técnica y sin correcciones.',
+                        'Riesgo medio: algunas secciones complejas o con correcciones previas.',
+                        'Riesgo alto: varias correcciones, widgets sin mapear o secciones muy personalizadas.',
+                    ],
+                ],
             ],
         ];
 

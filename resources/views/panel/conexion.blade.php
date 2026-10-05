@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('titulo', 'Conexión')
-@section('migas')<a href="{{ route('dashboard') }}">Inicio</a> / <b>Conexión</b>@endsection
+@section('migas')<a href="{{ route('dashboard') }}" class="raiz"><x-ic n="inicio" c="sm" />Panel</a> / <b aria-current="page">Conexión</b>@endsection
 
 @php
     // Celda de versión: punto de color + versión + enlace si hay una más nueva.

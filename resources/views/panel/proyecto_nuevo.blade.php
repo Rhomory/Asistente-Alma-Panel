@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('titulo', 'Nuevo proyecto')
-@section('migas')<a href="{{ route('dashboard') }}">Inicio</a> / <b>Nuevo proyecto</b>@endsection
+@section('migas')<a href="{{ route('dashboard') }}" class="raiz"><x-ic n="inicio" c="sm" />Panel</a> / <b aria-current="page">Nuevo proyecto</b>@endsection
 
 @section('contenido')
     <div class="cabeza">

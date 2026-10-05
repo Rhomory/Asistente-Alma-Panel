@@ -25,25 +25,25 @@
             <span><b>Asistente Alma</b><small>Panel de operaciones</small></span>
         </a>
         <nav class="nav">
-            <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'on' : '' }}"><x-ic n="inicio" /><span class="txt">Inicio</span>
+            <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'on' : '' }}" @if (request()->routeIs('dashboard')) aria-current="page" @endif><x-ic n="inicio" /><span class="txt">Panel</span>
                 @if ($navCola)<span class="cuenta alerta" title="Correcciones en cola">{{ $navCola }}</span>@endif</a>
-            <a href="{{ route('registro') }}" class="{{ request()->routeIs('registro') ? 'on' : '' }}"><x-ic n="lista" /><span class="txt">Registro de cambios</span></a>
-            <a href="{{ route('conexion') }}" class="{{ request()->routeIs('conexion') ? 'on' : '' }}"><x-ic n="enchufe" /><span class="txt">Conexión</span></a>
+            <a href="{{ route('registro') }}" class="{{ request()->routeIs('registro') ? 'on' : '' }}" @if (request()->routeIs('registro')) aria-current="page" @endif><x-ic n="lista" /><span class="txt">Registro de cambios</span></a>
+            <a href="{{ route('conexion') }}" class="{{ request()->routeIs('conexion') ? 'on' : '' }}" @if (request()->routeIs('conexion')) aria-current="page" @endif><x-ic n="enchufe" /><span class="txt">Conexión</span></a>
         </nav>
         <div class="nav-grupo">Proyectos</div>
         <nav class="nav">
             @php $proyectoActual = request()->route('proyecto') ?? request()->route('pagina')?->proyecto; @endphp
             @foreach ($navProyectos as $p)
-                <a href="{{ route('proyecto', $p) }}" class="{{ $proyectoActual?->id === $p->id ? 'on' : '' }}"><x-ic n="capas" /><span class="txt">{{ $p->nombre }}</span></a>
+                <a href="{{ route('proyecto', $p) }}" class="{{ $proyectoActual?->id === $p->id ? 'on' : '' }}" @if ($proyectoActual?->id === $p->id) aria-current="page" @endif><x-ic n="capas" /><span class="txt">{{ $p->nombre }}</span></a>
             @endforeach
-            <a href="{{ route('proyecto.nuevo') }}" class="{{ request()->routeIs('proyecto.nuevo') ? 'on' : '' }}"><x-ic n="mas" /><span class="txt">Nuevo proyecto</span></a>
+            <a href="{{ route('proyecto.nuevo') }}" class="{{ request()->routeIs('proyecto.nuevo') ? 'on' : '' }}" @if (request()->routeIs('proyecto.nuevo')) aria-current="page" @endif><x-ic n="mas" /><span class="txt">Nuevo proyecto</span></a>
         </nav>
         <div class="side-pie"><b><x-ic n="escudo" c="sm" />Nada se publica solo</b>El asistente construye en borrador y registra; tú apruebas cada sección antes de pedir QA.</div>
     </aside>
 
     <div class="cuerpo">
         <header class="barra">
-            <div class="miga">@hasSection('migas') @yield('migas') @else <b>Inicio</b> @endif</div>
+            <nav class="miga" aria-label="Ruta">@hasSection('migas') @yield('migas') @else <b aria-current="page"><x-ic n="inicio" c="sm" />Panel</b> @endif</nav>
             <div class="asistente-pill {{ $asistente['activo'] ? 'activo' : '' }}" title="{{ $asistente['hace'] ? 'Último registro de la consola ' . $asistente['hace'] : 'La consola aún no registra secciones' }}">
                 <i class="pulso"></i>
                 @if ($asistente['activo'])
@@ -80,6 +80,12 @@
         const nuevo = document.documentElement.dataset.theme === 'claro' ? 'oscuro' : 'claro';
         document.documentElement.dataset.theme = nuevo;
         try { localStorage.setItem('alma-tema', nuevo); } catch (e) {}
+    });
+
+    // Alt+↑ sube un nivel (al destino del botón .btn-subir); Alt+← sigue siendo el historial del navegador.
+    document.addEventListener('keydown', function (ev) {
+        const subir = document.querySelector('.btn-subir');
+        if (subir && ev.altKey && ev.key === 'ArrowUp') { ev.preventDefault(); location.href = subir.href; }
     });
 
     // Copiar al portapapeles: cualquier botón con data-copiar="#id" o data-texto="…"

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('titulo', $proyecto->nombre)
-@section('migas')<a href="{{ route('dashboard') }}">Inicio</a> / <b>{{ $proyecto->nombre }}</b>@endsection
+@section('migas')<a href="{{ route('dashboard') }}" class="raiz"><x-ic n="inicio" c="sm" />Panel</a> / <b aria-current="page">{{ $proyecto->nombre }}</b>@endsection
 
 @section('contenido')
     @php
@@ -11,9 +11,12 @@
     @endphp
 
     <div class="cabeza">
-        <div>
-            <a class="volver" href="{{ route('dashboard') }}"><x-ic n="atras" c="sm" />Inicio</a>
-            <h1>{{ $proyecto->nombre }}</h1>
+        <div class="titulo-con-padre">
+            <a class="btn-subir" href="{{ route('dashboard') }}" aria-label="Volver al panel" title="Volver al panel (Alt+↑)" aria-keyshortcuts="Alt+ArrowUp"><x-ic n="atras" /></a>
+            <div>
+                <p class="contexto">Proyecto del <a href="{{ route('dashboard') }}">Panel</a></p>
+                <h1>{{ $proyecto->nombre }}</h1>
+            </div>
             <p>
                 {{ $proyecto->cliente ? $proyecto->cliente . '.' : '' }}
                 {{ $alcance->count() ? "{$listas} de {$alcance->count()} páginas listas." : 'Aún sin páginas: el asistente las carga al leer el Figma (registro:figma).' }}

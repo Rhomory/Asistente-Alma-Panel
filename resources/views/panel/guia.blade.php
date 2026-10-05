@@ -1,12 +1,19 @@
 @extends('layouts.app')
 @section('titulo', 'Guía · ' . $proyecto->nombre)
-@section('migas')<a href="{{ route('dashboard') }}">Inicio</a> / <a href="{{ route('proyecto', $proyecto) }}">{{ $proyecto->nombre }}</a> / <b>Guía y prompt</b>@endsection
+@section('migas')<a href="{{ route('dashboard') }}" class="raiz"><x-ic n="inicio" c="sm" />Panel</a> / <a href="{{ route('proyecto', $proyecto) }}">{{ $proyecto->nombre }}</a> / @if ($pagina)<a href="{{ route('pagina', $pagina) }}">Página: {{ $pagina->nombre }}</a> / @endif<b aria-current="page">Guía y prompt</b>@endsection
 
 @section('contenido')
     <div class="cabeza">
-        <div>
-            <a class="volver" href="{{ $pagina ? route('pagina', $pagina) : route('proyecto', $proyecto) }}"><x-ic n="atras" c="sm" />{{ $pagina?->nombre ?? $proyecto->nombre }}</a>
-            <h1>Guía de construcción</h1>
+        @php
+            $padreUrl = $pagina ? route('pagina', $pagina) : route('proyecto', $proyecto);
+            $padre = $pagina ? "la página {$pagina->nombre}" : $proyecto->nombre;
+        @endphp
+        <div class="titulo-con-padre">
+            <a class="btn-subir" href="{{ $padreUrl }}" aria-label="Volver a {{ $padre }}" title="Volver a {{ $padre }} (Alt+↑)" aria-keyshortcuts="Alt+ArrowUp"><x-ic n="atras" /></a>
+            <div>
+                <p class="contexto">Guía de @if ($pagina)<a href="{{ $padreUrl }}">{{ $pagina->nombre }}</a> · {{ $proyecto->nombre }}@else<a href="{{ $padreUrl }}">{{ $proyecto->nombre }}</a>@endif</p>
+                <h1>Guía de construcción</h1>
+            </div>
             <p>Así recibe el asistente el sistema de diseño de {{ $proyecto->nombre }}: solo entran los tokens con el switch activo. Si algo se ve mal aquí, corrígelo antes de construir.</p>
         </div>
         <form method="get" class="acciones">

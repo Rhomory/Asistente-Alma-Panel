@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('titulo', $pagina->proyecto->nombre . ' · ' . $pagina->nombre)
-@section('migas')<a href="{{ route('dashboard') }}">Inicio</a> / <a href="{{ route('proyecto', $pagina->proyecto) }}">{{ $pagina->proyecto->nombre }}</a> / <b>{{ $pagina->nombre }}</b>@endsection
+@section('migas')<a href="{{ route('dashboard') }}" class="raiz"><x-ic n="inicio" c="sm" />Panel</a> / <a href="{{ route('proyecto', $pagina->proyecto) }}">{{ $pagina->proyecto->nombre }}</a> / <b aria-current="page">Página: {{ $pagina->nombre }}</b>@endsection
 
 @section('contenido')
     @php
@@ -16,9 +16,12 @@
     @endphp
 
     <div class="cabeza">
-        <div>
-            <a class="volver" href="{{ route('proyecto', $pagina->proyecto) }}"><x-ic n="atras" c="sm" />{{ $pagina->proyecto->nombre }}</a>
-            <h1>{{ $pagina->nombre }} @include('panel.partes.estado', ['estado' => $pagina->estado])</h1>
+        <div class="titulo-con-padre">
+            <a class="btn-subir" href="{{ route('proyecto', $pagina->proyecto) }}" aria-label="Volver a {{ $pagina->proyecto->nombre }}" title="Volver a {{ $pagina->proyecto->nombre }} (Alt+↑)" aria-keyshortcuts="Alt+ArrowUp"><x-ic n="atras" /></a>
+            <div>
+                <p class="contexto">Página de <a href="{{ route('proyecto', $pagina->proyecto) }}">{{ $pagina->proyecto->nombre }}</a></p>
+                <h1>{{ $pagina->nombre }} @include('panel.partes.estado', ['estado' => $pagina->estado])</h1>
+            </div>
             <p>El asistente construye cada sección desde la consola; aquí revisas, apruebas o le pides una corrección.</p>
         </div>
         <div class="acciones">
@@ -124,7 +127,7 @@
 
                     <div class="acciones">
                         <button class="btn p" type="button" id="qa-copiar" data-url="{{ route('pagina.qa', $pagina) }}"><x-ic n="copiar" />Copiar mensaje</button>
-                        <span class="listo" id="qa-ok" hidden><x-ic n="check" c="sm" />Copiado y anotado en la actividad</span>
+                        <span class="listo" id="qa-ok" role="status" hidden><x-ic n="check" c="sm" /><span>Copiado y anotado en la actividad</span></span>
                     </div>
                     <p class="nota">El sitio y el Figma salen de los datos del proyecto; solo agregas el Trello.</p>
                 </div>
@@ -153,11 +156,18 @@
         const texto = document.getElementById('qa-mensaje').value;
         try { await navigator.clipboard.writeText(texto); }
         catch (e) { const t = document.createElement('textarea'); t.value = texto; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
-        const r = await fetch(this.dataset.url, {
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, 'Accept': 'application/json' },
-        });
-        document.getElementById('qa-ok').hidden = false;
+        const aviso = document.getElementById('qa-ok');
+        let anotado = false;
+        try {
+            const r = await fetch(this.dataset.url, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, 'Accept': 'application/json' },
+            });
+            anotado = r.ok;
+        } catch (e) {}
+        aviso.lastChild.textContent = anotado ? 'Copiado y anotado en la actividad' : 'Copiado, pero no se pudo anotar en la actividad';
+        aviso.classList.toggle('falla', !anotado);
+        aviso.hidden = false;
         // El registro en la actividad dispara la recarga en vivo; si la página quedó completa, cambia a "QA solicitado".
     });
     </script>

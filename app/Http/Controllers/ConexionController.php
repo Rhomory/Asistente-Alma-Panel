@@ -15,13 +15,14 @@ use Illuminate\Http\Request;
  */
 class ConexionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $conexiones = Conexion::with('proyecto')->orderByDesc('updated_at')->orderByDesc('id')->get();
 
-        // La destacada es la del último proyecto en el que se trabajó.
+        // La destacada es la elegida (?conexion=) o la del último proyecto en el que se trabajó.
         $ultimoProyecto = Proyecto::has('conexiones')->orderByDesc('updated_at')->first();
-        $actual = $ultimoProyecto?->conexion ?? $conexiones->first();
+        $actual = $conexiones->firstWhere('id', $request->integer('conexion'))
+            ?? $ultimoProyecto?->conexion ?? $conexiones->first();
 
         return view('panel.conexion', [
             'conexiones'  => $conexiones,

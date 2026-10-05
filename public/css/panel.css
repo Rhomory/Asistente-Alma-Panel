@@ -355,6 +355,12 @@ input.falta { border-color: var(--warn); }
 .copiar { width: 28px; height: 28px; border-radius: 7px; border: 1px solid var(--line); background: transparent; color: var(--ink-3); display: grid; place-items: center; cursor: pointer; flex-shrink: 0; }
 .copiar:hover { color: var(--ink); background: var(--hover); }
 .copiar.hecho { color: var(--ok-ink); border-color: var(--ok); }
+.config-agente { border: 1px solid var(--line); border-radius: 10px; }
+.config-agente + .config-agente { margin-top: 8px; }
+.config-agente > summary { padding: 10px 14px; display: flex; gap: 6px; align-items: baseline; }
+.config-agente[open] > summary { border-bottom: 1px solid var(--line); }
+.config-cuerpo { position: relative; padding: 10px; }
+.config-cuerpo .copiar { position: absolute; top: 18px; right: 18px; background: var(--surface); }
 pre.bloque { margin: 0; padding: 12px 14px; border-radius: 10px; background: var(--surface-2); font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ink-2); max-height: 220px; overflow-y: auto; }
 .pasos { list-style: none; counter-reset: p; display: flex; flex-direction: column; gap: 10px; font-size: 12.5px; color: var(--ink-2); }
 .pasos li { counter-increment: p; display: flex; gap: 10px; }

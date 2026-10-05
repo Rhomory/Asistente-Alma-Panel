@@ -107,7 +107,7 @@
     const editando = () => {
         const a = document.activeElement;
         if (a && a.matches('input:not([type=checkbox]), textarea, select')) return true;
-        if (document.querySelector('details[open]')) return true;
+        if (document.querySelector('details[open]:not(.config-agente)')) return true;
         return [...document.querySelectorAll('form input[type=text], form input[type=url], form textarea:not([readonly])')].some(i => i.value !== i.defaultValue);
     };
     async function revisar() {

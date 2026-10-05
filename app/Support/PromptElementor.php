@@ -70,6 +70,46 @@ class PromptElementor
         return ['sitio_url' => $sitio, 'endpoint' => $endpoint, 'usuario_wp' => $usuario, 'nombre_mcp' => $nombre];
     }
 
+    /** Variable de entorno de Windows donde vive el encabezado de autorización del sitio (nunca el panel). */
+    public static function variableAuth(string $proyecto): string
+    {
+        return 'ALMA_' . strtoupper(str_replace('-', '_', Str::slug($proyecto))) . '_AUTH';
+    }
+
+    /**
+     * Configuración MCP lista para pegar en cada agente: el servidor del sitio con el nombre del proyecto
+     * y figwright. La credencial se referencia por variable de entorno; el secreto nunca sale del equipo.
+     *
+     * @return array<string, array{titulo: string, archivo: string, codigo: string}>
+     */
+    public static function configAgentes(\App\Models\Conexion $c): array
+    {
+        $nombre = $c->nombre_mcp;
+        $url = $c->endpoint ?: rtrim($c->sitio_url, '/') . '/wp-json/…';
+        $var = self::variableAuth($c->proyecto->nombre);
+
+        $claude = json_encode(['mcpServers' => [$nombre => [
+            'type' => 'http', 'url' => $url, 'headers' => ['Authorization' => '${' . $var . '}'],
+        ]]], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+        $codex = "[mcp_servers.figwright]\ncommand = \"cmd\"\nargs = [\"/c\", \"npx\", \"-y\", \"@figwright/mcp@latest\"]\n\n"
+            . "[mcp_servers.{$nombre}]\nurl = \"{$url}\"\nenv_http_headers = { \"Authorization\" = \"{$var}\" }";
+
+        $opencode = json_encode([
+            '$schema' => 'https://opencode.ai/config.json',
+            'mcp' => [
+                'figwright' => ['type' => 'local', 'command' => ['npx', '-y', '@figwright/mcp@latest']],
+                $nombre => ['type' => 'remote', 'url' => $url, 'headers' => ['Authorization' => '{env:' . $var . '}']],
+            ],
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+        return [
+            'claude'   => ['titulo' => 'Claude Code', 'archivo' => '.mcp.json en la carpeta del cliente (figwright va aparte, a nivel usuario)', 'codigo' => $claude],
+            'codex'    => ['titulo' => 'Codex', 'archivo' => '~/.codex/config.toml', 'codigo' => $codex],
+            'opencode' => ['titulo' => 'OpenCode', 'archivo' => 'opencode.json en la carpeta del cliente', 'codigo' => $opencode],
+        ];
+    }
+
     /** Nombre sugerido del servidor MCP para un proyecto: elementor-<proyecto>. */
     public static function nombreSugerido(string $proyecto): string
     {

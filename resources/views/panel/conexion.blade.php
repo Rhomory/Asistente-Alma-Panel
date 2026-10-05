@@ -54,6 +54,35 @@
                 <div><small>JetEngine</small>{!! $version($actual->jetengine_version) !!}</div>
             </div>
         </section>
+
+        @php
+            $configs = \App\Support\PromptElementor::configAgentes($actual);
+            $varAuth = \App\Support\PromptElementor::variableAuth($p->nombre);
+        @endphp
+        <section class="caja" id="agente">
+            <div class="caja-cab"><h2>Configurar en tu agente · <code>{{ $actual->nombre_mcp }}</code></h2>
+                <span class="nota derecha">Cada agente tiene su formato: usa el tuyo tal cual</span></div>
+            <div class="caja-cuerpo">
+                <ol class="pasos">
+                    <li><span>Guarda la credencial del sitio como variable de entorno de Windows <b>{{ $varAuth }}</b> con el valor
+                        <code>Basic &lt;usuario:contraseña de aplicación en Base64&gt;</code> (cómo: README, sección 2.1). Nunca la pegues aquí ni en archivos del proyecto.</span></li>
+                    <li><span>Copia el bloque de tu agente en el archivo indicado y reinicia el agente.</span></li>
+                    <li><span>Comprueba que aparezcan <code>{{ $actual->nombre_mcp }}</code> y <code>figwright</code> entre sus servidores MCP.</span></li>
+                </ol>
+                @unless ($actual->endpoint)
+                    <div class="aviso"><x-ic n="alerta" /><span>Esta conexión no tiene el endpoint exacto: pega el prompt de Elementor en “Agregar conexión” o reemplaza <code>/wp-json/…</code> por la URL del prompt.</span></div>
+                @endunless
+                @foreach ($configs as $clave => $cfg)
+                    <details class="config-agente" @if ($loop->first) open @endif>
+                        <summary><b>{{ $cfg['titulo'] }}</b> <span class="nota">· {{ $cfg['archivo'] }}</span></summary>
+                        <div class="config-cuerpo">
+                            <pre class="bloque" id="cfg-{{ $clave }}">{{ $cfg['codigo'] }}</pre>
+                            <button class="copiar" type="button" data-copiar="#cfg-{{ $clave }}" title="Copiar" aria-label="Copiar la configuración de {{ $cfg['titulo'] }}"><x-ic n="copiar" c="sm" /></button>
+                        </div>
+                    </details>
+                @endforeach
+            </div>
+        </section>
     @endif
 
     <section class="caja">
@@ -84,6 +113,7 @@
                             <div class="nota">{{ $c->comprobada_en?->diffForHumans() ?? 'nunca' }}</div>
                         </td>
                         <td class="nw">
+                            <a class="btn chico fant" href="{{ route('conexion', ['conexion' => $c->id]) }}#agente">Configurar</a>
                             @if ($c->prompt_saneado)
                                 <button class="btn chico fant" type="button" onclick="const d=document.getElementById('pr-{{ $c->id }}'); d.hidden=!d.hidden">Prompt</button>
                             @endif

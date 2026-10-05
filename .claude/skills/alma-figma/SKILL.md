@@ -1,52 +1,78 @@
 ---
 name: alma-figma
-description: Lee un archivo de Figma de un proyecto de Alma y carga sus páginas y tokens en el panel Asistente Alma con registro:figma. Úsala siempre que abras o revises un archivo de Figma de un proyecto, o cuando el usuario pida "leer el Figma", "detectar páginas", "cargar tokens" o preparar un proyecto para construir.
+description: Lee un archivo de Figma de un proyecto de Alma y carga en el panel Asistente Alma sus páginas, secciones (con su ID de Figma) y tokens con registro:figma. Úsala siempre que abras o revises un archivo de Figma de un proyecto, o cuando pidan "leer el Figma", "detectar páginas", "cargar tokens" o preparar un proyecto para construir.
 ---
 
 # Puente Figma → panel Asistente Alma
 
-Cada vez que leas un archivo de Figma de un proyecto, deja lo leído en el panel. El panel abierto en el
-navegador se recarga solo y muestra las páginas y tokens nuevos.
+Cada lectura del Figma se guarda en el panel como **memoria del diseño**: páginas, secciones y el ID de Figma
+de cada una. Al construir, el agente va directo a cada ID (con `guia:prompt`) en vez de volver a recorrer el
+archivo. El panel abierto en el navegador se recarga solo.
 
-## Dónde corre el panel
+## Antes de empezar
 
-El panel es Laravel en WSL Ubuntu (`/home/romino/proyectos/asistente-alma-panel`). Hay dos modos:
+- **Un solo proyecto.** Trabaja solo en el proyecto indicado en el `AGENTS.md` de esta carpeta. Usa su nombre
+  exacto en cada comando; no mires ni cargues datos de otros proyectos.
+- **Puente al panel.** Desde Windows, los comandos del panel van por
+  `powershell -NoProfile -File "$HOME\.alma\alma.ps1" <comando>` (en Ubuntu, dentro del panel: `php artisan <comando>`).
+  Si falla, ejecuta `alma.ps1 diagnostico`, muestra el resultado y detente: no inventes rutas ni otros caminos.
+- **figwright.** Llama a `ping`: si `plugin` es `null`, pide abrir Figma de escritorio y ejecutar
+  Plugins › Development › Figwright. Si hay varios archivos abiertos, `list_files` y luego `use_file` con el del proyecto.
 
-- **Desde Windows** (lo habitual: Claude Code en la carpeta del cliente, con figwright y el MCP de Elementor):
-  usa el puente `alma.ps1` que está junto a esta skill.
-  ```powershell
-  powershell -NoProfile -File "$HOME\.claude\skills\alma-figma\alma.ps1" registro:figma "<Proyecto>" --archivo=C:\ruta\figma.json
-  ```
-  Sirve para cualquier comando del panel: `registro:cola`, `registro:add`, `conexion:comprobar`…
-- **Dentro del repo en Ubuntu**: `php artisan registro:figma "<Proyecto>" --archivo=ruta.json`.
+## Leer el diseño (pocos tokens)
 
-## Pasos
+1. `get_pages` → lista de páginas de Figma (`id`, `name`).
+2. Por cada página de Figma que tenga diseño del sitio:
+   `scan_nodes_by_types` con `root: <id de la página>` y `types: ["FRAME", "SECTION"]`.
+   Quédate solo con los nodos cuyo `parent.id` es el id de la página: son los **marcos de primer nivel**,
+   normalmente una página del sitio cada uno (Inicio, Nosotros…). Ignora los demás.
+3. Por cada marco de página del sitio: `get_design_context` con `nodeId: <id del marco>`, `depth: 1`,
+   `detail: "minimal"`. Sus hijos directos son las **secciones** (Hero, Servicios…): guarda nombre e `id`.
+4. Tokens: `get_variable_defs` (variables con sus modos) y `get_styles`. Asigna el rol de cada color:
+   primario, secundario, fondo, texto, acento.
 
-1. **Proyecto.** El nombre debe coincidir con el del panel. Si dudas, lista los proyectos:
-   `alma.ps1 tinker --execute="echo App\Models\Proyecto::pluck('nombre')"`.
-2. **Leer el Figma gastando pocos tokens** (con figwright; requiere Figma desktop abierto con el plugin). Pide solo lo necesario, en este orden, y no repitas lecturas:
-   - Páginas: `get_pages`. Luego, por cada página, `get_design_context` con `nodeId` de la página, `depth: 1` y `detail: "minimal"` (solo id, nombre y tipo). Los marcos de primer nivel son las secciones.
-   - Tokens: `get_variable_defs` (variables locales con sus modos) y `get_styles`. Asigna el rol de cada color: primario, secundario, fondo, texto, acento.
-   - **Nunca** uses `get_document` ni `get_node` para inventario: serializan el subárbol completo, sin límite ni deduplicación. Nada de `get_screenshot` en esta etapa.
-   - Al construir, una sección a la vez: `get_design_context` con `detail: "full"` (deja `dedupeComponents` activo). Si devuelve un `sectionPlan`, pide cada subsección por separado.
-3. **Escribir el JSON** en un archivo temporal (en Windows: `%TEMP%\alma-figma.json`) con este formato:
-   ```json
-   {
-     "figma": "https://www.figma.com/design/<id>/<nombre>",
-     "paginas": [{"nombre": "Inicio", "secciones": 7}, {"nombre": "Contacto", "secciones": 3}],
-     "tokens": [
-       {"tipo": "color", "valor": "#2F6B4F", "nota": "primario"},
-       {"tipo": "tipografia", "valor": "Poppins", "nota": "títulos"},
-       {"tipo": "espaciado", "valor": "16 px", "nota": "base"}
-     ]
-   }
-   ```
-   Tipos válidos: `color`, `tipografia`, `espaciado`, `otro`. Colores en hexadecimal.
-4. **Cargar:** ejecuta `registro:figma` con `--archivo=` (modo Windows o Ubuntu, ver arriba). El comando no duplica páginas ni tokens, así que repetirlo es seguro.
-5. **Avisar** cuántas páginas y tokens se cargaron, y recordar que en el panel se decide con el switch qué páginas se maquetan.
+**Errores conocidos, no los repitas:**
+- `get_design_context` y `get_nodes_info` **no aceptan IDs de página** ("is a PAGE, not a frame/layer"): pásales marcos.
+- **Nunca** uses `get_document` ni `get_node` para el inventario: serializan el árbol completo sin límite.
+- Nada de `get_screenshot` en esta etapa.
+
+## Cargar en el panel
+
+Escribe el JSON en un archivo temporal (en Windows, `%TEMP%\alma-figma.json`) y pásalo con `--archivo=`.
+Nunca lo mandes en línea: las comillas entre PowerShell y WSL se rompen.
+
+```json
+{
+  "figma": "https://www.figma.com/design/<id>/<nombre>",
+  "paginas": [
+    { "nombre": "Inicio", "figma_id": "12:3", "url": "/",
+      "secciones": [ { "nombre": "Hero", "figma_id": "12:4" }, { "nombre": "Servicios", "figma_id": "12:9" } ] },
+    { "nombre": "Nosotros", "figma_id": "15:1", "url": "/nosotros",
+      "secciones": [ { "nombre": "Historia", "figma_id": "15:2" } ] }
+  ],
+  "tokens": [
+    { "tipo": "color", "valor": "#2F6B4F", "nota": "primario" },
+    { "tipo": "tipografia", "valor": "Poppins", "nota": "títulos" },
+    { "tipo": "espaciado", "valor": "16 px", "nota": "base" }
+  ]
+}
+```
+
+```powershell
+powershell -NoProfile -File "$HOME\.alma\alma.ps1" registro:figma "<Proyecto>" --archivo=$env:TEMP\alma-figma.json
+```
+
+- `url` es la ruta de la página en el sitio (`/` para Inicio). Si no la sabes, omítela: el panel la arma desde el nombre.
+- Tipos de token: `color`, `tipografia`, `espaciado`, `otro`. Colores en hexadecimal.
+- Repetirlo es seguro: páginas y secciones se reconocen por su ID de Figma o su nombre, sin duplicar.
+- Borra el JSON temporal al terminar.
+
+## Al final
+
+Avisa cuántas páginas, secciones y tokens se cargaron, y recuerda que en el panel se decide con el switch qué
+páginas se maquetan. Para construir, pide `guia:prompt "<Proyecto>" "<Página>"`: trae cada sección con su ID de Figma.
 
 ## Reglas
 
-- Nunca pegues tokens de acceso de Figma en el JSON, en mensajes ni en archivos; solo el enlace del archivo.
-- No inventes páginas ni colores: si un rol no es claro, usa `"nota": "sin rol"` y dilo.
-- Borra el JSON temporal al terminar.
+- Nunca pegues tokens de acceso de Figma ni contraseñas en el JSON, en mensajes ni en archivos.
+- No inventes páginas, secciones ni colores: si un rol no es claro, usa `"nota": "sin rol"` y dilo.

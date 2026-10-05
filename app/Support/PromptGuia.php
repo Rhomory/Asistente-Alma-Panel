@@ -78,7 +78,7 @@ class PromptGuia
         $lineas[] = '- Usa contenedores y widgets nativos de Elementor; nada de HTML incrustado.';
         $lineas[] = "- Antes de empezar revisa las correcciones pendientes: `php artisan registro:cola \"{$proyecto->nombre}\"`.";
         $lineas[] = "- Al terminar cada sección regístrala: `php artisan registro:add \"{$proyecto->nombre}\" \"{$nombrePagina}\" \"<sección>\" <min> --asistente=<min> --dev=<min>`.";
-        $lineas[] = '- Si trabajas desde Windows, los comandos del panel van por el puente: `powershell -NoProfile -File "$HOME\\.claude\\skills\\alma-figma\\alma.ps1" <comando>` (en lugar de `php artisan`).';
+        $lineas[] = '- Si trabajas desde Windows, los comandos del panel van por el puente: `powershell -NoProfile -File "$HOME\\.alma\\alma.ps1" <comando>` (en lugar de `php artisan`).';
 
         return implode("\n", $lineas);
     }
@@ -93,7 +93,7 @@ class PromptGuia
     {
         $nombre = $proyecto->nombre;
         $mcp = $proyecto->conexion?->nombre_mcp ?? PromptElementor::nombreSugerido($nombre);
-        $alma = 'powershell -NoProfile -File "$HOME\\.claude\\skills\\alma-figma\\alma.ps1"';
+        $alma = 'powershell -NoProfile -File "$HOME\\.alma\\alma.ps1"';
         $paginas = $proyecto->paginas()->where('incluida', true)->orderBy('id')->pluck('nombre');
         $sitio = $proyecto->sitio_wp ?: "[falta la URL del sitio]";
         $figma = $proyecto->archivo_figma ?: "[falta el archivo de Figma]";

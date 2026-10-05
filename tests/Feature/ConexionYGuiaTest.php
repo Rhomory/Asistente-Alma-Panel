@@ -178,6 +178,28 @@ class ConexionYGuiaTest extends TestCase
         $this->artisan('guia:prompt', ['proyecto' => 'ECOCREATIONS', 'pagina' => 'Blog'])->assertFailed();
     }
 
+    public function test_conexion_genera_la_configuracion_de_cada_agente_sin_secretos(): void
+    {
+        $p = Proyecto::create(['nombre' => 'Cota']);
+        $c = $p->conexiones()->create([
+            'nombre_mcp' => 'elementor-cota', 'sitio_url' => 'http://localhost:8883',
+            'endpoint' => 'http://localhost:8883/wp-json/elementor/v1/mcp',
+        ]);
+
+        $this->get("/conexion?conexion={$c->id}")->assertOk()
+            ->assertSee('Configurar en tu agente')
+            ->assertSee('ALMA_COTA_AUTH')
+            ->assertSee('[mcp_servers.elementor-cota]', false)
+            ->assertSee('env_http_headers', false)
+            ->assertSee('{env:ALMA_COTA_AUTH}', false)
+            ->assertSee('${ALMA_COTA_AUTH}', false);
+
+        $cfg = PromptElementor::configAgentes($c);
+        $this->assertStringContainsString('"command": [', $cfg['opencode']['codigo']);
+        $this->assertStringContainsString('"type": "remote"', $cfg['opencode']['codigo']);
+        $this->assertStringNotContainsString('Basic ', $cfg['codex']['codigo']);
+    }
+
     public function test_versiones_desactualizadas(): void
     {
         $this->assertTrue(EntornoWP::desactualizada('3.31.4', '4.3.1'));

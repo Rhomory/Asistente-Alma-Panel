@@ -24,8 +24,15 @@ Nada se publica solo: el asistente trabaja en borrador y cada sección se aprueb
 - Chrome o Edge reciente (el panel usa transiciones entre páginas; en otros navegadores funciona sin animación).
 
 **En WSL Ubuntu**
-- PHP 8.3 o superior con las extensiones `sqlite3`, `curl`, `mbstring` y `xml`.
-- Composer 2 y Git.
+- PHP 8.3 o superior con sus extensiones, Composer 2, Git y `unzip`. En una Ubuntu nueva faltan casi todas; instálalas
+  con el prefijo de tu versión de PHP (`php -v`), por ejemplo para 8.3:
+
+  ```bash
+  sudo apt install php8.3-cli php8.3-sqlite3 php8.3-mbstring php8.3-curl php8.3-xml php8.3-zip unzip git
+  ```
+
+  Sin `xml`/`zip`/`unzip` falla `composer install`; sin `sqlite3` falla la base de datos; sin `mbstring` y `curl` fallan
+  las pruebas y la comprobación de sitios. Tras instalar una extensión, reinicia `php artisan serve`.
 
 **En el WordPress de cada cliente** (staging, nunca producción)
 - WordPress 6.8 o superior.
@@ -36,15 +43,73 @@ Nada se publica solo: el asistente trabaja en borrador y cada sección se aprueb
 
 | Herramienta | Para qué | Cómo se agrega | Alcance |
 |---|---|---|---|
-| **figwright** (MCP) | Leer páginas, variables y estructura del Figma | Claude Code: `claude mcp add figwright --scope user -- cmd /c npx -y @figwright/mcp@latest` (con `@latest` se actualiza solo al arrancar). Otros agentes: `npx -y @figwright/mcp@latest` en su configuración MCP | Todas las carpetas |
-| **Elementor MCP** (oficial) | Construir en el sitio del cliente | En WordPress: Elementor › Elementor MCP › activar › elegir tu agente › Generate Prompt. Pega ese prompt en tu agente **dentro de la carpeta del cliente** | Solo esa carpeta (un servidor por sitio, ej. `elementor-ecocreations`) |
+| **figwright** (MCP) | Leer páginas, variables y estructura del Figma | Registro por agente en la sección 2.1 (con `@latest` se actualiza solo al arrancar) | Todas las carpetas |
+| **Elementor MCP** (oficial) | Construir en el sitio del cliente | En WordPress: Elementor › Elementor MCP › activar › elegir tu agente › Generate Prompt. Registro por agente en la sección 2.1 | Un servidor por sitio, con el nombre del proyecto (ej. `elementor-cota`) |
 | **JetEngine MCP** (opcional) | Tipos de contenido y campos dinámicos | Según la documentación de Crocoblock, en la carpeta del cliente | Solo esa carpeta |
 | **Framelink** (opcional) | Leer el Figma sin la app abierta, vía API REST | `claude mcp add framelink --scope user -e FIGMA_API_KEY=<token> -- cmd /c npx -y figma-developer-mcp --stdio` (útil solo con asiento Dev/Full) | Todas las carpetas |
-| **Skill `alma-figma`** | Pasar lo leído del Figma al panel y hablar con el panel desde Windows (`alma.ps1`) | Copiarla a tu carpeta de skills (paso 3.4) | Todas las carpetas |
+| **Skill `alma-figma`** y puente `alma.ps1` | Pasar lo leído del Figma al panel y hablar con el panel desde Windows | `scripts\instalar-windows.ps1` (paso 3.3) | Todas las carpetas y agentes |
 | **Skill `impeccable`** (opcional) | Solo para quien modifique el diseño del panel | — | — |
 
 El MCP oficial de Figma (Dev Mode) puede quedar desactivado: con asientos View/Collab tiene un cupo de pocas llamadas al mes
 y devuelve código React, que no sirve para Elementor.
+
+### 2.1 Registrar los MCP según tu agente
+
+Cada agente tiene su propio formato: copiar el de otro es la causa más común de que "no aparezcan las herramientas".
+El panel también genera estos bloques ya rellenos para cada proyecto (Conexión › "Configurar en tu agente").
+
+**Credenciales del sitio.** La contraseña de aplicación nunca va en el panel ni en archivos del repo. Guárdala como
+variable de entorno de tu usuario de Windows, con el encabezado completo, y que el agente la lea de ahí:
+
+```powershell
+# "usuario:contraseña de aplicación" en Base64 (los datos salen del prompt que genera Elementor)
+$b64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes('usuario:xxxx xxxx xxxx xxxx xxxx xxxx'))
+[Environment]::SetEnvironmentVariable('ALMA_COTA_AUTH', "Basic $b64", 'User')   # reinicia el agente después
+```
+
+**Claude Code** (`~/.claude.json`, por comandos):
+
+```powershell
+claude mcp add figwright --scope user -- cmd /c npx -y '@figwright/mcp@latest'
+# Elementor: pega el prompt que generó Elementor dentro de la carpeta del cliente (lo registra solo). Comprueba con:
+claude mcp list
+```
+
+**Codex** (`~/.codex/config.toml`):
+
+```toml
+[mcp_servers.figwright]
+command = "cmd"
+args = ["/c", "npx", "-y", "@figwright/mcp@latest"]
+
+[mcp_servers.elementor-cota]                  # uno por sitio, con el nombre que muestra el panel
+url = "http://localhost:8883/wp-json/…"       # el endpoint del prompt de Elementor
+env_http_headers = { "Authorization" = "ALMA_COTA_AUTH" }   # nombre de la variable, no el secreto
+```
+
+Comprueba con `codex mcp list`. Si un sitio usa el servidor de otro proyecto (por ejemplo `picnicplus-elementor`
+apuntando a otro puerto), el agente no verá el del proyecto actual: cada sitio necesita su propia entrada.
+
+**OpenCode** (`~/.config/opencode/opencode.json` o `opencode.json` en la carpeta del cliente):
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "figwright": { "type": "local", "command": ["npx", "-y", "@figwright/mcp@latest"] },
+    "elementor-cota": {
+      "type": "remote",
+      "url": "http://localhost:8883/wp-json/…",
+      "headers": { "Authorization": "{env:ALMA_COTA_AUTH}" }
+    }
+  }
+}
+```
+
+En OpenCode `command` es una lista y lleva `"type"`; el formato `command` + `args` de Claude no funciona ahí.
+
+**No inicies figwright a mano** en otra consola: lo arranca el agente al abrirse. Varias sesiones pueden compartirlo
+(una hace de principal y las demás de seguidoras).
 
 ## 3. Instalación (una sola vez por equipo)
 
@@ -68,19 +133,24 @@ php artisan test          # debe salir todo en verde
 cd ~/proyectos/asistente-alma-panel && php artisan serve
 ```
 
-Abre http://127.0.0.1:8090 en Windows.
+Abre http://127.0.0.1:8090 en Windows. El puerto sale de `SERVER_PORT` en `.env`; si ves "running on 8000",
+tu `.env` es anterior: agrega `SERVER_PORT=8090` o usa `php artisan serve --port=8090`.
 
-**3.3 Registrar figwright** (PowerShell, una vez): ver la tabla del paso 2.
-
-**3.4 Instalar la skill** (PowerShell):
+**3.3 Instalar el lado Windows** (PowerShell, una vez por equipo y otra si mueves el panel):
 
 ```powershell
-$ubuntu = (wsl -d Ubuntu -- whoami).Trim()   # tu usuario de Ubuntu (ej. romino); las rutas de WSL distinguen mayúsculas
-Copy-Item -Recurse -Force "\\wsl.localhost\Ubuntu\home\$ubuntu\proyectos\asistente-alma-panel\.claude\skills\alma-figma" "$HOME\.claude\skills\"
+powershell -ExecutionPolicy Bypass -File "\\wsl.localhost\Ubuntu\home\<usuario>\<ruta>\asistente-alma-panel\scripts\instalar-windows.ps1" -RegistrarFigwright
 ```
 
-`alma.ps1` asume el panel en `/home/romino/proyectos/asistente-alma-panel`. Si en tu equipo está en otra ruta,
-define la variable de entorno `ALMA_PANEL` con esa ruta de Ubuntu.
+Usa la ruta real de tu panel en Ubuntu (las rutas de WSL distinguen mayúsculas). El instalador:
+- deduce la distro y la ruta del panel desde dónde está el script, sin rutas fijas;
+- instala el puente en `%USERPROFILE%\.alma\alma.ps1` con su `alma.config.json`;
+- copia la skill a `~\.claude\skills\alma-figma` (Claude Code) y `~\.agents\skills\alma-figma` (Codex y OpenCode);
+- con `-RegistrarFigwright`, registra figwright en Claude Code y Codex si falta;
+- termina con un diagnóstico de todo.
+
+Para revisar el entorno en cualquier momento: `powershell -NoProfile -File "$HOME\.alma\alma.ps1" diagnostico`.
+La ruta del panel también se puede forzar con la variable de entorno `ALMA_PANEL` (y `ALMA_DISTRO`).
 
 ## 4. Uso con un proyecto nuevo
 
@@ -91,9 +161,8 @@ define la variable de entorno `ALMA_PANEL` con esa ruta de Ubuntu.
    Es el formato abierto que leen los agentes de código: así el agente sabe qué proyecto es, cómo hablar con el panel y el flujo.
    - **Codex, Cursor y otros** leen `AGENTS.md` solos.
    - **Claude Code** lee `CLAUDE.md`: crea uno al lado con una sola línea, `@AGENTS.md`, que importa el otro archivo.
-4. **Abre tu agente en esa carpeta** y pega el prompt de Elementor del sitio para registrar su servidor MCP
-   (en Elementor elige tu agente al generar el prompt). Comprueba que aparezcan figwright y el servidor del sitio
-   (en Claude Code: `claude mcp list`).
+4. **Registra el servidor MCP de Elementor de ese sitio** en tu agente, con el nombre que muestra el panel
+   (sección 2.1). Comprueba que aparezcan figwright y ese servidor (`claude mcp list`, `codex mcp list`…).
 5. **Abre el archivo en Figma de escritorio** con el plugin figwright corriendo.
 6. **Primer mensaje**, por ejemplo:
    > Lee el Figma del proyecto y cárgalo en el panel.
@@ -110,20 +179,30 @@ qué toca hoy (por ejemplo, "revisa la cola de correcciones y sigue con Nosotros
 ## 5. Comandos del panel
 
 En Ubuntu se usan con `php artisan …`; desde Windows, con
-`powershell -NoProfile -File "$HOME\.claude\skills\alma-figma\alma.ps1" …`.
+`powershell -NoProfile -File "$HOME\.alma\alma.ps1" …`. Pasa los JSON siempre con `--archivo=`, nunca en línea.
 
 | Comando | Para qué |
 |---|---|
-| `guia:prompt "<Proyecto>" "<Página>"` | Guía actualizada: tokens activos, plan de secciones y reglas |
-| `registro:figma "<Proyecto>" --archivo=figma.json` | Cargar páginas y tokens leídos del Figma |
+| `guia:prompt "<Proyecto>" "<Página>"` | Guía actualizada: tokens, plan de secciones con su ID de Figma y reglas |
+| `registro:figma "<Proyecto>" --archivo=figma.json` | Cargar páginas, secciones (con ID de Figma y URL) y tokens |
 | `registro:add "<Proyecto>" "<Página>" "<Sección>" <min> --asistente=<min> --dev=<min>` | Registrar una sección construida |
-| `registro:cola` | Correcciones pendientes |
+| `registro:cola "<Proyecto>"` | Correcciones pendientes de ese proyecto |
 | `conexion:comprobar` | Versiones de WordPress, Elementor y JetEngine de cada sitio |
 | `jev:sugerencias` | Revisión automática con Jev (necesita `OPENROUTER_API_KEY` en `.env`) |
 
 ## 6. Problemas frecuentes
 
+- **Primero, siempre:** `alma.ps1 diagnostico`. Revisa distro, ruta del panel, extensiones de PHP, web del panel,
+  figwright y skills, y dice qué hacer con cada fallo.
 - **figwright no conecta:** abre Figma de escritorio y ejecuta el plugin figwright; luego reinicia tu agente.
+  No lances `npx @figwright/mcp` a mano: si su proceso se cae, reinicia el agente.
+- **Las herramientas de figwright no aparecen en el agente:** está mal registrado para ese agente; revisa el formato en la sección 2.1.
+- **"is a PAGE, not a frame/layer":** `get_design_context` no acepta páginas. La skill actualizada lee primero los marcos
+  de cada página (`scan_nodes_by_types` con la página como raíz) y luego sus secciones.
+- **El agente no encuentra la skill:** debe estar en una carpeta propia (`skills\alma-figma\SKILL.md`), no suelta en
+  `skills\`. Vuelve a ejecutar el instalador, que lo corrige.
+- **Las secciones salen "0 de 0" tras leer el Figma:** se usó la skill anterior, que enviaba solo el número de secciones.
+  Vuelve a leer el Figma con la skill actualizada: carga cada sección con su nombre y su ID.
 - **Un sitio `localhost` sale "Sin respuesta":** el panel corre en WSL y prueba el host de Windows automáticamente.
   Si aun así falla, revisa que el servidor local esté encendido y que el firewall de Windows permita a WSL,
   o define `ALMA_HOST_WINDOWS=<ip>` en `.env`.

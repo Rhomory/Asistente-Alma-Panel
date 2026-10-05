@@ -9,7 +9,7 @@ diseños de Figma (Proyecto de Mejora SENATI).
   en la oficina, mientras el asistente construye en la consola.
 - **Trabajo del usuario:** ver el avance del piloto, comparar tiempos contra la línea
   base (480 min/página), revisar el registro de secciones y exportarlo a CSV.
-- **Principio rector:** panel de SOLO lectura; la consola escribe, el panel muestra.
+- **Principio rector:** la consola construye y registra; el panel supervisa, aprueba y administra el catálogo y las conexiones.
   Nada se publica sin aprobación humana.
 - **Alcance:** local (127.0.0.1), sin autenticación por ahora; datos sin información
   personal de clientes.

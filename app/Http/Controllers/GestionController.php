@@ -36,10 +36,23 @@ class GestionController extends Controller
             'sitio_wp.url'    => 'El sitio debe ser una URL completa (https://… o http://localhost/…).',
         ]);
 
+        // Conexión opcional en el mismo formulario: se valida antes de crear nada.
+        $conexion = null;
+        if ($request->filled('prompt_mcp') || ($request->filled('nombre_mcp') && ! empty($datos['sitio_wp']))) {
+            $request->merge(['sitio_url' => $request->input('sitio_url') ?: ($datos['sitio_wp'] ?? null)]);
+            $conexion = ConexionController::validar($request, true);
+            $datos['sitio_wp'] = ($datos['sitio_wp'] ?? null) ?: $conexion['sitio_url'];
+        }
+
         $proyecto = Proyecto::create($datos);
+        $mensaje = "Proyecto \"{$proyecto->nombre}\" creado.";
+        if ($conexion) {
+            $c = $proyecto->conexiones()->create($conexion);
+            $mensaje .= ' ' . ConexionController::mensaje($c, $request);
+        }
 
         return redirect()->route('proyecto', $proyecto)
-            ->with('ok', "Proyecto \"{$proyecto->nombre}\" creado. Agrega sus páginas aquí abajo.");
+            ->with('ok', $mensaje . ' El asistente cargará sus páginas al leer el Figma.');
     }
 
     public function guardarPagina(Request $request, Proyecto $proyecto)

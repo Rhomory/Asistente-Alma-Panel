@@ -1,20 +1,29 @@
 <?php
 
 use App\Http\Controllers\ConexionController;
+use App\Http\Controllers\EstadoController;
 use App\Http\Controllers\FlujoController;
 use App\Http\Controllers\GestionController;
+use App\Http\Controllers\GuiaController;
 use App\Http\Controllers\PanelController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PanelController::class, 'dashboard'])->name('dashboard');
-Route::get('/conexion', [ConexionController::class, 'index'])->name('conexion');
 Route::get('/registro', [PanelController::class, 'registro'])->name('registro');
 Route::get('/registro/export', [PanelController::class, 'exportCsv'])->name('registro.export');
+Route::get('/estado/version', [EstadoController::class, 'version'])->name('estado.version');
 
-// Catálogo (P2: proyectos, páginas y tokens de diseño)
+// Conexiones: un sitio WordPress y un servidor MCP de Elementor por proyecto
+Route::get('/conexion', [ConexionController::class, 'index'])->name('conexion');
+Route::post('/conexiones', [ConexionController::class, 'guardar'])->name('conexion.guardar');
+Route::post('/conexiones/comprobar', [ConexionController::class, 'comprobar'])->name('conexion.comprobar');
+Route::delete('/conexiones/{conexion}', [ConexionController::class, 'eliminar'])->name('conexion.eliminar');
+
+// Catálogo: proyectos, páginas y tokens de diseño
 Route::get('/proyectos/nuevo', [GestionController::class, 'crear'])->name('proyecto.nuevo');
 Route::post('/proyectos', [GestionController::class, 'guardar'])->name('proyecto.guardar');
 Route::get('/proyectos/{proyecto}', [PanelController::class, 'proyecto'])->name('proyecto');
+Route::get('/proyectos/{proyecto}/guia', [GuiaController::class, 'show'])->name('proyecto.guia');
 Route::post('/proyectos/{proyecto}/paginas', [GestionController::class, 'guardarPagina'])->name('pagina.guardar');
 Route::post('/paginas/{pagina}/incluir', [GestionController::class, 'incluirPagina'])->name('pagina.incluir');
 Route::post('/proyectos/{proyecto}/tokens', [GestionController::class, 'guardarToken'])->name('token.guardar');
@@ -22,7 +31,7 @@ Route::post('/tokens/{token}/incluir', [GestionController::class, 'incluirToken'
 Route::put('/tokens/{token}', [GestionController::class, 'actualizarToken'])->name('token.actualizar');
 Route::delete('/tokens/{token}', [GestionController::class, 'eliminarToken'])->name('token.eliminar');
 
-// Flujo de una página (P3 Plan + P4 Construcción)
+// Flujo de una página: plan, construcción supervisada y solicitud de QA
 Route::get('/paginas/{pagina}', [FlujoController::class, 'pagina'])->name('pagina');
 Route::post('/paginas/{pagina}/plan-estandar', [FlujoController::class, 'planEstandar'])->name('pagina.plan.estandar');
 Route::post('/paginas/{pagina}/plan', [FlujoController::class, 'agregarPlan'])->name('pagina.plan.agregar');

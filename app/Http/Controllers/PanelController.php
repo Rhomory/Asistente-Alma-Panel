@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Evento;
+use App\Models\Pagina;
 use App\Models\Proyecto;
 use App\Models\Seccion;
 use Illuminate\Http\Request;
@@ -44,20 +45,26 @@ class PanelController extends Controller
             'actividad'  => Evento::with('seccion.pagina.proyecto')->orderByDesc('created_at')->orderByDesc('id')->limit(8)->get(),
             'ultimas'    => Seccion::with('pagina.proyecto')->where('estado', '!=', 'planificada')->orderByDesc('updated_at')->limit(5)->get(),
             'proyectos'  => Proyecto::with('paginas')->orderByDesc('updated_at')->get(),
+            'listasQa'   => Pagina::with('proyecto')->where('incluida', true)->where('estado', 'aprobada')->orderByDesc('updated_at')->get(),
+            'hoy'        => Evento::where('tipo', 'construccion')->where('created_at', '>=', now('America/Lima')->startOfDay()->utc())->count(),
         ]);
     }
 
     public function proyecto(Proyecto $proyecto)
     {
-        $proyecto->load('tokens');
+        $proyecto->load('tokens', 'conexion');
         $paginas = DB::table('reporte_pagina')
             ->join('paginas', 'paginas.id', '=', 'reporte_pagina.id')
-            ->select('reporte_pagina.*', 'paginas.incluida', 'paginas.origen')
+            ->select('reporte_pagina.*', 'paginas.incluida', 'paginas.origen', 'paginas.secciones_total')
             ->where('reporte_pagina.proyecto_id', $proyecto->id)
             ->orderByDesc('paginas.incluida')->orderBy('paginas.id')
             ->get();
 
-        return view('panel.proyecto', compact('proyecto', 'paginas'));
+        // Estado de cada sección para la barra segmentada de avance.
+        $secciones = Seccion::whereIn('pagina_id', $paginas->pluck('id'))->orderBy('id')
+            ->get(['pagina_id', 'estado'])->groupBy('pagina_id');
+
+        return view('panel.proyecto', compact('proyecto', 'paginas', 'secciones'));
     }
 
     public function registro(Request $request)

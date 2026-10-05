@@ -18,7 +18,11 @@ class FlujoCompletoTest extends TestCase
 
     public function test_las_pantallas_principales_responden(): void
     {
-        foreach (['/', '/conexion', '/registro', '/proyectos/nuevo'] as $ruta) {
+        \Illuminate\Support\Facades\Cache::put('versiones.wordpress.org', ['wordpress' => null, 'elementor' => null], 60);
+        $p = Proyecto::create(['nombre' => 'Demo']);
+        $pagina = $p->paginas()->create(['nombre' => 'Inicio']);
+
+        foreach (['/', '/conexion', '/registro', '/proyectos/nuevo', "/proyectos/{$p->id}", "/proyectos/{$p->id}/guia", "/paginas/{$pagina->id}"] as $ruta) {
             $this->get($ruta)->assertOk();
         }
     }

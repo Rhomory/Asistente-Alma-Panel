@@ -1,28 +1,36 @@
 # Sistema de diseño — Panel Asistente Alma
 
-Heredado del mockup Figma del Proyecto de Mejora (identidad ya comprometida; se preserva).
+Rediseño de octubre 2026. Tema oscuro como principal y variante clara; el usuario elige con el
+botón de la barra superior (se recuerda en `localStorage`, clave `alma-tema`; `?tema=claro` lo fija).
 
-## Tokens (public/css/panel.css `:root`)
-- Fondo: `--cream #FBF7EC` · panel lateral: `--panel #F3EDDF`
-- Tinta: `--ink #171717` · secundario: `--gray #5F5F5F` · líneas: `--line #E2DCCC`
-- Acento (acciones/actual): `--ora #F2915F`, oscuro `--orad #C9622B`
-- Secundario de datos: `--lav #DCD2F0`, oscuro `--lavd #6B5CA8`
-- Neutro de datos: `--grow #ECECEC` · éxito: `--ok #2F7D32` / `--okbg #DFF2DC`
+## Escena
+Desarrolladores y Technical Lead de la agencia, en escritorio, con el panel abierto horas junto a la
+consola y Figma (ambos oscuros). Por eso el oscuro es el principal; el claro sirve para revisar con luz de día.
+
+## Tokens (public/css/panel.css, OKLCH)
+- Neutros teñidos hacia el lavanda de la marca (matiz 285): `--bg`, `--side`, `--surface`, `--surface-2`,
+  `--hover`, `--line`, `--line-2`; tinta `--ink`, `--ink-2`, `--ink-3` (todas ≥ 4.5:1 sobre su fondo).
+- Acento `--ora` (naranja de marca, ~#F2915F): solo acción primaria, selección actual y estados. Texto sobre
+  naranja: `--on-ora` (oscuro), nunca blanco.
+- Estados: `--ok` aprobada/conectado · `--lav` en construcción/asistente · `--warn` por revisar ·
+  `--ora` QA solicitado · `--err` sin respuesta. Cada uno tiene `-ink` (texto) y `-soft` (fondo).
 
 ## Tipografía
-Una sola familia: Poppins (fallback Segoe UI). Escala fija rem, cuerpo 14px,
-títulos h1 22px / h3 14.5px. Datos en tablas 13px.
+Una sola familia: Poppins (fallback Segoe UI). Escala fija: cuerpo 13.5px, h1 22px, h2 15px, datos 13px.
+Código y prompts en Cascadia Code / Consolas.
 
-## Vocabulario de componentes
-- KPI cards (lavanda / naranja / gris) — mismas tres del mockup Pantalla 5.
-- Tablas: encabezado tinta con texto blanco, cebra suave `#FAF6EC`.
-- Tags de estado: `asistente` (durazno), `mixto` (lavanda), `desarrollador` (gris),
-  estados de página `aprobada/construyendo/pendiente`.
-- Botones: `.btn.p` naranja (primario), `.btn.s` borde tinta (secundario).
-- Gráficos (Chart.js): naranja = trabajo real/asistente, lavanda = desarrollador,
-  gris cálido = línea base; sin animación (los datos llegan por recarga).
+## Componentes
+- `.caja` + `.caja-cab` + `.caja-cuerpo`: superficie base; sin cajas anidadas.
+- `.resumen`: franja de 6 cifras pequeñas (no tarjetas KPI grandes).
+- `.tag` con punto: `e-<estado>` para estados de página/sección (parcial `panel/partes/estado`).
+- `.btn` (secundario), `.btn.p` (primario naranja), `.btn.fant`, `.btn.ok`, `.btn.chico`.
+- `input.switch` para incluir/excluir páginas y tokens.
+- `.seg` barra segmentada por sección; `.barra-prog` avance apilado.
+- Íconos: componente `<x-ic n="…" />` (trazo 1.8, estilo lineal).
 
 ## Reglas
-- El naranja señala acción/actual, nunca decoración.
-- Motion: transiciones 150 ms ease-out solo en estados; respetar prefers-reduced-motion.
-- Texto sobre tarjetas de color: nunca gris — tinta o blanco con transparencia.
+- El naranja señala acción o lo actual, nunca decoración.
+- Sin bordes laterales de color, sin texto con degradado, sin tarjetas de métrica gigantes.
+- Motion: 150 ms ease-out solo en estados; `prefers-reduced-motion` lo desactiva.
+- El panel se recarga solo cuando la consola escribe (huella en `/estado/version`); si hay un formulario
+  a medio escribir, muestra un aviso en lugar de recargar.

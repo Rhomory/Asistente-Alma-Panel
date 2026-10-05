@@ -15,6 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // El prompt de Elementor trae la contraseña de aplicación: nunca se reenvía a la sesión.
+        $exceptions->dontFlash(['prompt_mcp']);
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );

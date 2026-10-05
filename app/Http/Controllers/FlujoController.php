@@ -16,7 +16,7 @@ use Illuminate\Http\Request;
 class FlujoController extends Controller
 {
     /** Secciones estándar de la guía técnica de construcción (v1). */
-    private const PLAN_ESTANDAR = [
+    public const PLAN_ESTANDAR = [
         ['Hero',                 'Contenedor + Heading + Button',    12],
         ['Servicios / destacados', 'Grid + Icon Box',                10],
         ['Contenido principal',  'Contenedor + Image + Text Editor',  8],

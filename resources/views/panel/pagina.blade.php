@@ -39,7 +39,7 @@
             <i class="c" style="width:{{ 100 * ($porEstado['construida'] ?? 0) / $total }}%"></i>
             <i class="r" style="width:{{ 100 * ($porEstado['construyendo'] ?? 0) / $total }}%"></i>
         </div>
-        <span><b>{{ $resumen['real'] }}</b> de {{ $resumen['estimado'] }} min estimados</span>
+        <span><b>{{ $resumen['real'] }}</b> min trabajados @if ($resumen['estimado']) · plan {{ $resumen['estimado'] }} min @endif</span>
         <span><b>{{ $trabajo ? round(100 * $pagina->secciones->sum('min_asistente') / $trabajo) : 0 }} %</b> hecho por el asistente</span>
     </section>
 
@@ -107,7 +107,8 @@
                 <div class="caja-cuerpo">
                     <form method="post" action="{{ route('pagina.trello', $pagina) }}" class="form-linea">@csrf
                         <div class="campo"><label for="trello_url">Tarjeta de Trello de esta página</label>
-                            <input id="trello_url" name="trello_url" type="url" value="{{ old('trello_url', $pagina->trello_url) }}" placeholder="https://trello.com/c/…" maxlength="255"></div>
+                            <input id="trello_url" name="trello_url" type="url" value="{{ old('trello_url', $pagina->trello_url) }}" placeholder="https://trello.com/c/…" maxlength="255" class="{{ $pagina->trello_url ? '' : 'falta' }}" @if (! $pagina->trello_url) aria-describedby="trello-falta" @endif>
+                            @if (! $pagina->trello_url)<small id="trello-falta" class="falta-txt">Sin esto, el mensaje sale con “[falta el link de Trello]”.</small>@endif</div>
                         <button class="btn" type="submit">Guardar</button>
                     </form>
                     @error('trello_url')<span class="error">{{ $message }}</span>@enderror
@@ -120,13 +121,28 @@
                     </div>
                     <textarea id="qa-mensaje" hidden readonly>{{ $mensaje }}</textarea>
 
-                    @if ($resumen['total'] === 0 || $resumen['aprobadas'] !== $resumen['total'])
+                    @php
+                        $sinAprobar = $resumen['total'] - $resumen['aprobadas'];
+                        $faltas = array_filter([
+                            ! $pagina->trello_url ? 'el link de Trello de esta página' : null,
+                            ! $pagina->proyecto->sitio_wp ? 'la URL del sitio (en el proyecto)' : null,
+                            ! $pagina->proyecto->archivo_figma ? 'el archivo de Figma (en el proyecto)' : null,
+                            $resumen['total'] === 0 ? 'secciones en el plan' : null,
+                            $sinAprobar > 0 ? "aprobar {$sinAprobar} " . ($sinAprobar === 1 ? 'sección' : 'secciones') : null,
+                        ]);
+                    @endphp
+                    @if ($faltas)
                         <div class="aviso"><x-ic n="alerta" />
-                            <span>Faltan {{ $resumen['total'] - $resumen['aprobadas'] }} {{ $resumen['total'] - $resumen['aprobadas'] === 1 ? 'sección' : 'secciones' }} por aprobar. Puedes copiar el mensaje ahora; la página pasa a “QA solicitado” cuando estén todas aprobadas.</span></div>
+                            <div>
+                                <b>Aún no está listo para el canal.</b> Falta:
+                                <ul class="faltas">@foreach ($faltas as $f)<li>{{ $f }}</li>@endforeach</ul>
+                                La página pasa a “QA solicitado” solo cuando todas sus secciones están aprobadas.
+                            </div>
+                        </div>
                     @endif
 
                     <div class="acciones">
-                        <button class="btn p" type="button" id="qa-copiar" data-url="{{ route('pagina.qa', $pagina) }}"><x-ic n="copiar" />Copiar mensaje</button>
+                        <button class="btn {{ $faltas ? '' : 'p' }}" type="button" id="qa-copiar" data-url="{{ route('pagina.qa', $pagina) }}"><x-ic n="copiar" />{{ $faltas ? 'Copiar de todos modos' : 'Copiar mensaje' }}</button>
                         <span class="listo" id="qa-ok" role="status" hidden><x-ic n="check" c="sm" /><span>Copiado y anotado en la actividad</span></span>
                     </div>
                     <p class="nota">El sitio y el Figma salen de los datos del proyecto; solo agregas el Trello.</p>
@@ -136,9 +152,24 @@
             <section class="caja">
                 <div class="caja-cab"><h2>Plan de construcción</h2></div>
                 <div class="caja-cuerpo">
-                    <form method="post" action="{{ route('pagina.plan.estandar', $pagina) }}">@csrf
-                        <button class="btn" type="submit"><x-ic n="lista" />Aplicar plan estándar de la guía</button>
-                    </form>
+                    @php
+                        $hayConstruidas = $pagina->secciones->where('estado', '!=', 'planificada')->isNotEmpty();
+                        $planificadas = $pagina->secciones->where('estado', 'planificada')->count();
+                    @endphp
+                    <div class="acciones">
+                        <form method="post" action="{{ route('pagina.plan.estandar', $pagina) }}">@csrf
+                            <button class="btn" type="submit" @disabled($hayConstruidas)><x-ic n="lista" />Aplicar plan estándar</button>
+                        </form>
+                        @if ($planificadas)
+                            <form method="post" action="{{ route('pagina.plan.limpiar', $pagina) }}" onsubmit="return confirm('¿Quitar las {{ $planificadas }} secciones planificadas? Las construidas no se tocan.')">@csrf @method('DELETE')
+                                <button class="btn fant" type="submit">Quitar las {{ $planificadas }} planificadas</button>
+                            </form>
+                        @endif
+                    </div>
+                    @if ($hayConstruidas)
+                        <p class="nota">El plan estándar solo se aplica a páginas sin construir; aquí agrega solo las secciones que falten.</p>
+                    @endif
+                    @error('plan')<span class="error">{{ $message }}</span>@enderror
                     <form method="post" action="{{ route('pagina.plan.agregar', $pagina) }}" class="form-linea">@csrf
                         <div class="campo"><label for="pnombre">Sección</label><input id="pnombre" name="nombre" type="text" required maxlength="120" placeholder="Preguntas frecuentes"></div>
                         <div class="campo"><label for="pwidget">Widget</label><input id="pwidget" name="widget_plan" type="text" maxlength="160" placeholder="Accordion"></div>

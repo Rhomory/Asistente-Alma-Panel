@@ -88,7 +88,7 @@
                                 <button class="btn chico fant" type="button" onclick="const d=document.getElementById('pr-{{ $c->id }}'); d.hidden=!d.hidden">Prompt</button>
                             @endif
                             <form method="post" action="{{ route('conexion.eliminar', $c) }}" class="inline" onsubmit="return confirm('¿Eliminar esta conexión del panel?')">@csrf @method('DELETE')
-                                <button class="btn chico fant peligro" type="submit" title="Eliminar"><x-ic n="basura" c="sm" /></button>
+                                <button class="btn chico fant peligro" type="submit" title="Eliminar" aria-label="Eliminar la conexión {{ $c->nombre_mcp }}"><x-ic n="basura" c="sm" /></button>
                             </form>
                         </td>
                     </tr>
@@ -162,7 +162,7 @@
                     ['php artisan registro:add', 'Registra una sección construida'],
                 ] as [$cmd, $txt])
                     <div class="cmd"><code>{{ $cmd }}</code><span>{{ $txt }}</span>
-                        <button class="copiar" type="button" data-texto="{{ $cmd }}" title="Copiar"><x-ic n="copiar" c="sm" /></button></div>
+                        <button class="copiar" type="button" data-texto="{{ $cmd }}" title="Copiar" aria-label="Copiar {{ $cmd }}"><x-ic n="copiar" c="sm" /></button></div>
                 @endforeach
             </section>
         </div>

@@ -37,6 +37,7 @@ Route::delete('/tokens/{token}', [GestionController::class, 'eliminarToken'])->n
 Route::get('/paginas/{pagina}', [FlujoController::class, 'pagina'])->name('pagina');
 Route::post('/paginas/{pagina}/plan-estandar', [FlujoController::class, 'planEstandar'])->name('pagina.plan.estandar');
 Route::post('/paginas/{pagina}/plan', [FlujoController::class, 'agregarPlan'])->name('pagina.plan.agregar');
+Route::delete('/paginas/{pagina}/planificadas', [FlujoController::class, 'quitarPlanificadas'])->name('pagina.plan.limpiar');
 Route::delete('/secciones/{seccion}/plan', [FlujoController::class, 'eliminarPlan'])->name('seccion.plan.eliminar');
 Route::post('/secciones/{seccion}/aprobar', [FlujoController::class, 'aprobar'])->name('seccion.aprobar');
 Route::post('/secciones/{seccion}/correccion', [FlujoController::class, 'pedirCorreccion'])->name('seccion.correccion');

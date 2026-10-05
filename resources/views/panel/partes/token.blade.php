@@ -11,7 +11,7 @@
     </div>
     @if ($t->tipo !== 'color')
         <details>
-            <summary title="Editar"><x-ic n="lapiz" c="sm" /></summary>
+            <summary title="Editar" aria-label="Editar el token {{ $t->valor }}"><x-ic n="lapiz" c="sm" /></summary>
             <form method="post" action="{{ route('token.actualizar', $t) }}">@csrf @method('PUT')
                 <div class="campo"><label>Valor</label><input type="text" name="valor" value="{{ $t->valor }}" required maxlength="120"></div>
                 <div class="campo"><label>Nota</label><input type="text" name="nota" value="{{ $t->nota }}" maxlength="160"></div>
@@ -20,6 +20,6 @@
         </details>
     @endif
     <form method="post" action="{{ route('token.eliminar', $t) }}" onsubmit="return confirm('¿Eliminar este token?')">@csrf @method('DELETE')
-        <button class="quitar" type="submit" title="Eliminar"><x-ic n="x" c="sm" /></button>
+        <button class="quitar" type="submit" title="Eliminar" aria-label="Eliminar el token {{ $t->valor }}"><x-ic n="x" c="sm" /></button>
     </form>
 </div>

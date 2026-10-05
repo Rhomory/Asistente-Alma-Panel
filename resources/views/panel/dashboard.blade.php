@@ -1,14 +1,16 @@
 @extends('layouts.app')
-@section('titulo', 'Inicio')
+@section('titulo', 'Panel')
 
 @section('contenido')
     @php
-        $hora = now('America/Lima')->hour;
-        $saludo = $hora < 12 ? 'Buenos días' : ($hora < 19 ? 'Buenas tardes' : 'Buenas noches');
-        $resumen = [];
-        $resumen[] = $hoy ? "El asistente registró {$hoy} " . ($hoy === 1 ? 'sección' : 'secciones') . ' hoy.' : 'Hoy el asistente aún no registra secciones.';
-        if ($pendientes->count()) { $resumen[] = "Hay {$pendientes->count()} " . ($pendientes->count() === 1 ? 'corrección' : 'correcciones') . ' en cola.'; }
-        if ($listasQa->count()) { $resumen[] = "{$listasQa->count()} " . ($listasQa->count() === 1 ? 'página está lista' : 'páginas están listas') . ' para pedir QA.'; }
+        // El título dice qué hacer ahora; el detalle va justo debajo, a todo el ancho.
+        $tareas = $pendientes->count() + $listasQa->count();
+        $titulo = $tareas ? ($tareas === 1 ? '1 cosa espera tu revisión' : "{$tareas} cosas esperan tu revisión") : 'Todo en orden';
+        $partes = [];
+        if ($pendientes->count()) { $partes[] = $pendientes->count() . ' ' . ($pendientes->count() === 1 ? 'corrección en cola' : 'correcciones en cola'); }
+        if ($listasQa->count()) { $partes[] = $listasQa->count() . ' ' . ($listasQa->count() === 1 ? 'página lista para QA' : 'páginas listas para QA'); }
+        $resumen = ($partes ? ucfirst(implode(' y ', $partes)) . '. ' : 'Sin correcciones en cola ni páginas esperando QA. ')
+            . ($hoy ? "Hoy el asistente registró {$hoy} " . ($hoy === 1 ? 'sección.' : 'secciones.') : 'Hoy el asistente aún no registra secciones.');
         $rotulos = [
             'construccion'         => ['robot', 'lav', 'construida'],
             'aprobacion'           => ['check', 'ok', 'aprobada'],
@@ -24,8 +26,8 @@
 
     <div class="cabeza">
         <div>
-            <h1>{{ $saludo }}</h1>
-            <p>{{ implode(' ', $resumen) }}</p>
+            <h1>{{ $titulo }}</h1>
+            <p>{{ $resumen }}</p>
         </div>
         <div class="acciones">
             <a class="btn" href="{{ route('registro.export') }}"><x-ic n="lista" />Exportar registro</a>
@@ -33,19 +35,9 @@
         </div>
     </div>
 
-    <section class="caja resumen" aria-label="Resumen">
-        <div><small>Promedio por página</small><b>{{ $stats['promedio_min'] ?: '—' }}</b><em>min · base {{ $stats['linea_base'] }}</em></div>
-        <div><small>Hecho por el asistente</small><b>{{ $stats['pct_asistente'] }} %</b><em>del tiempo</em></div>
-        <div><small>Correcciones</small><b>{{ str_replace('.', ',', (string) $stats['correcciones']) }}</b><em>por página</em></div>
-        <div><small>En cola</small><b class="{{ $pendientes->count() ? 'alerta' : '' }}">{{ $pendientes->count() }}</b><em>{{ $pendientes->count() === 1 ? 'corrección' : 'correcciones' }}</em></div>
-        <div><small>En construcción</small><b>{{ $stats['en_obra'] }}</b><em>páginas</em></div>
-        <div><small>QA solicitado</small><b>{{ $stats['en_qa'] }}</b><em>páginas</em></div>
-    </section>
-
-    <div class="rejilla">
-        <div class="col">
-            <section class="caja">
-                <div class="caja-cab"><h2>Esperan tu atención</h2><span class="cifra">{{ $pendientes->count() + $listasQa->count() }}</span></div>
+    @if ($tareas)
+            <section class="caja" aria-label="Esperan tu atención">
+                <div class="caja-cab"><h2>Esperan tu atención</h2><span class="cifra">{{ $tareas }}</span></div>
                 @foreach ($pendientes as $e)
                     <div class="pendiente">
                         <span class="icono-suave warn"><x-ic n="llave" /></span>
@@ -67,15 +59,23 @@
                         <a class="btn chico p" href="{{ route('pagina', $pg) }}#qa"><x-ic n="mensaje" c="sm" />Preparar mensaje</a>
                     </div>
                 @endforeach
-                @if ($pendientes->isEmpty() && $listasQa->isEmpty())
-                    <p class="vacio">Todo en orden: no hay correcciones en cola ni páginas esperando QA.</p>
-                @endif
             </section>
+    @endif
+
+    <section class="caja resumen cuatro" aria-label="Resumen">
+        <div><small>Promedio por página</small><b>{{ $stats['promedio_min'] ?: '—' }}</b><em>min · base {{ $stats['linea_base'] }}</em></div>
+        <div><small>Hecho por el asistente</small><b>{{ $stats['pct_asistente'] }} %</b><em>del tiempo</em></div>
+        <div><small>En construcción</small><b>{{ $stats['en_obra'] }}</b><em>{{ $stats['en_obra'] === 1 ? 'página' : 'páginas' }}</em></div>
+        <div><small>QA solicitado</small><b>{{ $stats['en_qa'] }}</b><em>{{ $stats['en_qa'] === 1 ? 'página' : 'páginas' }}</em></div>
+    </section>
+
+    <div class="rejilla">
+        <div class="col">
 
             <section class="caja">
                 <div class="caja-cab"><h2>Últimos registros</h2><a class="ver" href="{{ route('registro') }}">Ver registro <x-ic n="flecha" c="sm" /></a></div>
                 <div class="tabla-env">
-                    <table class="tabla">
+                    <table class="tabla compacta">
                         <thead><tr><th>Sección</th><th>Página</th><th>Proyecto</th><th class="n">Min</th><th class="n">Asistente</th><th>Estado</th></tr></thead>
                         <tbody>
                         @forelse ($ultimas as $s)

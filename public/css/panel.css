@@ -46,7 +46,7 @@ h3 { font-size: 13.5px; font-weight: 600; }
 code, .mono { font-family: "Cascadia Code", Consolas, ui-monospace, monospace; font-size: 12.5px; }
 code { background: var(--surface-2); padding: 1px 6px; border-radius: 5px; }
 .i { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
-.i.sm { width: 14px; height: 14px; } .i.lg { width: 18px; height: 18px; }
+.i.xs { width: 12px; height: 12px; } .i.sm { width: 14px; height: 14px; } .i.lg { width: 18px; height: 18px; }
 :focus-visible { outline: 2px solid var(--ora); outline-offset: 2px; }
 [hidden] { display: none !important; }
 
@@ -135,7 +135,7 @@ code { background: var(--surface-2); padding: 1px 6px; border-radius: 5px; }
 .btn.hecho { background: var(--ok-soft); border-color: transparent; color: var(--ok-ink); }
 form.inline { display: inline; }
 
-.tag { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 500; padding: 1px 9px; border-radius: 99px; white-space: nowrap; background: var(--surface-2); color: var(--ink-3); }
+.tag { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; padding: 1px 9px; border-radius: 99px; white-space: nowrap; background: var(--surface-2); color: var(--ink-3); }
 .tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .tag.ok, .tag.e-aprobada, .tag.e-conectado { background: var(--ok-soft); color: var(--ok-ink); }
 .tag.obra, .tag.e-construyendo { background: var(--lav-soft); color: var(--lav-ink); }
@@ -162,6 +162,9 @@ form.inline { display: inline; }
 .enlace b { color: var(--ink); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 a.enlace:hover { border-color: var(--line-2); }
 .enlaces { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+a.enlace .i-externo { color: var(--ink-3); }
+.datos { display: flex; flex-wrap: wrap; gap: 0 14px; margin-top: 8px !important; font-size: 12.5px; color: var(--ink-3) !important; }
+.datos span + span::before { content: "·"; margin-right: 14px; }
 
 /* ── Formularios ───────────────────────────── */
 .campo { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
@@ -182,10 +185,11 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--o
 fieldset { border: 1px dashed var(--line-2); border-radius: 12px; padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 12px; }
 legend { padding: 0 6px; font-weight: 600; font-size: 13px; }
 
-input[type=checkbox].switch { appearance: none; width: 32px; height: 18px; border-radius: 99px; background: var(--line-2); position: relative; cursor: pointer; flex-shrink: 0; transition: background-color .15s ease-out; }
-input[type=checkbox].switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); transition: left .15s ease-out; }
+input[type=checkbox].switch { appearance: none; width: 40px; height: 24px; border-radius: 99px; background: var(--line-2); position: relative; cursor: pointer; flex-shrink: 0; transition: background-color .15s ease-out; }
+input[type=checkbox].switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--surface); transition: left .15s ease-out; }
 input[type=checkbox].switch:checked { background: var(--ora); }
-input[type=checkbox].switch:checked::after { left: 16px; background: var(--on-ora); }
+input[type=checkbox].switch:focus-visible { outline: 2px solid var(--ora); outline-offset: 2px; box-shadow: none; }
+input[type=checkbox].switch:checked::after { left: 19px; background: var(--on-ora); }
 
 details > summary { list-style: none; cursor: pointer; }
 details > summary::-webkit-details-marker { display: none; }
@@ -201,6 +205,9 @@ details > summary::-webkit-details-marker { display: none; }
 .tabla .n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .tabla .mut { color: var(--ink-3); }
 .tabla .nw { white-space: nowrap; }
+.tabla.compacta th, .tabla.compacta td { padding-left: 12px; padding-right: 12px; }
+.tabla.compacta th:first-child, .tabla.compacta td:first-child { padding-left: 18px; }
+.tabla.compacta th:last-child, .tabla.compacta td:last-child { padding-right: 18px; }
 .paginacion { padding: 12px 18px; border-top: 1px solid var(--line); font-size: 12.5px; }
 .paginacion nav > div:first-child { display: none; }
 .paginacion svg { width: 14px; height: 14px; }
@@ -209,6 +216,7 @@ details > summary::-webkit-details-marker { display: none; }
 
 /* ── Inicio ────────────────────────────────── */
 .resumen { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.resumen.cuatro { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .resumen > div { padding: 14px 18px; border-right: 1px solid var(--line); min-width: 0; }
 .resumen > div:last-child { border-right: 0; }
 .resumen small { display: block; color: var(--ink-3); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -299,6 +307,10 @@ details.corr[open] > summary { background: var(--hover); }
 .aviso .i { color: var(--warn-ink); margin-top: 2px; }
 .listo { display: inline-flex; align-items: center; gap: 6px; color: var(--ok-ink); font-size: 12.5px; font-weight: 500; }
 .listo.falla { color: var(--warn-ink); }
+.faltas { margin: 4px 0 6px 18px; }
+.faltas li { margin: 1px 0; }
+input.falta { border-color: var(--warn); }
+.falta-txt { color: var(--warn-ink) !important; }
 
 /* ── Guía y prompt ─────────────────────────── */
 .guia { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 20px; align-items: start; }
@@ -350,6 +362,7 @@ pre.bloque { margin: 0; padding: 12px 14px; border-radius: 10px; background: var
 @media (max-width: 1180px) {
     .rejilla, .rejilla.ancha, .rejilla.flujo, .guia { grid-template-columns: 1fr; }
     .resumen { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .resumen.cuatro { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .resumen > div:nth-child(3n) { border-right: 0; }
     .resumen > div:nth-child(-n+3) { border-bottom: 1px solid var(--line); }
     .actual { grid-template-columns: repeat(2, minmax(0, 1fr)); }

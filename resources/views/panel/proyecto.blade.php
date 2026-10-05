@@ -21,22 +21,24 @@
                 {{ $proyecto->cliente ? $proyecto->cliente . '.' : '' }}
                 {{ $alcance->count() ? "{$listas} de {$alcance->count()} páginas listas." : 'Aún sin páginas: el asistente las carga al leer el Figma (registro:figma).' }}
             </p>
+            {{-- Píldora = enlace (con ↗ si sale del panel). Los datos fijos van como texto plano. --}}
             <div class="enlaces">
                 @if ($proyecto->sitio_wp)
-                    <a class="enlace" href="{{ $proyecto->sitio_wp }}" target="_blank" rel="noopener"><x-ic n="globo" c="sm" /><b>{{ preg_replace('#^https?://#', '', $proyecto->sitio_wp) }}</b></a>
+                    <a class="enlace" href="{{ $proyecto->sitio_wp }}" target="_blank" rel="noopener"><x-ic n="globo" c="sm" /><b>{{ preg_replace('#^https?://#', '', $proyecto->sitio_wp) }}</b><x-ic n="externo" c="xs" /></a>
                 @endif
-                @if ($proyecto->archivo_figma)
-                    @if (str_starts_with($proyecto->archivo_figma, 'https://'))
-                        <a class="enlace" href="{{ $proyecto->archivo_figma }}" target="_blank" rel="noopener"><x-ic n="figma" c="sm" /><b>Archivo de Figma</b></a>
-                    @else
-                        <span class="enlace"><x-ic n="figma" c="sm" /><b>{{ $proyecto->archivo_figma }}</b></span>
-                    @endif
+                @if ($proyecto->archivo_figma && str_starts_with($proyecto->archivo_figma, 'https://'))
+                    <a class="enlace" href="{{ $proyecto->archivo_figma }}" target="_blank" rel="noopener"><x-ic n="figma" c="sm" /><b>Archivo de Figma</b><x-ic n="externo" c="xs" /></a>
                 @endif
                 <a class="enlace" href="{{ route('conexion') }}"><x-ic n="enchufe" c="sm" />
-                    @if ($proyecto->conexion)<b>{{ $proyecto->conexion->nombre_mcp }}</b>@else Sin conexión MCP @endif
+                    @if ($proyecto->conexion)<b>{{ $proyecto->conexion->nombre_mcp }}</b>@else Agregar conexión MCP @endif
                 </a>
-                <span class="enlace"><x-ic n="reloj" c="sm" />Actualizado {{ $proyecto->updated_at->diffForHumans() }}</span>
             </div>
+            <p class="datos">
+                @if ($proyecto->archivo_figma && ! str_starts_with($proyecto->archivo_figma, 'https://'))
+                    <span>Figma: {{ $proyecto->archivo_figma }} (sin enlace)</span>
+                @endif
+                <span>Actualizado {{ $proyecto->updated_at->diffForHumans() }}</span>
+            </p>
         </div>
         <div class="acciones">
             <a class="btn" href="{{ route('proyecto.guia', $proyecto) }}"><x-ic n="libro" />Ver guía y prompt</a>

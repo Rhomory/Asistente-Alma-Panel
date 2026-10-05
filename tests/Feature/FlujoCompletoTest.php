@@ -118,8 +118,37 @@ class FlujoCompletoTest extends TestCase
         $this->assertSame('construyendo', $pagina->fresh()->estado);
 
         $pagina->update(['estado' => 'en_qc']);
-        $this->post("/paginas/{$pagina->id}/plan-estandar")->assertRedirect();
+        $this->post("/paginas/{$pagina->id}/plan", ['nombre' => 'Galería'])->assertRedirect();
         $this->assertSame('construyendo', $pagina->fresh()->estado);
+    }
+
+    public function test_plan_estandar_no_duplica_si_ya_hay_secciones_construidas_y_se_puede_limpiar(): void
+    {
+        $pagina = $this->pagina();
+        $pagina->secciones()->create(['nombre' => 'Hero con video', 'estado' => 'aprobada', 'aprobada' => true, 'minutos' => 10]);
+        $pagina->update(['estado' => 'aprobada']);
+
+        $this->post("/paginas/{$pagina->id}/plan-estandar")->assertSessionHasErrors('plan');
+        $this->assertSame(1, $pagina->secciones()->count());
+
+        // Planificadas sobrantes: se quitan y la página vuelve a quedar aprobada.
+        $this->post("/paginas/{$pagina->id}/plan", ['nombre' => 'Hero'])->assertRedirect();
+        $this->assertSame('construyendo', $pagina->fresh()->estado);
+        $this->delete("/paginas/{$pagina->id}/planificadas")->assertRedirect();
+        $this->assertSame(1, $pagina->secciones()->count());
+        $this->assertSame('aprobada', $pagina->fresh()->estado);
+    }
+
+    public function test_el_boton_de_qa_solo_es_principal_si_el_mensaje_esta_completo(): void
+    {
+        $proyecto = Proyecto::create(['nombre' => 'QA', 'sitio_wp' => 'https://qa.ejemplo.pe', 'archivo_figma' => 'https://www.figma.com/design/x/QA']);
+        $pagina = $proyecto->paginas()->create(['nombre' => 'Contacto', 'estado' => 'aprobada']);
+        $pagina->secciones()->create(['nombre' => 'Formulario', 'estado' => 'aprobada', 'aprobada' => true, 'minutos' => 5]);
+
+        $this->get("/paginas/{$pagina->id}")->assertSee('Copiar de todos modos')->assertSee('el link de Trello de esta página');
+
+        $pagina->update(['trello_url' => 'https://trello.com/c/abc/contacto']);
+        $this->get("/paginas/{$pagina->id}")->assertSee('Copiar mensaje')->assertDontSee('Aún no está listo para el canal');
     }
 
     public function test_pedir_correccion_encola_y_registro_add_la_resuelve(): void

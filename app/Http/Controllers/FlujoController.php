@@ -50,6 +50,12 @@ class FlujoController extends Controller
 
     public function planEstandar(Pagina $pagina)
     {
+        // Con secciones ya construidas, el plan genérico duplicaría trabajo hecho con otro nombre
+        // ("Hero" junto a "Hero con video"): se agregan solo las que falten, a mano.
+        if ($pagina->secciones()->where('estado', '!=', 'planificada')->exists()) {
+            return back()->withErrors(['plan' => 'Esta página ya tiene secciones construidas: agrega solo las que falten con el formulario.']);
+        }
+
         $existentes = $pagina->secciones()->pluck('nombre')->map(fn ($n) => mb_strtolower($n))->all();
         $creadas = 0;
         foreach (self::PLAN_ESTANDAR as [$nombre, $widget, $est]) {
@@ -80,6 +86,21 @@ class FlujoController extends Controller
         self::reabrir($pagina);
 
         return back()->with('ok', "Sección \"{$datos['nombre']}\" agregada al plan.");
+    }
+
+    /** Quita todas las secciones planificadas (aún no construidas) y recalcula el estado de la página. */
+    public function quitarPlanificadas(Pagina $pagina)
+    {
+        $n = $pagina->secciones()->where('estado', 'planificada')->delete();
+
+        $total = $pagina->secciones()->count();
+        if ($total > 0 && $pagina->secciones()->where('estado', '!=', 'aprobada')->doesntExist() && $pagina->estado === 'construyendo') {
+            $pagina->update(['estado' => 'aprobada']); // lo que queda ya está todo aprobado
+        } elseif ($total === 0) {
+            $pagina->update(['estado' => 'pendiente']);
+        }
+
+        return back()->with('ok', $n ? "Se quitaron {$n} secciones planificadas." : 'No había secciones planificadas.');
     }
 
     /**

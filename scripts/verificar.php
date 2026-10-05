@@ -3,7 +3,10 @@
 $db = new PDO('sqlite:' . __DIR__ . '/../database/database.sqlite');
 $q = fn (string $sql) => $db->query($sql)->fetch(PDO::FETCH_ASSOC);
 
-$inicio = $q("SELECT * FROM reporte_pagina WHERE nombre='Inicio' AND proyecto_id=1");
+$inicio = $q("SELECT r.* FROM reporte_pagina r JOIN proyectos p ON p.id = r.proyecto_id WHERE r.nombre='Inicio' AND p.nombre='Sitio Bodega Andina'");
+if (! $inicio) {
+    exit("No están los datos demo del documento. Cárgalos con: php artisan db:seed --class=DemoSeeder\n");
+}
 $tot = $q('SELECT SUM(min_asistente) a, SUM(min_dev) d FROM secciones');
 $n = $q('SELECT COUNT(*) c FROM secciones');
 

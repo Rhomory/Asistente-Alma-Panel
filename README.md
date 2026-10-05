@@ -125,6 +125,7 @@ php artisan key:generate
 touch database/database.sqlite
 php artisan migrate
 php artisan test          # debe salir todo en verde
+# opcional, solo para la demo del documento SENATI: php artisan db:seed --class=DemoSeeder
 ```
 
 **3.2 Encender el panel** (deja esta terminal abierta mientras trabajas):

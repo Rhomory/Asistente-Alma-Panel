@@ -20,7 +20,7 @@ Nada se publica solo: el asistente trabaja en borrador y cada sección se aprueb
 - Windows 10/11 con WSL 2 y Ubuntu.
 - Un agente de código compatible con MCP: Claude Code (con el que se probó todo el flujo), Codex, Cursor u otro.
 - Node.js 20.19 o superior (lo usan los MCP que se instalan con `npx`).
-- Figma de escritorio con el plugin **figwright** (lo necesita el MCP de figwright para leer el diseño).
+- Figma de escritorio con el plugin **figwright**. No está en la Community: se descarga el zip de la última versión en [GitHub Releases](https://github.com/awdr74100/figwright/releases) y se importa en Figma (Plugins › Development › Import plugin from manifest). **El plugin no se actualiza solo:** cuando salga una versión nueva, reemplaza los archivos en la misma carpeta y reinicia Figma; su pestaña Debug muestra si coincide con el servidor.
 - Chrome o Edge reciente (el panel usa transiciones entre páginas; en otros navegadores funciona sin animación).
 
 **En WSL Ubuntu**
@@ -36,7 +36,7 @@ Nada se publica solo: el asistente trabaja en borrador y cada sección se aprueb
 
 | Herramienta | Para qué | Cómo se agrega | Alcance |
 |---|---|---|---|
-| **figwright** (MCP) | Leer páginas, variables y estructura del Figma | Claude Code: `claude mcp add figwright --scope user -- cmd /c npx -y @figwright/mcp`. Otros agentes: mismo comando `npx -y @figwright/mcp` en su configuración MCP | Todas las carpetas |
+| **figwright** (MCP) | Leer páginas, variables y estructura del Figma | Claude Code: `claude mcp add figwright --scope user -- cmd /c npx -y @figwright/mcp@latest` (con `@latest` se actualiza solo al arrancar). Otros agentes: `npx -y @figwright/mcp@latest` en su configuración MCP | Todas las carpetas |
 | **Elementor MCP** (oficial) | Construir en el sitio del cliente | En WordPress: Elementor › Elementor MCP › activar › elegir tu agente › Generate Prompt. Pega ese prompt en tu agente **dentro de la carpeta del cliente** | Solo esa carpeta (un servidor por sitio, ej. `elementor-ecocreations`) |
 | **JetEngine MCP** (opcional) | Tipos de contenido y campos dinámicos | Según la documentación de Crocoblock, en la carpeta del cliente | Solo esa carpeta |
 | **Framelink** (opcional) | Leer el Figma sin la app abierta, vía API REST | `claude mcp add framelink --scope user -e FIGMA_API_KEY=<token> -- cmd /c npx -y figma-developer-mcp --stdio` (útil solo con asiento Dev/Full) | Todas las carpetas |

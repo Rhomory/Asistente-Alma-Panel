@@ -5,7 +5,7 @@ desde la carpeta de cada cliente con el `CLAUDE.md` que genera el panel (botón 
 
 ## Qué es
 Laravel 13 + SQLite, PHP 8.3, sin build de front (CSS plano en `public/css/panel.css`, Blade en
-`resources/views`). Corre en WSL Ubuntu: `php artisan serve` → http://127.0.0.1:8000. Uso local, sin login.
+`resources/views`). Corre en WSL Ubuntu: `php artisan serve` → http://127.0.0.1:8090. Uso local, sin login.
 
 La consola (Claude Code) escribe; el panel supervisa, aprueba y administra:
 - `registro:add`, `registro:cola`, `registro:paginas`, `registro:tokens`, `registro:figma`, `guia:prompt`,

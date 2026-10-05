@@ -88,6 +88,7 @@ class PromptGuia
         $figma = $proyecto->archivo_figma ?: "[falta el archivo de Figma]";
         $lista = $paginas->isEmpty() ? "aún ninguna (léelas del Figma)" : $paginas->implode(", ");
         $fecha = now("America/Lima")->format("d/m/Y");
+        $urlPanel = rtrim(config("app.url"), "/") . "/proyectos/{$proyecto->id}";
 
         return <<<MD
         # {$nombre} — contexto para el asistente
@@ -99,7 +100,7 @@ class PromptGuia
         - Archivo de Figma: {$figma}
         - Servidor MCP de Elementor de este sitio: `{$mcp}` (registrado solo en esta carpeta; compruébalo con `claude mcp list`).
         - Páginas en alcance: {$lista}
-        - Panel de supervisión: http://127.0.0.1:8000/proyectos/{$proyecto->id} (lo mira el desarrollador mientras construyes).
+        - Panel de supervisión: {$urlPanel} (lo mira el desarrollador mientras construyes).
 
         ## Cómo hablar con el panel
         El panel corre en WSL Ubuntu. Desde esta carpeta (Windows) sus comandos van por el puente:

@@ -8,7 +8,7 @@ Tiene dos piezas que trabajan juntas:
 | Pieza | Dónde corre | Qué hace |
 |---|---|---|
 | **Asistente** (Claude Code + MCP) | Windows, en la carpeta de cada cliente | Lee el Figma, construye en Elementor sección por sección (en borrador) y registra cada sección |
-| **Panel** (este repo, Laravel) | WSL Ubuntu, http://127.0.0.1:8000 | Muestra el avance en vivo, aprueba o pide correcciones, guarda tokens, conexiones y tiempos, arma el mensaje de QA |
+| **Panel** (este repo, Laravel) | WSL Ubuntu, http://127.0.0.1:8090 | Muestra el avance en vivo, aprueba o pide correcciones, guarda tokens, conexiones y tiempos, arma el mensaje de QA |
 
 Nada se publica solo: el asistente trabaja en borrador y cada sección se aprueba en el panel.
 
@@ -68,7 +68,7 @@ php artisan test          # debe salir todo en verde
 cd ~/proyectos/asistente-alma-panel && php artisan serve
 ```
 
-Abre http://127.0.0.1:8000 en Windows.
+Abre http://127.0.0.1:8090 en Windows.
 
 **3.3 Registrar figwright** (PowerShell, una vez): ver la tabla del paso 2.
 

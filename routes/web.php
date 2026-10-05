@@ -41,5 +41,6 @@ Route::delete('/paginas/{pagina}/planificadas', [FlujoController::class, 'quitar
 Route::delete('/secciones/{seccion}/plan', [FlujoController::class, 'eliminarPlan'])->name('seccion.plan.eliminar');
 Route::post('/secciones/{seccion}/aprobar', [FlujoController::class, 'aprobar'])->name('seccion.aprobar');
 Route::post('/secciones/{seccion}/correccion', [FlujoController::class, 'pedirCorreccion'])->name('seccion.correccion');
+Route::post('/paginas/{pagina}/url', [FlujoController::class, 'guardarUrl'])->name('pagina.url');
 Route::post('/paginas/{pagina}/trello', [FlujoController::class, 'guardarTrello'])->name('pagina.trello');
 Route::post('/paginas/{pagina}/qa', [FlujoController::class, 'qaSolicitado'])->name('pagina.qa');

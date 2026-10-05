@@ -23,12 +23,26 @@
                 <h1>{{ $pagina->nombre }} @include('panel.partes.estado', ['estado' => $pagina->estado])</h1>
             </div>
             <p>El asistente construye cada sección desde la consola; aquí revisas, apruebas o le pides una corrección.</p>
+            @php $urlPagina = $pagina->urlSitio(); @endphp
+            <div class="enlaces">
+                @if ($urlPagina)
+                    <a class="enlace" href="{{ $urlPagina }}" target="_blank" rel="noopener"><x-ic n="globo" c="sm" /><b>{{ preg_replace('#^https?://#', '', $urlPagina) }}</b><x-ic n="externo" c="xs" /></a>
+                @endif
+                <details class="editar-url">
+                    <summary class="btn chico fant"><x-ic n="lapiz" c="sm" />{{ $urlPagina ? 'Cambiar URL' : 'Agregar URL' }}</summary>
+                    <form method="post" action="{{ route('pagina.url', $pagina) }}" class="form-linea">@csrf
+                        <div class="campo"><label for="url">Ruta en el sitio</label>
+                            <input id="url" name="url" type="text" value="{{ old('url', $pagina->url) }}" maxlength="255" placeholder="/{{ \Illuminate\Support\Str::slug($pagina->nombre) }}"></div>
+                        <button class="btn" type="submit">Guardar</button>
+                    </form>
+                    <small class="nota">Vacío = se arma desde el nombre: “Inicio” es la raíz del sitio y el resto va como /nombre.</small>
+                </details>
+                @if ($pagina->figma_id)<span class="enlace" title="ID del marco en Figma, guardado como memoria del diseño"><x-ic n="figma" c="sm" />{{ $pagina->figma_id }}</span>@endif
+            </div>
+            @error('url')<span class="error">{{ $message }}</span>@enderror
         </div>
         <div class="acciones">
             <a class="btn" href="{{ route('proyecto.guia', [$pagina->proyecto, 'pagina' => $pagina->id]) }}"><x-ic n="libro" />Guía y prompt</a>
-            @if ($pagina->proyecto->sitio_wp)
-                <a class="btn" href="{{ $pagina->proyecto->sitio_wp }}" target="_blank" rel="noopener"><x-ic n="externo" />Ver en el sitio</a>
-            @endif
         </div>
     </div>
 
@@ -58,7 +72,7 @@
                             @if ($s->estado === 'construyendo')<span class="tag obra">En corrección</span>@else @include('panel.partes.estado', ['estado' => $s->estado]) @endif
                         </div>
                         <div class="det">
-                            {{ $s->widget_plan ?? 'Widget sin definir' }} ·
+                            {{ $s->widget_plan ?? 'Widget sin definir' }}@if ($s->figma_id) <span title="ID en Figma">· Figma {{ $s->figma_id }}</span>@endif ·
                             @if ($hecha)
                                 <em>{{ $s->minutos }} min</em>@if ($s->min_estimado) de {{ $s->min_estimado }} estimados @endif
                                 · asistente {{ $s->min_asistente }}@if ($s->min_dev) · dev {{ $s->min_dev }}@endif
@@ -95,7 +109,11 @@
                 </div>
             @empty
                 <div class="caja-cuerpo">
-                    <div class="aviso-suave"><x-ic n="lista" />Esta página aún no tiene plan. Aplica el plan estándar de la guía o agrega secciones a mano.</div>
+                    @if ($pagina->secciones_total > 0)
+                        <div class="aviso-suave"><x-ic n="figma" />Figma detectó {{ $pagina->secciones_total }} secciones en esta página, pero aún no tienen nombre en el panel. Vuelve a leer el Figma con la skill actualizada (carga cada sección con su ID) o aplica el plan estándar.</div>
+                    @else
+                        <div class="aviso-suave"><x-ic n="lista" />Esta página aún no tiene plan. Aplica el plan estándar de la guía o agrega secciones a mano.</div>
+                    @endif
                 </div>
             @endforelse
             @error('detalle')<p class="error caja-cuerpo">{{ $message }}</p>@enderror

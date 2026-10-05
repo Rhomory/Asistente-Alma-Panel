@@ -161,11 +161,23 @@ class FlujoController extends Controller
     public static function mensajeQA(Pagina $pagina): string
     {
         $p = $pagina->proyecto;
-        $sitio = $p->sitio_wp ?: '[falta la URL del sitio]';
+        $sitio = $pagina->urlSitio() ?: '[falta la URL del sitio]'; // la URL de la página, no solo la raíz
         $figma = $p->archivo_figma ?: '[falta el archivo de Figma]';
         $trello = $pagina->trello_url ?: '[falta el link de Trello]';
 
         return "@canal Solicito QA para {$sitio} aquí archivo Figma: {$figma} y link de Trello: {$trello}";
+    }
+
+    /** Ruta de la página en el sitio: "/nosotros" o una URL completa; vacío = se calcula desde el nombre. */
+    public function guardarUrl(Request $request, Pagina $pagina)
+    {
+        $datos = $request->validate(
+            ['url' => ['nullable', 'string', 'max:255', 'regex:#^(/|https?://)#i']],
+            ['url.regex' => 'Escribe una ruta que empiece con "/" (ej. /nosotros) o una URL completa.']
+        );
+        $pagina->update(['url' => $datos['url'] ?? null]);
+
+        return back()->with('ok', 'URL de la página guardada: ' . ($pagina->fresh()->urlSitio() ?? 'falta el sitio del proyecto') . '.');
     }
 
     public function guardarTrello(Request $request, Pagina $pagina)

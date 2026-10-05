@@ -24,10 +24,11 @@ El panel es Laravel en WSL Ubuntu (`/home/romino/proyectos/asistente-alma-panel`
 
 1. **Proyecto.** El nombre debe coincidir con el del panel. Si dudas, lista los proyectos:
    `alma.ps1 tinker --execute="echo App\Models\Proyecto::pluck('nombre')"`.
-2. **Leer el Figma gastando pocos tokens.** Pide solo lo necesario, en este orden, y no vuelvas a pedir lo que ya tienes:
-   - Páginas: los marcos de primer nivel (profundidad 1). Por cada página, cuenta sus bloques horizontales de primer nivel = secciones. No pidas el árbol completo.
-   - Tokens: variables o estilos locales de color (con su rol: primario, secundario, fondo, texto, acento), tipografías (familia y uso: títulos, cuerpo) y la escala de espaciado.
-   - Nada de capturas ni de nodos profundos en esta etapa; eso se lee después, sección por sección, al construir.
+2. **Leer el Figma gastando pocos tokens** (con figwright; requiere Figma desktop abierto con el plugin). Pide solo lo necesario, en este orden, y no repitas lecturas:
+   - Páginas: `get_pages`. Luego, por cada página, `get_design_context` con `nodeId` de la página, `depth: 1` y `detail: "minimal"` (solo id, nombre y tipo). Los marcos de primer nivel son las secciones.
+   - Tokens: `get_variable_defs` (variables locales con sus modos) y `get_styles`. Asigna el rol de cada color: primario, secundario, fondo, texto, acento.
+   - **Nunca** uses `get_document` ni `get_node` para inventario: serializan el subárbol completo, sin límite ni deduplicación. Nada de `get_screenshot` en esta etapa.
+   - Al construir, una sección a la vez: `get_design_context` con `detail: "full"` (deja `dedupeComponents` activo). Si devuelve un `sectionPlan`, pide cada subsección por separado.
 3. **Escribir el JSON** en un archivo temporal (en Windows: `%TEMP%\alma-figma.json`) con este formato:
    ```json
    {

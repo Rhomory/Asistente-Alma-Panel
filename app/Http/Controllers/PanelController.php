@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Panel de solo lectura del Asistente Alma.
- * La consola (Claude Code) escribe el registro; aquí solo se consulta.
+ * La consola (el agente) escribe el registro; aquí solo se consulta.
  */
 class PanelController extends Controller
 {

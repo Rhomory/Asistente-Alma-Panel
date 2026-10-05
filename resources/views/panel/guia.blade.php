@@ -16,7 +16,7 @@
                     <option value="{{ $pg->id }}" @selected($pagina?->id === $pg->id)>Página: {{ $pg->nombre }}</option>
                 @endforeach
             </select>
-            <a class="btn" href="{{ route('proyecto.claude', $proyecto) }}" title="Contexto para Claude Code: guárdalo en la carpeta del cliente"><x-ic n="terminal" />Descargar CLAUDE.md</a>
+            <a class="btn" href="{{ route('proyecto.agents', $proyecto) }}" title="Contexto para el agente (Claude Code, Codex, Cursor…): guárdalo en la carpeta del cliente"><x-ic n="terminal" />Descargar AGENTS.md</a>
         </form>
     </div>
 

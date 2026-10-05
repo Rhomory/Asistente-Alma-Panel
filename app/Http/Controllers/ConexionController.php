@@ -46,7 +46,7 @@ class ConexionController extends Controller
         $nombre = $conexion->nombre_mcp;
         $conexion->delete();
 
-        return back()->with('ok', "Conexión \"{$nombre}\" eliminada del panel. Quítala también de la consola: claude mcp remove {$nombre}");
+        return back()->with('ok', "Conexión \"{$nombre}\" eliminada del panel. Quítala también de tu agente (en Claude Code: claude mcp remove {$nombre})");
     }
 
     public function comprobar(Request $request)

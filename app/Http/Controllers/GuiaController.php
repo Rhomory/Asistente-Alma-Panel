@@ -8,7 +8,7 @@ use App\Support\PromptGuia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
-/** Guía visual del proyecto (colores, tipografías, plan), el prompt del asistente y su CLAUDE.md. */
+/** Guía visual del proyecto (colores, tipografías, plan), el prompt del asistente y su AGENTS.md. */
 class GuiaController extends Controller
 {
     public function show(Request $request, Proyecto $proyecto)
@@ -26,12 +26,12 @@ class GuiaController extends Controller
         ]);
     }
 
-    /** Descarga el CLAUDE.md para la carpeta del cliente. */
-    public function claudeMd(Proyecto $proyecto)
+    /** Descarga el AGENTS.md para la carpeta del cliente (sirve para cualquier agente con MCP). */
+    public function agentsMd(Proyecto $proyecto)
     {
-        return response(PromptGuia::claudeMd($proyecto->load('conexion')), 200, [
+        return response(PromptGuia::agentsMd($proyecto->load('conexion')), 200, [
             'Content-Type'        => 'text/markdown; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="CLAUDE.md"',
+            'Content-Disposition' => 'attachment; filename="AGENTS.md"',
         ]);
     }
 }

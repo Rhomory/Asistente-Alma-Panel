@@ -74,11 +74,12 @@ class PromptGuia
     }
 
     /**
-     * CLAUDE.md para la carpeta del cliente: Claude Code lo carga al abrir esa carpeta,
-     * así el asistente empieza sabiendo qué proyecto es, cómo hablar con el panel y el flujo.
+     * AGENTS.md para la carpeta del cliente: el formato abierto que leen los agentes de código
+     * (Codex, Cursor y otros; en Claude Code se importa desde CLAUDE.md con `@AGENTS.md`).
+     * Así el agente empieza sabiendo qué proyecto es, cómo hablar con el panel y el flujo.
      * El sistema de diseño no se copia aquí: se pide actualizado con guia:prompt.
      */
-    public static function claudeMd(Proyecto $proyecto): string
+    public static function agentsMd(Proyecto $proyecto): string
     {
         $nombre = $proyecto->nombre;
         $mcp = $proyecto->conexion?->nombre_mcp ?? PromptElementor::nombreSugerido($nombre);
@@ -91,14 +92,16 @@ class PromptGuia
         $urlPanel = rtrim(config("app.url"), "/") . "/proyectos/{$proyecto->id}";
 
         return <<<MD
-        # {$nombre} — contexto para el asistente
+        # {$nombre} — contexto para el agente
 
         Generado por el panel Asistente Alma el {$fecha}. Vuelve a descargarlo si cambian el sitio, el Figma o la conexión.
+        Sirve para cualquier agente de código con MCP (Claude Code, Codex, Cursor u otros).
 
         ## El proyecto
         - Sitio WordPress (staging): {$sitio}
         - Archivo de Figma: {$figma}
-        - Servidor MCP de Elementor de este sitio: `{$mcp}` (registrado solo en esta carpeta; compruébalo con `claude mcp list`).
+        - Servidor MCP de Elementor de este sitio: `{$mcp}`, registrado solo para esta carpeta en la configuración MCP de tu agente. Si no lo ves entre tus herramientas, avisa antes de seguir.
+        - Lectura del Figma: MCP figwright (requiere Figma de escritorio abierto con su plugin).
         - Páginas en alcance: {$lista}
         - Panel de supervisión: {$urlPanel} (lo mira el desarrollador mientras construyes).
 
@@ -113,13 +116,13 @@ class PromptGuia
         |---|---|
         | Guía actualizada (tokens, plan, reglas) de una página | `guia:prompt "{$nombre}" "<Página>"` |
         | Correcciones pendientes | `registro:cola` |
-        | Cargar páginas y tokens leídos del Figma | `registro:figma "{$nombre}" --archivo=<ruta.json>` (skill `alma-figma`) |
+        | Cargar páginas y tokens leídos del Figma | `registro:figma "{$nombre}" --archivo=<ruta.json>` |
         | Registrar una sección terminada | `registro:add "{$nombre}" "<Página>" "<Sección>" <min> --asistente=<min> --dev=<min>` |
         | Comprobar el sitio | `conexion:comprobar "{$nombre}"` |
 
         ## Flujo de trabajo
         1. Al empezar: revisa `registro:cola`. Las correcciones pendientes van primero.
-        2. Si el proyecto aún no tiene páginas o tokens en el panel, lee el Figma con la skill `alma-figma`.
+        2. Si el proyecto aún no tiene páginas o tokens en el panel, lee el Figma siguiendo `\$HOME\\.claude\\skills\\alma-figma\\SKILL.md` (en Claude Code se activa sola como skill; otros agentes deben leer ese archivo).
         3. Antes de construir una página, pide su guía con `guia:prompt` y síguela al pie de la letra.
         4. Construye **una sección a la vez** con el MCP `{$mcp}`, siempre en borrador. Al terminar cada una, regístrala con `registro:add`. El desarrollador la aprueba o pide corrección en el panel.
         5. Nunca publiques ni borres contenido del sitio. Nada se publica sin aprobación en el panel.

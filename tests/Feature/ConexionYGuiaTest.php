@@ -158,16 +158,16 @@ class ConexionYGuiaTest extends TestCase
         $this->assertNotNull($b->fresh()->comprobada_en);
     }
 
-    public function test_claude_md_y_guia_prompt_para_la_carpeta_del_cliente(): void
+    public function test_agents_md_y_guia_prompt_para_la_carpeta_del_cliente(): void
     {
         $p = Proyecto::create(['nombre' => 'ECOCREATIONS', 'sitio_wp' => 'https://eco.ejemplo.pe']);
         $p->conexiones()->create(['nombre_mcp' => 'elementor-ecocreations', 'sitio_url' => 'https://eco.ejemplo.pe']);
         $p->paginas()->create(['nombre' => 'Inicio']);
         $p->tokens()->create(['tipo' => 'color', 'valor' => '#2F6B4F', 'nota' => 'primario']);
 
-        $md = $this->get("/proyectos/{$p->id}/claude-md")->assertOk()
-            ->assertHeader('content-disposition', 'attachment; filename="CLAUDE.md"')->getContent();
-        $this->assertStringContainsString('# ECOCREATIONS — contexto para el asistente', $md);
+        $md = $this->get("/proyectos/{$p->id}/agents-md")->assertOk()
+            ->assertHeader('content-disposition', 'attachment; filename="AGENTS.md"')->getContent();
+        $this->assertStringContainsString('# ECOCREATIONS — contexto para el agente', $md);
         $this->assertStringContainsString('`elementor-ecocreations`', $md);
         $this->assertStringContainsString('Páginas en alcance: Inicio', $md);
         $this->assertStringContainsString('guia:prompt "ECOCREATIONS" "<Página>"', $md);

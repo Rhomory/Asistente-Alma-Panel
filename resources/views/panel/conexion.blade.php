@@ -126,7 +126,7 @@
                 <div class="campo">
                     <label for="prompt_mcp">Prompt de conexión que generó Elementor</label>
                     <textarea id="prompt_mcp" name="prompt_mcp" rows="6" maxlength="8000" placeholder="Pega aquí el texto de Elementor › Elementor MCP › Generate Prompt. El panel toma el sitio, el endpoint y el usuario, y oculta la contraseña antes de guardar."></textarea>
-                    <small>La contraseña de aplicación nunca se guarda: se reemplaza por [oculto]. Pega el mismo prompt completo en Claude Code para que registre el servidor.</small>
+                    <small>La contraseña de aplicación nunca se guarda: se reemplaza por [oculto]. Pega el mismo prompt completo en tu agente (Claude Code, Codex, Cursor…) para que registre el servidor.</small>
                 </div>
                 <div class="form-fila">
                     <div class="campo"><label for="sitio_url">URL del sitio WordPress</label>
@@ -144,10 +144,10 @@
                 <div class="caja-cab"><span class="icono-suave chico"><x-ic n="libro" c="sm" /></span><h2>Cómo se conecta un proyecto nuevo</h2></div>
                 <div class="caja-cuerpo">
                     <ol class="pasos">
-                        <li><span>En el WordPress del cliente entra a <b>Elementor › Elementor MCP</b>, activa el acceso, elige <b>Claude Code</b> y pulsa <b>Generate Prompt</b>. Requiere Elementor 4.3 o superior y WordPress 6.8 o superior.</span></li>
-                        <li><span>Abre Claude Code <b>dentro de la carpeta de ese proyecto</b> y pega el prompt. Así el servidor queda registrado solo para esa carpeta y el asistente no confunde un sitio con otro.</span></li>
+                        <li><span>En el WordPress del cliente entra a <b>Elementor › Elementor MCP</b>, activa el acceso, elige tu agente (por ejemplo <b>Claude Code</b> o <b>Codex</b>) y pulsa <b>Generate Prompt</b>. Requiere Elementor 4.3 o superior y WordPress 6.8 o superior.</span></li>
+                        <li><span>Abre tu agente <b>dentro de la carpeta de ese proyecto</b> y pega el prompt. Así el servidor queda registrado solo para esa carpeta y el asistente no confunde un sitio con otro.</span></li>
                         <li><span>Pega el mismo prompt aquí al lado. El panel guarda el sitio y el nombre del servidor, sin la contraseña, y comprueba las versiones.</span></li>
-                        <li><span>Verifica en la consola con <code>claude mcp list</code> que aparezca el servidor con el nombre que registraste.</span></li>
+                        <li><span>Verifica que el servidor aparezca con el nombre que registraste (en Claude Code: <code>claude mcp list</code>).</span></li>
                     </ol>
                 </div>
             </section>
@@ -155,7 +155,7 @@
             <section class="caja">
                 <div class="caja-cab"><span class="icono-suave chico"><x-ic n="terminal" c="sm" /></span><h2>Comandos de la consola</h2></div>
                 @foreach ([
-                    ['claude mcp list', 'Servidores MCP registrados en esta carpeta'],
+                    ['claude mcp list', 'Servidores MCP de la carpeta (Claude Code; cada agente tiene el suyo)'],
                     ['php artisan conexion:comprobar', 'Comprueba versiones de todos los sitios'],
                     ['php artisan registro:figma', 'Carga páginas y tokens leídos del Figma'],
                     ['php artisan registro:cola', 'Correcciones pendientes para el asistente'],

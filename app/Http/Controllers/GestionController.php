@@ -101,7 +101,7 @@ class GestionController extends Controller
 
         return redirect()->route('dashboard')->with('ok', "Proyecto \"{$proyecto->nombre}\" eliminado"
             . ($conteo['en_blanco'] ? '.' : ' junto con todos sus registros.')
-            . ($mcp ? " Quita también su servidor de la consola: claude mcp remove {$mcp}" : ''));
+            . ($mcp ? " Quita también su servidor MCP de tu agente (en Claude Code: claude mcp remove {$mcp})" : ''));
     }
 
     public function guardarPagina(Request $request, Proyecto $proyecto)

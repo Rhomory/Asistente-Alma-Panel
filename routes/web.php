@@ -23,6 +23,7 @@ Route::delete('/conexiones/{conexion}', [ConexionController::class, 'eliminar'])
 Route::get('/proyectos/nuevo', [GestionController::class, 'crear'])->name('proyecto.nuevo');
 Route::post('/proyectos', [GestionController::class, 'guardar'])->name('proyecto.guardar');
 Route::get('/proyectos/{proyecto}', [PanelController::class, 'proyecto'])->name('proyecto');
+Route::delete('/proyectos/{proyecto}', [GestionController::class, 'eliminar'])->name('proyecto.eliminar');
 Route::get('/proyectos/{proyecto}/guia', [GuiaController::class, 'show'])->name('proyecto.guia');
 Route::post('/proyectos/{proyecto}/paginas', [GestionController::class, 'guardarPagina'])->name('pagina.guardar');
 Route::post('/paginas/{pagina}/incluir', [GestionController::class, 'incluirPagina'])->name('pagina.incluir');

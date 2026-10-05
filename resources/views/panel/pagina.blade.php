@@ -40,7 +40,7 @@
         <span><b>{{ $trabajo ? round(100 * $pagina->secciones->sum('min_asistente') / $trabajo) : 0 }} %</b> hecho por el asistente</span>
     </section>
 
-    <div class="rejilla" style="grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr)">
+    <div class="rejilla flujo">
         <section class="caja">
             <div class="caja-cab"><h2>Secciones</h2><span class="cifra">{{ $resumen['total'] }}</span></div>
             @forelse ($pagina->secciones as $i => $s)

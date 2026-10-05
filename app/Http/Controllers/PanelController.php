@@ -64,7 +64,9 @@ class PanelController extends Controller
         $secciones = Seccion::whereIn('pagina_id', $paginas->pluck('id'))->orderBy('id')
             ->get(['pagina_id', 'estado'])->groupBy('pagina_id');
 
-        return view('panel.proyecto', compact('proyecto', 'paginas', 'secciones'));
+        $conteo = GestionController::conteoEliminar($proyecto);
+
+        return view('panel.proyecto', compact('proyecto', 'paginas', 'secciones', 'conteo'));
     }
 
     public function registro(Request $request)

@@ -37,10 +37,13 @@
         </div>
         <div class="acciones">
             <a class="btn" href="{{ route('proyecto.guia', $proyecto) }}"><x-ic n="libro" />Ver guía y prompt</a>
+            <button class="btn fant peligro" type="button" onclick="document.getElementById('eliminar-proyecto').showModal()"><x-ic n="basura" />Eliminar</button>
         </div>
     </div>
 
-    <div class="rejilla" style="grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr)">
+    @include('panel.partes.eliminar-proyecto')
+
+    <div class="rejilla ancha">
         <section class="caja">
             <div class="caja-cab"><h2>Páginas</h2><span class="cifra">{{ $paginas->count() }}</span>
                 <span class="nota derecha">El switch decide qué páginas se maquetan</span></div>

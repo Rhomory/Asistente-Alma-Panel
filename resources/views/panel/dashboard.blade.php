@@ -18,6 +18,7 @@
             'qa_solicitado'        => ['mensaje', 'ora', 'QA solicitado'],
             'token'                => ['paleta', '', 'Token de diseño'],
             'figma'                => ['figma', '', 'Figma leído'],
+            'proyecto_eliminado'   => ['basura', 'err', 'Proyecto eliminado'],
         ];
     @endphp
 

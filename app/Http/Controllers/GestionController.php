@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Evento;
 use App\Models\Pagina;
 use App\Models\Proyecto;
+use App\Models\Seccion;
 use App\Models\Token;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Gestión del catálogo (proyectos y páginas) desde la interfaz.
@@ -53,6 +56,52 @@ class GestionController extends Controller
 
         return redirect()->route('proyecto', $proyecto)
             ->with('ok', $mensaje . ' El asistente cargará sus páginas al leer el Figma.');
+    }
+
+    /** Lo que se perdería al eliminar el proyecto. Un proyecto sin páginas ni tokens está "en blanco". */
+    public static function conteoEliminar(Proyecto $proyecto): array
+    {
+        $secciones = Seccion::whereIn('pagina_id', $proyecto->paginas()->select('id'));
+
+        $c = [
+            'paginas'    => $proyecto->paginas()->count(),
+            'secciones'  => (clone $secciones)->count(),
+            'tokens'     => $proyecto->tokens()->count(),
+            'conexiones' => $proyecto->conexiones()->count(),
+            'eventos'    => Evento::whereIn('seccion_id', (clone $secciones)->select('id'))->count(),
+        ];
+        $c['en_blanco'] = $c['paginas'] === 0 && $c['tokens'] === 0;
+
+        return $c;
+    }
+
+    /**
+     * Elimina el proyecto. En blanco: basta la confirmación del navegador.
+     * Con registros: hay que escribir el nombre exacto del proyecto; se borra todo lo relacionado.
+     */
+    public function eliminar(Request $request, Proyecto $proyecto)
+    {
+        $conteo = self::conteoEliminar($proyecto);
+
+        if (! $conteo['en_blanco'] && trim((string) $request->input('confirmacion')) !== $proyecto->nombre) {
+            return back()->withErrors(['confirmacion' => 'El nombre no coincide. Escríbelo exactamente como aparece para eliminar el proyecto.']);
+        }
+
+        $mcp = $proyecto->conexion?->nombre_mcp;
+
+        DB::transaction(function () use ($proyecto) {
+            // Los eventos solo quedarían huérfanos (seccion_id → null); se borran con el proyecto.
+            Evento::whereIn('seccion_id', Seccion::whereIn('pagina_id', $proyecto->paginas()->select('id'))->select('id'))->delete();
+            $proyecto->delete(); // páginas, secciones, tokens y conexiones caen en cascada
+        });
+
+        Evento::create(['tipo' => 'proyecto_eliminado', 'detalle' => $conteo['en_blanco']
+            ? "Proyecto \"{$proyecto->nombre}\" eliminado (estaba en blanco)"
+            : "Proyecto \"{$proyecto->nombre}\" eliminado con {$conteo['paginas']} páginas, {$conteo['secciones']} secciones y {$conteo['tokens']} tokens"]);
+
+        return redirect()->route('dashboard')->with('ok', "Proyecto \"{$proyecto->nombre}\" eliminado"
+            . ($conteo['en_blanco'] ? '.' : ' junto con todos sus registros.')
+            . ($mcp ? " Quita también su servidor de la consola: claude mcp remove {$mcp}" : ''));
     }
 
     public function guardarPagina(Request $request, Proyecto $proyecto)

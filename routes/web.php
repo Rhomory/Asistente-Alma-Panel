@@ -25,6 +25,7 @@ Route::post('/proyectos', [GestionController::class, 'guardar'])->name('proyecto
 Route::get('/proyectos/{proyecto}', [PanelController::class, 'proyecto'])->name('proyecto');
 Route::delete('/proyectos/{proyecto}', [GestionController::class, 'eliminar'])->name('proyecto.eliminar');
 Route::get('/proyectos/{proyecto}/guia', [GuiaController::class, 'show'])->name('proyecto.guia');
+Route::get('/proyectos/{proyecto}/claude-md', [GuiaController::class, 'claudeMd'])->name('proyecto.claude');
 Route::post('/proyectos/{proyecto}/paginas', [GestionController::class, 'guardarPagina'])->name('pagina.guardar');
 Route::post('/paginas/{pagina}/incluir', [GestionController::class, 'incluirPagina'])->name('pagina.incluir');
 Route::post('/proyectos/{proyecto}/tokens', [GestionController::class, 'guardarToken'])->name('token.guardar');

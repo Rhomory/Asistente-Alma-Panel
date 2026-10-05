@@ -37,6 +37,7 @@
         </div>
         <div class="acciones">
             <a class="btn" href="{{ route('proyecto.guia', $proyecto) }}"><x-ic n="libro" />Ver guía y prompt</a>
+            <a class="btn" href="{{ route('proyecto.claude', $proyecto) }}" title="Contexto para Claude Code: guárdalo en la carpeta del cliente"><x-ic n="terminal" />CLAUDE.md</a>
             <button class="btn fant peligro" type="button" onclick="document.getElementById('eliminar-proyecto').showModal()"><x-ic n="basura" />Eliminar</button>
         </div>
     </div>

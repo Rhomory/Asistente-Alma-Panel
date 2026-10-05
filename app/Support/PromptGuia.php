@@ -73,6 +73,63 @@ class PromptGuia
         return implode("\n", $lineas);
     }
 
+    /**
+     * CLAUDE.md para la carpeta del cliente: Claude Code lo carga al abrir esa carpeta,
+     * así el asistente empieza sabiendo qué proyecto es, cómo hablar con el panel y el flujo.
+     * El sistema de diseño no se copia aquí: se pide actualizado con guia:prompt.
+     */
+    public static function claudeMd(Proyecto $proyecto): string
+    {
+        $nombre = $proyecto->nombre;
+        $mcp = $proyecto->conexion?->nombre_mcp ?? PromptElementor::nombreSugerido($nombre);
+        $alma = 'powershell -NoProfile -File "$HOME\\.claude\\skills\\alma-figma\\alma.ps1"';
+        $paginas = $proyecto->paginas()->where('incluida', true)->orderBy('id')->pluck('nombre');
+        $sitio = $proyecto->sitio_wp ?: "[falta la URL del sitio]";
+        $figma = $proyecto->archivo_figma ?: "[falta el archivo de Figma]";
+        $lista = $paginas->isEmpty() ? "aún ninguna (léelas del Figma)" : $paginas->implode(", ");
+        $fecha = now("America/Lima")->format("d/m/Y");
+
+        return <<<MD
+        # {$nombre} — contexto para el asistente
+
+        Generado por el panel Asistente Alma el {$fecha}. Vuelve a descargarlo si cambian el sitio, el Figma o la conexión.
+
+        ## El proyecto
+        - Sitio WordPress (staging): {$sitio}
+        - Archivo de Figma: {$figma}
+        - Servidor MCP de Elementor de este sitio: `{$mcp}` (registrado solo en esta carpeta; compruébalo con `claude mcp list`).
+        - Páginas en alcance: {$lista}
+        - Panel de supervisión: http://127.0.0.1:8000/proyectos/{$proyecto->id} (lo mira el desarrollador mientras construyes).
+
+        ## Cómo hablar con el panel
+        El panel corre en WSL Ubuntu. Desde esta carpeta (Windows) sus comandos van por el puente:
+
+        ```powershell
+        {$alma} <comando> [argumentos]
+        ```
+
+        | Para | Comando |
+        |---|---|
+        | Guía actualizada (tokens, plan, reglas) de una página | `guia:prompt "{$nombre}" "<Página>"` |
+        | Correcciones pendientes | `registro:cola` |
+        | Cargar páginas y tokens leídos del Figma | `registro:figma "{$nombre}" --archivo=<ruta.json>` (skill `alma-figma`) |
+        | Registrar una sección terminada | `registro:add "{$nombre}" "<Página>" "<Sección>" <min> --asistente=<min> --dev=<min>` |
+        | Comprobar el sitio | `conexion:comprobar "{$nombre}"` |
+
+        ## Flujo de trabajo
+        1. Al empezar: revisa `registro:cola`. Las correcciones pendientes van primero.
+        2. Si el proyecto aún no tiene páginas o tokens en el panel, lee el Figma con la skill `alma-figma`.
+        3. Antes de construir una página, pide su guía con `guia:prompt` y síguela al pie de la letra.
+        4. Construye **una sección a la vez** con el MCP `{$mcp}`, siempre en borrador. Al terminar cada una, regístrala con `registro:add`. El desarrollador la aprueba o pide corrección en el panel.
+        5. Nunca publiques ni borres contenido del sitio. Nada se publica sin aprobación en el panel.
+
+        ## Reglas
+        - Lee el Figma con figwright en modo económico: inventario con `detail: "minimal"`, `full` solo para la sección que estás construyendo; nunca `get_node` ni `get_document` para inventario.
+        - Usa variables globales de Elementor para colores y tipografías; nada de valores sueltos ni HTML incrustado.
+        - No escribas contraseñas, tokens ni la contraseña de aplicación en archivos, mensajes o registros.
+        MD;
+    }
+
     public static function esColor(string $valor): bool
     {
         return (bool) preg_match('/^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i', trim($valor));

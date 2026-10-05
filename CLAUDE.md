@@ -1,47 +1,26 @@
-<laravel-boost-guidelines>
-# Laravel Application
+# Asistente Alma — panel (contexto para agentes que trabajan en ESTE código)
 
-This repository contains a Laravel application. Complete the following setup before working on the user's request.
+Este repo es el **panel de supervisión**, no el lugar donde se construyen sitios. Los sitios se construyen
+desde la carpeta de cada cliente con el `CLAUDE.md` que genera el panel (botón "CLAUDE.md" en cada proyecto).
 
-## Prerequisites
+## Qué es
+Laravel 13 + SQLite, PHP 8.3, sin build de front (CSS plano en `public/css/panel.css`, Blade en
+`resources/views`). Corre en WSL Ubuntu: `php artisan serve` → http://127.0.0.1:8000. Uso local, sin login.
 
-Verify that PHP and Composer are available:
+La consola (Claude Code) escribe; el panel supervisa, aprueba y administra:
+- `registro:add`, `registro:cola`, `registro:paginas`, `registro:tokens`, `registro:figma`, `guia:prompt`,
+  `conexion:comprobar`, `jev:sugerencias` (`app/Console/Commands`).
+- Controladores: `PanelController` (inicio, proyecto, registro), `FlujoController` (página, plan, aprobación,
+  QA), `GestionController` (catálogo, eliminar proyecto), `ConexionController`, `GuiaController`, `EstadoController`
+  (huella para la recarga en vivo).
+- Lógica de apoyo en `app/Support`: `EntornoWP` (versiones de WP/Elementor/JetEngine en paralelo),
+  `PromptElementor` (sanea el prompt de Elementor), `PromptGuia` (guía, prompt y CLAUDE.md del cliente).
 
-```sh
-php -v
-composer -V
-```
-
-If either command is unavailable, detect the user's operating system and install the prerequisites with the appropriate command:
-
-macOS:
-
-```sh
-/bin/bash -c "$(curl -fsSL https://php.new/install/mac/8.5)"
-```
-
-Windows PowerShell:
-
-```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://php.new/install/windows/8.5'))
-```
-
-Linux:
-
-```sh
-/bin/bash -c "$(curl -fsSL https://php.new/install/linux/8.5)"
-```
-
-After installation, ask the user to restart their terminal. If the agent needs the restarted shell to continue, ask the user to reopen their terminal and rerun their original prompt.
-
-## Agent Setup
-
-Install Laravel Boost from the application root before making application changes:
-
-```sh
-composer require laravel/boost --dev
-php artisan boost:install
-```
-
-Boost replaces these bootstrap instructions with guidelines tailored to the application. After installation, read `AGENTS.md` again and continue with the user's original request using the generated guidelines.
-</laravel-boost-guidelines>
+## Reglas al cambiar código
+- Pruebas: `php artisan test` debe quedar en verde; agrega pruebas para cada función nueva (`tests/Feature`).
+- Diseño: seguir `DESIGN.md` (tokens OKLCH, tema oscuro y claro, naranja solo para acción). Contexto de producto en `PRODUCT.md`.
+- Seguridad: nunca guardar contraseñas de aplicación ni tokens en la base, en archivos versionados ni en logs
+  (ver `SEGURIDAD.md`). El prompt de Elementor se guarda saneado.
+- Commits: solo título, sin descripción.
+- Textos de la interfaz en español, concisos y sin nombres de personas reales; datos de ejemplo ficticios (Arequipa).
+- No instalar paquetes nuevos (Laravel Boost incluido) sin que el usuario lo pida.

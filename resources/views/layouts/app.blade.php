@@ -27,7 +27,7 @@
         <nav class="nav">
             <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'on' : '' }}"><x-ic n="inicio" /><span class="txt">Inicio</span>
                 @if ($navCola)<span class="cuenta alerta" title="Correcciones en cola">{{ $navCola }}</span>@endif</a>
-            <a href="{{ route('registro') }}" class="{{ request()->routeIs('registro') ? 'on' : '' }}"><x-ic n="lista" /><span class="txt">Registro de secciones</span></a>
+            <a href="{{ route('registro') }}" class="{{ request()->routeIs('registro') ? 'on' : '' }}"><x-ic n="lista" /><span class="txt">Registro de cambios</span></a>
             <a href="{{ route('conexion') }}" class="{{ request()->routeIs('conexion') ? 'on' : '' }}"><x-ic n="enchufe" /><span class="txt">Conexión</span></a>
         </nav>
         <div class="nav-grupo">Proyectos</div>

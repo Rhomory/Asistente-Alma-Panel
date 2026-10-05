@@ -387,22 +387,12 @@ pre.bloque { margin: 0; padding: 12px 14px; border-radius: 10px; background: var
     .dialogo[open]::backdrop { opacity: 0; }
 }
 
-/* ── Transición entre páginas (View Transitions entre documentos del mismo origen) ──
-   Las barras lateral y superior quedan quietas; solo el contenido se funde y sube 6 px. */
-@view-transition { navigation: auto; }
-.side { view-transition-name: lateral; }
-.barra { view-transition-name: barra-superior; }
-.contenido { view-transition-name: contenido; }
-::view-transition-group(lateral), ::view-transition-group(barra-superior),
-::view-transition-old(lateral), ::view-transition-new(lateral),
-::view-transition-old(barra-superior), ::view-transition-new(barra-superior) { animation: none; }
-::view-transition-old(contenido) { animation: vt-salir .12s ease-out both; }
-::view-transition-new(contenido) { animation: vt-entrar .24s cubic-bezier(.22, 1, .36, 1) both; }
-::view-transition-group(contenido) { animation-duration: .24s; }
-@keyframes vt-salir { to { opacity: 0; } }
-@keyframes vt-entrar { from { opacity: 0; transform: translateY(6px); } }
+/* ── Entrada de página: el contenido se aclara de forma sutil, sin desplazarse ──
+   Parte de 55 % de opacidad (nunca invisible) y no toca las barras lateral ni superior. */
+.contenido { animation: aparecer .22s ease-out; }
+@keyframes aparecer { from { opacity: .55; } }
 
 @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; }
-    ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+    .contenido { animation: none; }
 }

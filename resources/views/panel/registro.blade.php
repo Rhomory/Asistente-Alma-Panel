@@ -1,11 +1,11 @@
 @extends('layouts.app')
 @section('titulo', 'Registro')
-@section('migas')<a href="{{ route('dashboard') }}">Inicio</a> / <b>Registro de secciones</b>@endsection
+@section('migas')<a href="{{ route('dashboard') }}">Inicio</a> / <b>Registro de cambios</b>@endsection
 
 @section('contenido')
     <div class="cabeza">
         <div>
-            <h1>Registro de secciones</h1>
+            <h1>Registro de cambios</h1>
             <p>Cada fila la escribe la consola al terminar una sección. Este registro es la base de la medición de tiempos y del beneficio/costo.</p>
         </div>
         <a class="btn" href="{{ route('registro.export', request()->query()) }}"><x-ic n="lista" />Exportar CSV</a>

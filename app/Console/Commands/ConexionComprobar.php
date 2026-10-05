@@ -25,9 +25,11 @@ class ConexionComprobar extends Command
         }
 
         $ultimas = EntornoWP::ultimasVersiones();
-        $this->table(['Proyecto', 'MCP', 'Estado', 'WordPress', 'Elementor', 'JetEngine', 'Vía'], $conexiones->map(function ($c) {
-            EntornoWP::comprobar($c);
+        $inicio = microtime(true);
+        EntornoWP::comprobarVarias($conexiones);
+        $this->line(sprintf('%d sitios comprobados en %.1f s.', $conexiones->count(), microtime(true) - $inicio));
 
+        $this->table(['Proyecto', 'MCP', 'Estado', 'WordPress', 'Elementor', 'JetEngine', 'Vía'], $conexiones->map(function ($c) {
             return [$c->proyecto->nombre, $c->nombre_mcp, $c->estado, $c->wp_version ?? '—', $c->elementor_version ?? '—', $c->jetengine_version ?? '—', $c->via ?? 'directo'];
         }));
         $this->line('Últimas publicadas: WordPress ' . ($ultimas['wordpress'] ?? '?') . ' · Elementor ' . ($ultimas['elementor'] ?? '?'));

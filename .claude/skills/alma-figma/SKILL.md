@@ -1,39 +1,51 @@
 ---
 name: alma-figma
-description: Lee un archivo de Figma de un proyecto de Alma y carga sus páginas y tokens en el panel con registro:figma. Úsala siempre que abras o revises un archivo de Figma de un proyecto, o cuando el usuario pida "leer el Figma", "detectar páginas" o "cargar tokens".
+description: Lee un archivo de Figma de un proyecto de Alma y carga sus páginas y tokens en el panel Asistente Alma con registro:figma. Úsala siempre que abras o revises un archivo de Figma de un proyecto, o cuando el usuario pida "leer el Figma", "detectar páginas", "cargar tokens" o preparar un proyecto para construir.
 ---
 
 # Puente Figma → panel Asistente Alma
 
-Cada vez que leas un archivo de Figma de un proyecto, deja lo leído en el panel. El panel
-abierto en el navegador se recarga solo y muestra las páginas y tokens nuevos.
+Cada vez que leas un archivo de Figma de un proyecto, deja lo leído en el panel. El panel abierto en el
+navegador se recarga solo y muestra las páginas y tokens nuevos.
+
+## Dónde corre el panel
+
+El panel es Laravel en WSL Ubuntu (`/home/romino/proyectos/asistente-alma-panel`). Hay dos modos:
+
+- **Desde Windows** (lo habitual: Claude Code en la carpeta del cliente, con figwright y el MCP de Elementor):
+  usa el puente `alma.ps1` que está junto a esta skill.
+  ```powershell
+  powershell -NoProfile -File "$HOME\.claude\skills\alma-figma\alma.ps1" registro:figma "<Proyecto>" --archivo=C:\ruta\figma.json
+  ```
+  Sirve para cualquier comando del panel: `registro:cola`, `registro:add`, `conexion:comprobar`…
+- **Dentro del repo en Ubuntu**: `php artisan registro:figma "<Proyecto>" --archivo=ruta.json`.
 
 ## Pasos
 
-1. Identifica el proyecto: el nombre debe coincidir con el del panel (`php artisan tinker --execute="App\Models\Proyecto::pluck('nombre')"` si dudas).
-2. Lee el archivo con el MCP de Figma:
-   - **Páginas:** cada marco de primer nivel que represente una página del sitio (Inicio, Nosotros…). Cuenta sus secciones (bloques horizontales de primer nivel dentro del marco).
-   - **Tokens:** variables o estilos de color (con su rol: primario, secundario, fondo, texto, acento), tipografías (familia y uso: títulos, cuerpo) y la escala de espaciado.
-3. Carga todo de una vez:
-
-```bash
-php artisan registro:figma "<Proyecto>" --json='{
-  "figma": "https://www.figma.com/design/<id>/<nombre>",
-  "paginas": [{"nombre": "Inicio", "secciones": 7}, {"nombre": "Contacto", "secciones": 3}],
-  "tokens": [
-    {"tipo": "color", "valor": "#2F6B4F", "nota": "primario"},
-    {"tipo": "tipografia", "valor": "Poppins", "nota": "títulos"},
-    {"tipo": "espaciado", "valor": "16 px", "nota": "base"}
-  ]
-}'
-```
-
-   Tipos válidos: `color`, `tipografia`, `espaciado`, `otro`. Los colores van en hexadecimal.
-   Si el JSON es largo, guárdalo en un archivo temporal y usa `--archivo=ruta.json`.
-4. Avisa al usuario cuántas páginas y tokens se cargaron y recuérdale que en el panel decide con el switch qué páginas se maquetan.
+1. **Proyecto.** El nombre debe coincidir con el del panel. Si dudas, lista los proyectos:
+   `alma.ps1 tinker --execute="echo App\Models\Proyecto::pluck('nombre')"`.
+2. **Leer el Figma gastando pocos tokens.** Pide solo lo necesario, en este orden, y no vuelvas a pedir lo que ya tienes:
+   - Páginas: los marcos de primer nivel (profundidad 1). Por cada página, cuenta sus bloques horizontales de primer nivel = secciones. No pidas el árbol completo.
+   - Tokens: variables o estilos locales de color (con su rol: primario, secundario, fondo, texto, acento), tipografías (familia y uso: títulos, cuerpo) y la escala de espaciado.
+   - Nada de capturas ni de nodos profundos en esta etapa; eso se lee después, sección por sección, al construir.
+3. **Escribir el JSON** en un archivo temporal (en Windows: `%TEMP%\alma-figma.json`) con este formato:
+   ```json
+   {
+     "figma": "https://www.figma.com/design/<id>/<nombre>",
+     "paginas": [{"nombre": "Inicio", "secciones": 7}, {"nombre": "Contacto", "secciones": 3}],
+     "tokens": [
+       {"tipo": "color", "valor": "#2F6B4F", "nota": "primario"},
+       {"tipo": "tipografia", "valor": "Poppins", "nota": "títulos"},
+       {"tipo": "espaciado", "valor": "16 px", "nota": "base"}
+     ]
+   }
+   ```
+   Tipos válidos: `color`, `tipografia`, `espaciado`, `otro`. Colores en hexadecimal.
+4. **Cargar:** ejecuta `registro:figma` con `--archivo=` (modo Windows o Ubuntu, ver arriba). El comando no duplica páginas ni tokens, así que repetirlo es seguro.
+5. **Avisar** cuántas páginas y tokens se cargaron, y recordar que en el panel se decide con el switch qué páginas se maquetan.
 
 ## Reglas
 
-- No repitas a mano lo que ya existe: el comando no duplica páginas ni tokens.
-- Nunca pegues tokens de acceso de Figma en el JSON ni en los mensajes; solo el enlace del archivo.
-- No inventes páginas ni colores: si un rol no es claro, usa `"nota": "sin rol"` y avísalo.
+- Nunca pegues tokens de acceso de Figma en el JSON, en mensajes ni en archivos; solo el enlace del archivo.
+- No inventes páginas ni colores: si un rol no es claro, usa `"nota": "sin rol"` y dilo.
+- Borra el JSON temporal al terminar.

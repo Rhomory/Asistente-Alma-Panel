@@ -61,6 +61,9 @@ class FlujoController extends Controller
                 $creadas++;
             }
         }
+        if ($creadas) {
+            self::reabrir($pagina);
+        }
 
         return back()->with('ok', "Plan estándar aplicado: {$creadas} secciones planificadas según la guía técnica.");
     }
@@ -74,8 +77,21 @@ class FlujoController extends Controller
         ], ['nombre.required' => 'La sección necesita un nombre.']);
 
         $pagina->secciones()->create($datos + ['estado' => 'planificada', 'ejecuto' => 'asistente']);
+        self::reabrir($pagina);
 
         return back()->with('ok', "Sección \"{$datos['nombre']}\" agregada al plan.");
+    }
+
+    /**
+     * Una página aprobada (o con QA pedido) que recibe secciones nuevas vuelve a obra:
+     * ya no está lista para QA hasta que se aprueben también las nuevas.
+     */
+    public static function reabrir(Pagina $pagina): void
+    {
+        if (in_array($pagina->estado, ['aprobada', 'en_qc'], true)
+            && $pagina->secciones()->where('estado', '!=', 'aprobada')->exists()) {
+            $pagina->update(['estado' => 'construyendo']);
+        }
     }
 
     public function eliminarPlan(Seccion $seccion)

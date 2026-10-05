@@ -108,6 +108,20 @@ class FlujoCompletoTest extends TestCase
         $this->assertSame('construyendo', $pagina->fresh()->estado);
     }
 
+    public function test_agregar_secciones_a_una_pagina_aprobada_la_vuelve_a_obra(): void
+    {
+        $pagina = $this->pagina();
+        $pagina->secciones()->create(['nombre' => 'Hero', 'estado' => 'aprobada', 'aprobada' => true, 'minutos' => 10]);
+        $pagina->update(['estado' => 'aprobada']);
+
+        $this->post("/paginas/{$pagina->id}/plan", ['nombre' => 'Preguntas frecuentes'])->assertRedirect();
+        $this->assertSame('construyendo', $pagina->fresh()->estado);
+
+        $pagina->update(['estado' => 'en_qc']);
+        $this->post("/paginas/{$pagina->id}/plan-estandar")->assertRedirect();
+        $this->assertSame('construyendo', $pagina->fresh()->estado);
+    }
+
     public function test_pedir_correccion_encola_y_registro_add_la_resuelve(): void
     {
         $pagina = $this->pagina();

@@ -13,6 +13,8 @@
             document.documentElement.dataset.theme = localStorage.getItem('alma-tema') || 'oscuro';
         } catch (e) {}
     </script>
+    <link rel="preload" href="{{ asset('fonts/poppins-400.woff2') }}" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="{{ asset('fonts/poppins-600.woff2') }}" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="{{ asset('css/panel.css') }}">
 </head>
 <body>

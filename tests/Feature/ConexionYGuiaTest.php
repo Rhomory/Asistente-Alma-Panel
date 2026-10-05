@@ -143,6 +143,21 @@ class ConexionYGuiaTest extends TestCase
             ->assertDontSee("font-family: 'Poppins'; background", false);
     }
 
+    public function test_comprobar_varias_conexiones_en_paralelo_no_bloquea(): void
+    {
+        $p = Proyecto::create(['nombre' => 'Sin sitio']);
+        // Puertos locales cerrados: fallan al instante, no esperan el timeout.
+        $a = $p->conexiones()->create(['nombre_mcp' => 'a', 'sitio_url' => 'http://127.0.0.1:9']);
+        $b = $p->conexiones()->create(['nombre_mcp' => 'b', 'sitio_url' => 'http://127.0.0.1:19']);
+
+        $inicio = microtime(true);
+        $this->post('/conexiones/comprobar')->assertRedirect()->assertSessionHas('ok', fn ($m) => str_contains($m, '0 de 2'));
+
+        $this->assertLessThan(3, microtime(true) - $inicio);
+        $this->assertSame('sin_conexion', $a->fresh()->estado);
+        $this->assertNotNull($b->fresh()->comprobada_en);
+    }
+
     public function test_versiones_desactualizadas(): void
     {
         $this->assertTrue(EntornoWP::desactualizada('3.31.4', '4.3.1'));

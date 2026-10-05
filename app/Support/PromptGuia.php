@@ -68,6 +68,7 @@ class PromptGuia
         $lineas[] = '- Usa contenedores y widgets nativos de Elementor; nada de HTML incrustado.';
         $lineas[] = '- Antes de empezar revisa las correcciones pendientes: `php artisan registro:cola`.';
         $lineas[] = "- Al terminar cada sección regístrala: `php artisan registro:add \"{$proyecto->nombre}\" \"{$nombrePagina}\" \"<sección>\" <min> --asistente=<min> --dev=<min>`.";
+        $lineas[] = '- Si trabajas desde Windows, los comandos del panel van por el puente: `powershell -NoProfile -File "$HOME\\.claude\\skills\\alma-figma\\alma.ps1" <comando>` (en lugar de `php artisan`).';
 
         return implode("\n", $lineas);
     }

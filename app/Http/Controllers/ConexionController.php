@@ -54,7 +54,7 @@ class ConexionController extends Controller
         $conexiones = $request->filled('conexion_id')
             ? Conexion::whereKey($request->integer('conexion_id'))->get()
             : Conexion::all();
-        $conexiones->each(fn ($c) => EntornoWP::comprobar($c));
+        EntornoWP::comprobarVarias($conexiones); // todas en paralelo
 
         $ok = $conexiones->where('estado', 'conectado')->count();
 

@@ -40,6 +40,12 @@ class RegistroFigma extends Command
             return self::FAILURE;
         }
 
+        if (empty($datos['paginas']) && empty($datos['tokens']) && empty($datos['figma'])) {
+            $this->warn('El JSON no trae páginas, tokens ni enlace de Figma: no se registró nada.');
+
+            return self::SUCCESS;
+        }
+
         $proyecto = Proyecto::firstOrCreate(['nombre' => $this->argument('proyecto')]);
 
         $figma = trim((string) ($datos['figma'] ?? ''));

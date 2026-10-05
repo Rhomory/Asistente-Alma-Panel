@@ -21,6 +21,9 @@ class FlujoCompletoTest extends TestCase
         \Illuminate\Support\Facades\Cache::put('versiones.wordpress.org', ['wordpress' => null, 'elementor' => null], 60);
         $p = Proyecto::create(['nombre' => 'Demo']);
         $pagina = $p->paginas()->create(['nombre' => 'Inicio']);
+        // Una sección planificada (sin fecha de inicio) y una construida: el registro debe mostrar ambas.
+        $pagina->secciones()->create(['nombre' => 'Hero', 'estado' => 'planificada']);
+        $pagina->secciones()->create(['nombre' => 'Galería', 'estado' => 'construida', 'minutos' => 9, 'inicio' => now(), 'fin' => now()]);
 
         foreach (['/', '/conexion', '/registro', '/proyectos/nuevo', "/proyectos/{$p->id}", "/proyectos/{$p->id}/guia", "/paginas/{$pagina->id}"] as $ruta) {
             $this->get($ruta)->assertOk();

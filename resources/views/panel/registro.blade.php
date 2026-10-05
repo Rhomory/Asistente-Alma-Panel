@@ -33,7 +33,7 @@
                 <tbody>
                 @forelse ($secciones as $s)
                     <tr>
-                        <td class="mut nw">{{ optional($s->inicio)->setTimezone('America/Lima')->format('d/m/Y') ?? '—' }}</td>
+                        <td class="mut nw">{{ $s->inicio?->setTimezone('America/Lima')->format('d/m/Y') ?? '—' }}</td>
                         <td class="nw">{{ $s->pagina->proyecto->nombre }}</td>
                         <td class="nw"><a href="{{ route('pagina', $s->pagina_id) }}">{{ $s->pagina->nombre }}</a></td>
                         <td>{{ $s->nombre }}</td>

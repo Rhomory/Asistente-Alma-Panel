@@ -17,7 +17,17 @@
                 <div class="campo"><label for="nombre">Nombre del proyecto</label>
                     <input id="nombre" name="nombre" type="text" value="{{ old('nombre') }}" placeholder="Ej.: Sitio Clínica del Sur" required maxlength="120"
                         oninput="const n=document.getElementById('nombre_mcp'); if(!n.dataset.tocado) n.value = this.value ? 'elementor-' + this.value.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') : ''">
+                    <small>Debe ser único. No uses versiones como “v2” o “copia”: los cambios de diseño se guardan como Design\v2 dentro del mismo proyecto.</small>
                     @error('nombre')<span class="error">{{ $message }}</span>@enderror</div>
+                @error('variante')
+                    <div class="aviso variante" role="alert"><x-ic n="alerta" />
+                        <div>
+                            <b>Este nombre parece una variante de otro proyecto</b>
+                            <p>{{ $message }}</p>
+                            <label class="forzar"><input type="checkbox" name="forzar_variante" value="1"> Es un proyecto distinto de verdad: crearlo igual</label>
+                        </div>
+                    </div>
+                @enderror
                 <div class="campo"><label for="cliente">Cliente</label>
                     <input id="cliente" name="cliente" type="text" value="{{ old('cliente') }}" placeholder="Razón social · ciudad, sin datos personales" maxlength="160">
                     @error('cliente')<span class="error">{{ $message }}</span>@enderror</div>

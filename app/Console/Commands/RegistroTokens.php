@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Evento;
 use App\Models\Proyecto;
+use App\Support\NombresProyecto;
 use Illuminate\Console\Command;
 
 /**
@@ -16,12 +17,15 @@ use Illuminate\Console\Command;
  */
 class RegistroTokens extends Command
 {
-    protected $signature = 'registro:tokens {proyecto} {tokens*}';
+    protected $signature = 'registro:tokens {proyecto} {tokens*} {--forzar-variante : Crear el proyecto aunque se parezca a otro (solo si el usuario lo confirma)}';
     protected $description = 'Registra los tokens de diseño detectados en el archivo (los escribe el asistente)';
 
     public function handle(): int
     {
-        $proyecto = Proyecto::firstOrCreate(['nombre' => $this->argument('proyecto')]);
+        $proyecto = NombresProyecto::paraConsola($this, $this->argument('proyecto'));
+        if (! $proyecto) {
+            return self::FAILURE;
+        }
         $nuevos = $omitidos = 0;
 
         foreach ($this->argument('tokens') as $entrada) {

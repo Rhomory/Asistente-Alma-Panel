@@ -110,6 +110,7 @@
         <div class="caja-cuerpo reglas">
             <p><x-ic n="escudo" c="sm" />Nada se publica sin tu aprobación: el agente trabaja siempre en borrador.</p>
             <p><x-ic n="capas" c="sm" />Una carpeta y un servidor MCP por proyecto; el agente solo atiende ese proyecto.</p>
+            <p><x-ic n="lista" c="sm" />Cada proyecto tiene un nombre único: “Cota” y “cota” son el mismo. No se crean variantes (“Cota v2”, “cotav1”, “Cota copia”): comparten MCP y credencial parecidos y el agente puede trabajar en el equivocado. Si el Figma cambió, se relee y queda como Design\v2. Forzar una variante pide confirmación expresa.</p>
             <p><x-ic n="llave" c="sm" />Las contraseñas nunca van al panel, a archivos del proyecto ni al chat: viven en la configuración del agente o en variables de Windows.</p>
             <p><x-ic n="figma" c="sm" />El Figma se lee en modo económico y se guarda en el panel; al construir se usa el ID guardado de cada sección.</p>
             <p><x-ic n="alerta" c="sm" />Si algo falla, primero <code>alma.ps1 diagnostico</code>.</p>

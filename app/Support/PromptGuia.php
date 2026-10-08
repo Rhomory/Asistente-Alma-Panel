@@ -118,6 +118,10 @@ class PromptGuia
         ## Alcance: solo este proyecto
         Trabajas únicamente en **{$nombre}**. Usa siempre su nombre en los comandos del panel, no leas ni modifiques
         otros proyectos y no tomes en cuenta su estado, aunque aparezcan en el panel o en la cola.
+        Escribe el nombre tal cual: "{$nombre}". **No crees otro proyecto ni una variante** ("{$nombre} v2", "{$nombre} copia"):
+        si el Figma cambió, se guarda como versión nueva con `diseno:guardar`. Si un comando rechaza un nombre por parecido,
+        no uses `--forzar-variante` por tu cuenta: explica al desarrollador que una variante comparte MCP y credencial
+        parecidos (puedes terminar trabajando en el proyecto equivocado) y fuérzalo solo si te lo confirma.
 
         ## Esta carpeta
         - `AGENTS.md` (este archivo) y `CLAUDE.md` (lo importa para Claude Code).

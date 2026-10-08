@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Console\Commands\Concerns\LeeJson;
 use App\Models\Proyecto;
+use App\Support\NombresProyecto;
 use App\Support\CarpetaProyecto;
 use App\Support\Disenos;
 use Illuminate\Console\Command;
@@ -42,7 +43,7 @@ class DisenoGuardar extends Command
             return self::FAILURE;
         }
 
-        $proyecto = Proyecto::where('nombre', $this->argument('proyecto'))->first();
+        $proyecto = NombresProyecto::buscar($this->argument('proyecto'));
         if (! $proyecto) {
             $this->error('No existe el proyecto "' . $this->argument('proyecto') . '". Créalo primero en el panel.');
 

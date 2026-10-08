@@ -86,4 +86,5 @@ ID de Figma y la carpeta de capturas de la versión en uso.
 ## Reglas
 
 - Nunca pegues tokens de acceso de Figma ni contraseñas en el JSON, en mensajes ni en archivos.
+- Usa el nombre exacto del proyecto. No crees variantes ("Cota v2", "cotav1", "Cota copia"): un Figma nuevo se guarda como `DesignN` del mismo proyecto. `--forzar-variante` solo si el desarrollador lo confirma tras explicarle el riesgo.
 - No inventes páginas, secciones ni colores: si un rol no es claro, usa `"nota": "sin rol"` y dilo.

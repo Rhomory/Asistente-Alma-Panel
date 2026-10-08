@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Evento;
 use App\Models\Pagina;
 use App\Models\Proyecto;
+use App\Support\NombresProyecto;
 use Illuminate\Console\Command;
 
 /**
@@ -24,13 +25,17 @@ class RegistroAdd extends Command
         {--dev=0 : Minutos ejecutados por el desarrollador}
         {--widget= : Widget aplicado según la guía técnica}
         {--correcciones=0 : Número de correcciones pedidas}
-        {--aprobada : Marcar la sección como aprobada}';
+        {--aprobada : Marcar la sección como aprobada}
+        {--forzar-variante : Crear el proyecto aunque se parezca a otro (solo si el usuario lo confirma)}';
 
     protected $description = 'Registra una sección construida (lo escribe la consola, el panel solo lee)';
 
     public function handle(): int
     {
-        $proyecto = Proyecto::firstOrCreate(['nombre' => $this->argument('proyecto')]);
+        $proyecto = NombresProyecto::paraConsola($this, $this->argument('proyecto'));
+        if (! $proyecto) {
+            return self::FAILURE;
+        }
         $pagina = Pagina::firstOrCreate(
             ['proyecto_id' => $proyecto->id, 'nombre' => $this->argument('pagina')],
             ['estado' => 'construyendo']

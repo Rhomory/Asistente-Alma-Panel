@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Proyecto;
+use App\Support\NombresProyecto;
 use App\Support\PromptGuia;
 use Illuminate\Console\Command;
 
@@ -19,7 +20,7 @@ class GuiaPrompt extends Command
 
     public function handle(): int
     {
-        $proyecto = Proyecto::where('nombre', $this->argument('proyecto'))->first();
+        $proyecto = NombresProyecto::buscar($this->argument('proyecto'));
         if (! $proyecto) {
             $this->error('No existe el proyecto "' . $this->argument('proyecto') . '". Proyectos: ' . Proyecto::pluck('nombre')->implode(', '));
 

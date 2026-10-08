@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Pagina;
 use App\Models\Proyecto;
+use App\Support\NombresProyecto;
 use Illuminate\Console\Command;
 
 /**
@@ -33,7 +34,7 @@ class RegistroImport extends Command
             if (count($fila) < 7 || trim($fila[$col['proyecto']]) === '') {
                 continue;
             }
-            $proyecto = Proyecto::firstOrCreate(['nombre' => trim($fila[$col['proyecto']])]);
+            $proyecto = NombresProyecto::buscar(trim($fila[$col['proyecto']])) ?? Proyecto::create(['nombre' => trim($fila[$col['proyecto']])]);
             $pagina = Pagina::firstOrCreate(
                 ['proyecto_id' => $proyecto->id, 'nombre' => trim($fila[$col['pagina']])],
                 ['estado' => 'construyendo']

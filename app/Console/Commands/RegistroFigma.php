@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Console\Commands\Concerns\LeeJson;
 use App\Models\Evento;
 use App\Models\Proyecto;
+use App\Support\NombresProyecto;
 use App\Support\CargaFigma;
 use Illuminate\Console\Command;
 
@@ -20,7 +21,8 @@ class RegistroFigma extends Command
     protected $signature = 'registro:figma {proyecto}
         {--json= : JSON con figma, paginas y tokens}
         {--archivo= : Ruta a un archivo .json con el mismo formato}
-        {--stdin : Leer el JSON desde la entrada estándar}';
+        {--stdin : Leer el JSON desde la entrada estándar}
+        {--forzar-variante : Crear el proyecto aunque se parezca a otro (solo si el usuario lo confirma)}';
 
     protected $description = 'Carga páginas, secciones (con ID de Figma) y tokens leídos del diseño, sin versionar';
 
@@ -38,7 +40,10 @@ class RegistroFigma extends Command
             return self::SUCCESS;
         }
 
-        $proyecto = Proyecto::firstOrCreate(['nombre' => $this->argument('proyecto')]);
+        $proyecto = NombresProyecto::paraConsola($this, $this->argument('proyecto'));
+        if (! $proyecto) {
+            return self::FAILURE;
+        }
         $r = CargaFigma::aplicar($proyecto, $datos);
         foreach ($r['avisos'] as $aviso) {
             $this->warn($aviso);

@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Proyecto;
+use App\Support\NombresProyecto;
 use Illuminate\Console\Command;
 
 /**
@@ -16,12 +17,15 @@ use Illuminate\Console\Command;
  */
 class RegistroPaginas extends Command
 {
-    protected $signature = 'registro:paginas {proyecto} {paginas*}';
+    protected $signature = 'registro:paginas {proyecto} {paginas*} {--forzar-variante : Crear el proyecto aunque se parezca a otro (solo si el usuario lo confirma)}';
     protected $description = 'Registra las páginas detectadas en el diseño (las escribe el asistente)';
 
     public function handle(): int
     {
-        $proyecto = Proyecto::firstOrCreate(['nombre' => $this->argument('proyecto')]);
+        $proyecto = NombresProyecto::paraConsola($this, $this->argument('proyecto'));
+        if (! $proyecto) {
+            return self::FAILURE;
+        }
         $nuevas = $actualizadas = 0;
 
         foreach ($this->argument('paginas') as $entrada) {

@@ -7,8 +7,10 @@ use App\Models\Pagina;
 use App\Models\Proyecto;
 use App\Models\Seccion;
 use App\Models\Token;
+use App\Support\NombresProyecto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Gestión del catálogo (proyectos y páginas) desde la interfaz.
@@ -25,7 +27,11 @@ class GestionController extends Controller
     public function guardar(Request $request)
     {
         $datos = $request->validate([
-            'nombre'        => 'required|string|max:120|unique:proyectos,nombre',
+            'nombre'        => ['required', 'string', 'max:120', function ($attr, $valor, $falla) {
+                if ($otro = NombresProyecto::buscar($valor)) {
+                    $falla("Ya existe el proyecto \"{$otro->nombre}\". Los nombres no distinguen mayúsculas, tildes ni signos: elige uno distinto.");
+                }
+            }],
             'cliente'       => 'nullable|string|max:160',
             'archivo_figma' => ['nullable', 'string', 'max:255', function ($attr, $valor, $falla) {
                 if (str_starts_with($valor, 'http') && ! preg_match('#^https://(www\.)?figma\.com/#', $valor)) {
@@ -35,9 +41,16 @@ class GestionController extends Controller
             'sitio_wp'      => 'nullable|url|max:200',
         ], [
             'nombre.required' => 'El proyecto necesita un nombre.',
-            'nombre.unique'   => 'Ya existe un proyecto con ese nombre.',
             'sitio_wp.url'    => 'El sitio debe ser una URL completa (https://… o http://localhost/…).',
         ]);
+
+        // Variantes ("Cota v2", "cotav1", "Cota copia"): se frenan salvo que se confirme a propósito.
+        $similares = NombresProyecto::variantesDe($datos['nombre']);
+        if ($similares && ! $request->boolean('forzar_variante')) {
+            throw ValidationException::withMessages([
+                'variante' => 'Se parece a ' . implode(', ', array_map(fn ($n) => "\"{$n}\"", $similares)) . '. ' . NombresProyecto::riesgo(),
+            ]);
+        }
 
         // Conexión opcional en el mismo formulario: se valida antes de crear nada.
         $conexion = null;

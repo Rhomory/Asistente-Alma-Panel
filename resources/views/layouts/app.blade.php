@@ -15,7 +15,8 @@
     </script>
     <link rel="preload" href="{{ asset('fonts/poppins-400.woff2') }}" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="{{ asset('fonts/poppins-600.woff2') }}" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="{{ asset('css/panel.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/panel.css') }}?v={{ filemtime(public_path('css/panel.css')) }}">
+    <script src="{{ asset('js/motion.js') }}?v=14.0.0"></script>
 </head>
 <body>
 <div class="app">
@@ -102,42 +103,47 @@
         b.dispatchEvent(new CustomEvent('copiado', { bubbles: true }));
     });
 
-    // Entrada de la vista (estilo dashboard). No se repite en las recargas automáticas ni con "reducir movimiento".
-    let sinEntrada = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // Entrada de la vista, estilo dashboard, con Motion (resortes sin rebote).
+    // No se repite en las recargas automáticas ni con "reducir movimiento"; sin Motion, todo queda quieto y visible.
+    const M = window.Motion;
+    let sinEntrada = !M || matchMedia('(prefers-reduced-motion: reduce)').matches;
     try { if (sessionStorage.getItem('alma-sin-entrada')) { sinEntrada = true; sessionStorage.removeItem('alma-sin-entrada'); } } catch (e) {}
     if (!sinEntrada) {
+        const { animate, stagger } = M;
+        const suave = { type: 'spring', bounce: 0, visualDuration: 0.5 };
         // 1. Bloques en cascada, en orden de lectura (cabecera, resumen, cajas).
-        const bloques = document.querySelectorAll('.contenido > .cabeza, .contenido > .caja, .contenido > form, .contenido .rejilla > .caja, .contenido .rejilla > .col > .caja, .contenido .guia > .col > .caja, .contenido .guia > .caja');
-        [...bloques].slice(0, 10).forEach((el, i) => { el.style.setProperty('--i', i); el.classList.add('entra'); });
+        const bloques = [...document.querySelectorAll('.contenido > .cabeza, .contenido > .caja, .contenido > form, .contenido .rejilla > .caja, .contenido .rejilla > .col > .caja, .contenido .guia > .col > .caja, .contenido .guia > .caja')].slice(0, 10);
+        if (bloques.length) animate(bloques, { opacity: [0, 1], y: [10, 0] }, { ...suave, delay: stagger(0.06) });
         // 2. Filas de cada lista, una tras otra (máx. 12 por lista).
         document.querySelectorAll('.contenido .caja').forEach(caja => {
-            [...caja.querySelectorAll(':scope .pag:not(.cab), :scope .sec, :scope .pendiente, :scope .evento, :scope .proy, :scope .tabla tbody tr, :scope .token, :scope .cmd, :scope .ciclo > li, :scope .piezas > div, :scope .estados > div, :scope .reglas > p')]
-                .slice(0, 12).forEach((f, i) => { f.style.setProperty('--i', i); f.classList.add('entra-fila'); });
+            const filas = [...caja.querySelectorAll(':scope .pag:not(.cab), :scope .sec, :scope .pendiente, :scope .evento, :scope .proy, :scope .tabla tbody tr, :scope .token, :scope .cmd, :scope .ciclo > li, :scope .piezas > div, :scope .estados > div, :scope .reglas > p')].slice(0, 12);
+            if (filas.length) animate(filas, { opacity: [0, 1] }, { duration: 0.4, ease: 'easeOut', delay: stagger(0.035, { startDelay: 0.18 }) });
         });
         // 3. Barras de avance que crecen.
-        document.querySelectorAll('.contenido .barra-prog i, .contenido .seg i').forEach((b, i) => { b.style.setProperty('--i', i % 14); b.classList.add('crece'); });
+        const barras = [...document.querySelectorAll('.contenido .barra-prog i, .contenido .seg i')];
+        if (barras.length) animate(barras, { scaleX: [0, 1] }, { type: 'spring', bounce: 0, visualDuration: 0.8, delay: stagger(0.025, { startDelay: 0.25 }) });
         // 4. Cifras que cuentan hasta su valor (formatos "187", "65 %", "0,6").
-        const facil = t => 1 - Math.pow(1 - t, 3);
         document.querySelectorAll('.contenido .resumen b, .contenido .avance b').forEach(el => {
             const m = el.textContent.trim().match(/^(\d+)(?:,(\d+))?(\s*%)?$/);
             if (!m) return;
             const final = parseFloat(m[1] + '.' + (m[2] || '0')), dec = m[2] ? m[2].length : 0, sufijo = m[3] || '';
             if (!final) return;
-            const t0 = performance.now() + 250, dur = 800;
-            const paso = ahora => {
-                const t = Math.min(Math.max((ahora - t0) / dur, 0), 1);
-                el.textContent = (final * facil(t)).toFixed(dec).replace('.', ',') + sufijo;
-                if (t < 1) requestAnimationFrame(paso);
-            };
-            el.textContent = (0).toFixed(dec).replace('.', ',') + sufijo;
-            requestAnimationFrame(paso);
+            const formato = v => v.toFixed(dec).replace('.', ',') + sufijo;
+            el.textContent = formato(0);
+            animate(0, final, { duration: 0.9, delay: 0.25, ease: [0.22, 1, 0.36, 1], onUpdate: v => { el.textContent = formato(v); } });
         });
     }
 
-    // Aviso flotante: se va solo a los 4,5 s (o al hacer clic).
+    // Aviso flotante: entra con un resorte suave y se va solo a los 4,5 s (o al hacer clic).
     const toast = document.getElementById('toast');
     if (toast) {
-        const quitar = () => { toast.classList.add('saliendo'); setTimeout(() => toast.remove(), 320); };
+        if (M && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            M.animate(toast, { opacity: [0, 1], y: [16, 0] }, { type: 'spring', bounce: 0.15, visualDuration: 0.4 });
+        }
+        const quitar = () => {
+            if (M) M.animate(toast, { opacity: 0, y: 10 }, { duration: 0.25, ease: 'easeIn' }).then(() => toast.remove());
+            else toast.remove();
+        };
         setTimeout(quitar, 4500);
         toast.addEventListener('click', quitar);
     }

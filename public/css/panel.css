@@ -407,21 +407,12 @@ pre.bloque { margin: 0; padding: 12px 14px; border-radius: 10px; background: var
 .btn.peligro-lleno:hover { filter: brightness(1.06); }
 .btn.peligro-lleno:disabled { filter: saturate(.3); opacity: .55; cursor: not-allowed; }
 
-/* ── Movimiento, estilo dashboard ────────────────────────────────────────────────
-   Al abrir una vista: los bloques entran en cascada (fundido + 6 px), las filas de cada lista se encienden
-   una tras otra, las cifras cuentan hasta su valor y las barras crecen. Lo marca el script del layout (clases
-   .entra/.entra-fila/.crece y la variable --i para el orden) y NO se repite cuando el panel se recarga solo.
+/* ── Movimiento, estilo dashboard (con Motion, public/js/motion.js) ──────────────────────
+   El script del layout anima al abrir una vista: bloques en cascada, filas que se encienden, cifras que cuentan
+   y barras que crecen, con resortes sin rebote. No se repite en recargas automáticas ni con "reducir movimiento".
    El menú lateral y la barra superior nunca se animan. Sin JavaScript, todo se ve quieto y completo. */
 :root { --ease-salida: cubic-bezier(.22, 1, .36, 1); }
-
-.entra { animation: bloque-entra .55s var(--ease-salida) both; animation-delay: calc(var(--i, 0) * 60ms); }
-@keyframes bloque-entra { from { opacity: 0; transform: translateY(6px); } }
-
-.entra-fila { animation: fila-entra .4s ease-out both; animation-delay: calc(var(--i, 0) * 35ms + 180ms); }
-@keyframes fila-entra { from { opacity: 0; } }
-
-.barra-prog i.crece, .seg i.crece { transform-origin: left center; animation: barra-crece .8s var(--ease-salida) both; animation-delay: calc(var(--i, 0) * 40ms + 250ms); }
-@keyframes barra-crece { from { transform: scaleX(0); } }
+.barra-prog i, .seg i { transform-origin: left center; }
 
 /* Botones: solo el cambio de color al pasar el mouse (el menú y las pestañas siguen sin transición). */
 .btn, .btn-subir, .copiar { transition: background-color .15s ease-out, border-color .15s ease-out, color .15s ease-out; }
@@ -440,14 +431,10 @@ pre.bloque { margin: 0; padding: 12px 14px; border-radius: 10px; background: var
 /* Aviso flotante (toast) abajo al centro: confirma cada acción y se va solo. */
 .toast { position: fixed; left: 50%; bottom: 28px; z-index: 40; translate: -50% 0; display: flex; align-items: center; gap: 10px;
          max-width: min(560px, calc(100vw - 32px)); padding: 10px 16px; border-radius: 99px; background: var(--ink); color: var(--bg);
-         font-size: 13px; font-weight: 500; box-shadow: var(--shadow); animation: toast-entra .45s var(--ease-salida) both; }
+         font-size: 13px; font-weight: 500; box-shadow: var(--shadow); cursor: pointer; }
 .toast .i { color: var(--ok); flex-shrink: 0; }
-.toast.saliendo { animation: toast-sale .3s ease-in both; }
-@keyframes toast-entra { from { opacity: 0; transform: translateY(12px); } }
-@keyframes toast-sale { to { opacity: 0; transform: translateY(8px); } }
 
 @media (prefers-reduced-motion: reduce) {
-    .entra, .entra-fila, .crece, .toast, .toast.saliendo { animation: none !important; }
     .btn, .btn-subir, .copiar, .dialogo, .dialogo::backdrop { transition: none !important; }
 }
 
@@ -475,5 +462,4 @@ pre.bloque { margin: 0; padding: 12px 14px; border-radius: 10px; background: var
     .app { display: block; }
     .contenido { padding: 0; }
     .caja { box-shadow: none; break-inside: avoid; }
-    .entra, .entra-fila, .crece { animation: none !important; }
 }

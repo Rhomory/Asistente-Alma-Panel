@@ -26,6 +26,16 @@ class Proyecto extends Model
         return $this->hasMany(Conexion::class);
     }
 
+    public function disenos(): HasMany
+    {
+        return $this->hasMany(Diseno::class)->orderByDesc('version');
+    }
+
+    public function disenoActivo(): HasOne
+    {
+        return $this->hasOne(Diseno::class)->where('estado', 'activa');
+    }
+
     /** La conexión vigente del proyecto: la última registrada. */
     public function conexion(): HasOne
     {

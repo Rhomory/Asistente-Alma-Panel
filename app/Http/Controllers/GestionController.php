@@ -51,8 +51,9 @@ class GestionController extends Controller
         $mensaje = "Proyecto \"{$proyecto->nombre}\" creado.";
         if ($conexion) {
             $c = $proyecto->conexiones()->create($conexion);
-            $mensaje .= ' ' . ConexionController::mensaje($c, $request);
+            $mensaje .= ' ' . ConexionController::mensaje($c, $request) . ConexionController::entregarCredencial($c, $request);
         }
+        $mensaje .= ConexionController::actualizarCarpeta($proyecto);
 
         return redirect()->route('proyecto', $proyecto)
             ->with('ok', $mensaje . ' El asistente cargará sus páginas al leer el Figma.');

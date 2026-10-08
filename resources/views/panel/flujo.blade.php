@@ -41,10 +41,10 @@
             <div class="caja-cab"><h2>Una vez por proyecto</h2></div>
             <div class="caja-cuerpo">
                 <ol class="pasos">
-                    <li><span><b>Crear el proyecto</b> en el panel con su sitio y su Figma. Si tienes el prompt de Elementor, pégalo: se guarda sin la contraseña.</span></li>
-                    <li><span><b>Carpeta del cliente</b> en Windows con su <code>AGENTS.md</code> (botón en el proyecto). Para Claude Code, agrega un <code>CLAUDE.md</code> con la línea <code>@AGENTS.md</code>.</span></li>
-                    <li><span><b>Conectar el sitio:</b> Conexión › “Configurar en tu agente” da el bloque exacto para tu agente. La credencial va en la variable <code>ALMA_&lt;PROYECTO&gt;_AUTH</code>, nunca en el panel.</span></li>
-                    <li><span><b>Reiniciar el agente</b> y comprobar que vea figwright y el servidor del sitio.</span></li>
+                    <li><span><b>Crear el proyecto</b> en el panel y pegar el prompt de Elementor. El panel crea <code>AlmaProyectos\&lt;Proyecto&gt;</code> con <code>AGENTS.md</code>, <code>CLAUDE.md</code> y la configuración MCP de Claude Code, Codex, Cursor y OpenCode.</span></li>
+                    <li><span><b>Credencial automática:</b> queda como variable de Windows <code>ALMA_&lt;PROYECTO&gt;_AUTH</code>; el panel no la guarda y la configuración solo la nombra.</span></li>
+                    <li><span><b>“Abrir terminal aquí”</b> (o “Abrir en Cursor”) desde el proyecto y ejecutar el agente. La primera vez: Claude Code pide aprobar <code>.mcp.json</code> y Codex marcar la carpeta como de confianza.</span></li>
+                    <li><span><b>El agente verifica la conexión</b> (figwright y el sitio) antes de leer nada.</span></li>
                 </ol>
             </div>
         </section>
@@ -55,8 +55,8 @@
         <ol class="ciclo">
             <li>
                 <span class="paso-n">1</span>
-                <div><b>Leer el Figma</b><p>Pídele al agente “lee el Figma del proyecto y cárgalo en el panel”. Carga páginas, secciones con su ID de Figma (la memoria del diseño) y tokens.</p>
-                    <code>{{ $alma }} registro:figma "Cota" --archivo=…</code></div>
+                <div><b>Leer el Figma</b><p>“Lee el Figma del proyecto y guárdalo en el panel.” Se guarda como <code>Design\v1</code> (lectura y capturas) con páginas, secciones con su ID de Figma y tokens. Si el Figma cambia y se relee, queda como v2 y el panel no cambia hasta que pulses “Usar esta versión”.</p>
+                    <code>{{ $alma }} diseno:guardar "Cota" --archivo=…</code></div>
             </li>
             <li>
                 <span class="paso-n">2</span>

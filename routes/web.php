@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CarpetaController;
 use App\Http\Controllers\ConexionController;
 use App\Http\Controllers\EstadoController;
 use App\Http\Controllers\FlujoController;
@@ -45,3 +46,8 @@ Route::post('/secciones/{seccion}/correccion', [FlujoController::class, 'pedirCo
 Route::post('/paginas/{pagina}/url', [FlujoController::class, 'guardarUrl'])->name('pagina.url');
 Route::post('/paginas/{pagina}/trello', [FlujoController::class, 'guardarTrello'])->name('pagina.trello');
 Route::post('/paginas/{pagina}/qa', [FlujoController::class, 'qaSolicitado'])->name('pagina.qa');
+
+// Carpeta del proyecto en Windows y versiones del diseño (Design/vN)
+Route::post('/proyectos/{proyecto}/carpeta', [CarpetaController::class, 'preparar'])->name('proyecto.carpeta');
+Route::post('/proyectos/{proyecto}/abrir/{que}', [CarpetaController::class, 'abrir'])->name('proyecto.abrir');
+Route::post('/disenos/{diseno}/usar', [CarpetaController::class, 'usarDiseno'])->name('diseno.usar');

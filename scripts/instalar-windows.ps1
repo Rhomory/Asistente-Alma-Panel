@@ -12,6 +12,7 @@
 param(
     [string]$Distro,
     [string]$Panel,
+    [string]$Proyectos,   # carpeta base de los proyectos en Windows (por defecto %USERPROFILE%\AlmaProyectos)
     [switch]$RegistrarFigwright
 )
 
@@ -39,6 +40,22 @@ New-Item -ItemType Directory -Force $destAlma | Out-Null
 Copy-Item -Force (Join-Path $PSScriptRoot 'alma.ps1') (Join-Path $destAlma 'alma.ps1')
 [ordered]@{ panel = $Panel; distro = $Distro } | ConvertTo-Json | Set-Content -Encoding UTF8 (Join-Path $destAlma 'alma.config.json')
 Write-Host "  Puente instalado en $destAlma\alma.ps1"
+
+# 2b. Carpeta de proyectos (fuera del panel) y rutas en el .env del panel
+if (-not $Proyectos) { $Proyectos = Join-Path $HOME 'AlmaProyectos' }
+New-Item -ItemType Directory -Force $Proyectos | Out-Null
+$proyectosWsl = (wsl -d $Distro -- wslpath -a ($Proyectos.Replace('\', '/'))).Trim()
+$envPanel = Join-Path $raiz '.env'
+if (Test-Path $envPanel) {
+    $lineas = @(@(Get-Content $envPanel) | Where-Object { $_ -notmatch '^(ALMA_PROYECTOS_DIR|ALMA_PUENTE)=' })
+    $lineas += "ALMA_PROYECTOS_DIR=$proyectosWsl"
+    $lineas += "ALMA_PUENTE='$destAlma\alma.ps1'"   # comillas simples: .env no interpreta las barras invertidas
+    [IO.File]::WriteAllLines($envPanel, $lineas, (New-Object Text.UTF8Encoding $false))
+    wsl -d $Distro --cd $Panel -- php artisan config:clear 2>$null | Out-Null
+    Write-Host "  Proyectos en $Proyectos (el panel crea ahí una carpeta por proyecto)"
+} else {
+    Write-Host "  No encontré ${envPanel}: crea el .env del panel y vuelve a ejecutar el instalador." -ForegroundColor Yellow
+}
 
 # 3. Skill en una carpeta propia por agente (evita que SKILL.md quede suelto en skills\)
 $skillOrigen = Join-Path $raiz '.claude\skills\alma-figma\SKILL.md'

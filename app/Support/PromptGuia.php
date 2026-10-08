@@ -44,6 +44,10 @@ class PromptGuia
         if ($pagina) {
             $lineas[] = 'URL de la página: ' . ($pagina->urlSitio() ?? '[falta la URL del sitio]');
         }
+        if ($activa = $proyecto->disenoActivo()->first()) {
+            $carpeta = CarpetaProyecto::rutaWindows($proyecto);
+            $lineas[] = "Diseño en uso: v{$activa->version}" . ($carpeta ? " · capturas de referencia en {$carpeta}\\Design\\v{$activa->version}\\capturas" : '');
+        }
         $lineas[] = '';
         $lineas[] = 'Sistema de diseño (crea estas variables globales antes de maquetar y no uses valores sueltos):';
         foreach ($g['colores'] as $t) {
@@ -101,48 +105,64 @@ class PromptGuia
         $fecha = now("America/Lima")->format("d/m/Y");
         $urlPanel = rtrim(config("app.url"), "/") . "/proyectos/{$proyecto->id}";
 
+        $varAuth = PromptElementor::variableAuth($nombre);
+        $activa = $proyecto->disenoActivo()->first();
+        $disenoActivo = $activa ? "Design\\v{$activa->version} (capturas de referencia en Design\\v{$activa->version}\\capturas)" : 'aún ninguno: lee el Figma (paso 2)';
+
         return <<<MD
         # {$nombre} — contexto para el agente
 
-        Generado por el panel Asistente Alma el {$fecha}. Vuelve a descargarlo si cambian el sitio, el Figma o la conexión.
-        Sirve para cualquier agente de código con MCP (Claude Code, Codex, OpenCode, Cursor u otros).
+        Generado por el panel Asistente Alma el {$fecha}. El panel lo reescribe solo cuando cambian el sitio, la conexión o el diseño.
+        Sirve para Claude Code, Codex, Cursor y OpenCode.
 
         ## Alcance: solo este proyecto
         Trabajas únicamente en **{$nombre}**. Usa siempre su nombre en los comandos del panel, no leas ni modifiques
         otros proyectos y no tomes en cuenta su estado, aunque aparezcan en el panel o en la cola.
 
+        ## Esta carpeta
+        - `AGENTS.md` (este archivo) y `CLAUDE.md` (lo importa para Claude Code).
+        - Configuración MCP ya lista para cada agente: `.mcp.json` (Claude Code), `.codex/config.toml` (Codex),
+          `.cursor/mcp.json` (Cursor) y `opencode.json` (OpenCode). Incluye figwright y `{$mcp}`.
+        - `Design\vN\`: cada lectura del Figma (`lectura.json` + `capturas\`). Diseño en uso: {$disenoActivo}.
+
         ## El proyecto
         - Sitio WordPress (staging): {$sitio}
         - Archivo de Figma: {$figma}
-        - Servidor MCP de Elementor de este sitio: `{$mcp}`, registrado en la configuración MCP de tu agente. Si no lo ves entre tus herramientas, detente y avisa: no uses el servidor de otro proyecto.
-        - Lectura del Figma: MCP figwright (requiere Figma de escritorio abierto con su plugin).
+        - Servidor MCP de Elementor: `{$mcp}`. Su credencial está en la variable de Windows `{$varAuth}`; tú no la manejas.
         - Páginas en alcance: {$lista}
-        - Panel de supervisión: {$urlPanel} (lo mira el desarrollador mientras construyes).
+        - Panel de supervisión: {$urlPanel}
 
         ## Cómo hablar con el panel
-        El panel corre en WSL Ubuntu. Desde Windows sus comandos van por el puente (lo instala `scripts/instalar-windows.ps1` del panel):
+        Desde Windows, los comandos del panel van por el puente:
 
         ```powershell
         {$alma} <comando> [argumentos]
         ```
 
-        Si el puente falla, ejecuta `{$alma} diagnostico` y muestra el resultado antes de improvisar otra vía.
-        Pasa siempre los JSON con `--archivo=<ruta>`, nunca en línea (las comillas entre PowerShell y WSL se rompen).
+        Si falla, ejecuta `{$alma} diagnostico` y muestra el resultado antes de improvisar otra vía.
+        Pasa siempre los JSON con `--archivo=<ruta>`, nunca en línea.
 
         | Para | Comando |
         |---|---|
+        | Guardar la lectura del Figma como nueva versión (Design\vN) | `diseno:guardar "{$nombre}" --archivo=<ruta.json>` |
         | Guía de una página: tokens, plan con IDs de Figma y reglas | `guia:prompt "{$nombre}" "<Página>"` |
         | Correcciones pendientes de este proyecto | `registro:cola "{$nombre}"` |
-        | Cargar páginas, secciones (con su ID de Figma) y tokens | `registro:figma "{$nombre}" --archivo=<ruta.json>` |
         | Registrar una sección terminada | `registro:add "{$nombre}" "<Página>" "<Sección>" <min> --asistente=<min> --dev=<min>` |
         | Comprobar el sitio | `conexion:comprobar "{$nombre}"` |
 
         ## Flujo de trabajo
-        1. Al empezar: `registro:cola "{$nombre}"`. Las correcciones pendientes van primero.
-        2. Si el panel aún no tiene páginas, secciones o tokens de este proyecto, lee el Figma siguiendo `\$HOME\.claude\skills\alma-figma\SKILL.md` (en Claude Code se activa sola como skill; otros agentes deben leer ese archivo).
-        3. Antes de construir una página, pide su guía con `guia:prompt`. Trae el ID de Figma de cada sección: es la memoria del diseño, úsala en vez de volver a recorrer el archivo.
-        4. Construye **una sección a la vez** con el MCP `{$mcp}`, siempre en borrador. Al terminar cada una, regístrala con `registro:add`. El desarrollador la aprueba o pide corrección en el panel.
-        5. Nunca publiques ni borres contenido del sitio. Nada se publica sin aprobación en el panel.
+        0. **Conexión primero.** Comprueba que tienes las herramientas de figwright (`ping`) y de `{$mcp}`. Si falta alguna:
+           - Claude Code: aprueba los servidores de `.mcp.json` cuando lo pida (o `/mcp`).
+           - Codex: la carpeta debe estar marcada como de confianza para leer `.codex/config.toml`.
+           - Cursor: activa los servidores en Settings › MCP.
+           - Si `{$mcp}` no autentica, la variable `{$varAuth}` no está: pide al desarrollador que pegue el prompt de Elementor en el panel (Conexión) y reinicie el agente desde el botón "Abrir terminal" del proyecto.
+           Si tuviste que cambiar algo, pide reiniciar el agente antes de seguir.
+        1. `registro:cola "{$nombre}"`: las correcciones pendientes van primero.
+        2. Si no hay diseño en uso, lee el Figma siguiendo `\$HOME\.claude\skills\alma-figma\SKILL.md` (en Claude Code se activa sola; los demás agentes deben leer ese archivo). Guarda la lectura con `diseno:guardar`, que crea `Design\vN`, y exporta ahí las capturas de cada página.
+        3. Si el Figma cambió, vuelve a leerlo y guárdalo con `diseno:guardar`: queda como versión nueva hasta que el desarrollador pulse "Usar esta versión" en el panel. Trabaja siempre con la versión en uso.
+        4. Antes de construir una página, pide su guía con `guia:prompt`: trae el ID de Figma de cada sección (úsalo en vez de recorrer el archivo) y las capturas sirven de referencia visual.
+        5. Construye **una sección a la vez** con `{$mcp}`, siempre en borrador, y regístrala con `registro:add`. El desarrollador la aprueba o pide corrección en el panel.
+        6. Nunca publiques ni borres contenido del sitio. Nada se publica sin aprobación en el panel.
 
         ## Reglas
         - Lee el Figma en modo económico: `get_design_context` solo acepta marcos (no IDs de página) y para el inventario va con `detail: "minimal"`; `full` solo para la sección que construyes. Nunca `get_document` ni `get_node` para inventario.

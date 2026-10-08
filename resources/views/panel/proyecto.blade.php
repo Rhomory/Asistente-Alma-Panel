@@ -49,6 +49,8 @@
 
     @include('panel.partes.eliminar-proyecto')
 
+    @include('panel.partes.carpeta-diseno')
+
     <div class="rejilla ancha">
         <section class="caja">
             <div class="caja-cab"><h2>Páginas</h2><span class="cifra">{{ $paginas->count() }}</span>

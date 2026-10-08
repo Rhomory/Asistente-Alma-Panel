@@ -87,6 +87,40 @@ if ($args.Count -eq 0 -or @('ayuda', '-h', '--help') -contains $args[0]) {
 }
 if ($args[0] -eq 'diagnostico') { Diagnostico; exit 0 }
 
+# --- Acciones que pide el panel (desde WSL) --------------------------------------------
+# Recarga las variables de usuario (ej. ALMA_COTA_AUTH recién guardada) en este proceso, para que
+# la terminal o Cursor que se abran a continuación ya las vean.
+function Recargar-Entorno {
+    foreach ($k in [Environment]::GetEnvironmentVariables('User').Keys) {
+        Set-Item -Path "env:$k" -Value ([Environment]::GetEnvironmentVariable($k, 'User'))
+    }
+}
+# Ojo: dentro de los bloques de switch, $args ya no son los del script; por eso se copian antes.
+$accion = $args[0]
+$objetivo = if ($args.Count -gt 1) { $args[1] } else { $null }
+switch ($accion) {
+    'abrir-carpeta' { Start-Process explorer.exe -ArgumentList "`"$objetivo`""; exit 0 }
+    'abrir-terminal' {
+        Recargar-Entorno
+        if (Get-Command wt.exe -ErrorAction SilentlyContinue) { Start-Process wt.exe -ArgumentList '-d', "`"$objetivo`"" }
+        else { Start-Process powershell.exe -WorkingDirectory $objetivo -ArgumentList '-NoExit' }
+        exit 0
+    }
+    'abrir-cursor' {
+        Recargar-Entorno
+        if (Get-Command cursor -ErrorAction SilentlyContinue) { Start-Process cursor -ArgumentList "`"$objetivo`""; exit 0 }
+        Write-Host 'No encuentro el comando "cursor" (instala Cursor y su comando de shell).'; exit 3
+    }
+    'guardar-credencial' {
+        # El valor llega por la entrada estándar (o ALMA_VALOR), nunca por la línea de comandos.
+        $valor = $env:ALMA_VALOR
+        if (-not $valor) { $valor = [Console]::In.ReadLine() }
+        if (-not $objetivo -or -not $valor) { Write-Host 'Falta el nombre o el valor.'; exit 3 }
+        [Environment]::SetEnvironmentVariable($objetivo, $valor.Trim(), 'User')
+        exit 0
+    }
+}
+
 if (-not (Panel-Existe)) {
     Write-Host "No encuentro el panel en '$panel' (distro '$distro')." -ForegroundColor Yellow
     Write-Host "Solucion: ejecuta scripts\instalar-windows.ps1 desde la carpeta del panel, o define ALMA_PANEL con la ruta de Ubuntu."

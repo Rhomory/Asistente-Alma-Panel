@@ -38,16 +38,47 @@ class ConexionController extends Controller
         $datos = self::validar($request);
         $conexion = Conexion::create($datos);
         $conexion->proyecto->touch();
+        $extra = self::entregarCredencial($conexion, $request) . self::actualizarCarpeta($conexion->proyecto);
 
-        return redirect()->route('conexion')->with('ok', self::mensaje($conexion, $request));
+        return redirect()->route('conexion')->with('ok', self::mensaje($conexion, $request) . $extra);
     }
 
     public function eliminar(Conexion $conexion)
     {
         $nombre = $conexion->nombre_mcp;
+        $proyecto = $conexion->proyecto;
         $conexion->delete();
+        self::actualizarCarpeta($proyecto->fresh());
 
-        return back()->with('ok', "Conexión \"{$nombre}\" eliminada del panel. Quítala también de tu agente (en Claude Code: claude mcp remove {$nombre})");
+        return back()->with('ok', "Conexión \"{$nombre}\" eliminada del panel y de los archivos del agente.");
+    }
+
+    /**
+     * Si se pegó el prompt de Elementor (o usuario + contraseña de aplicación), guarda el encabezado de
+     * autorización como variable de usuario de Windows (ALMA_<PROYECTO>_AUTH). El panel no lo guarda.
+     */
+    public static function entregarCredencial(Conexion $c, Request $request): string
+    {
+        $valor = \App\Support\PromptElementor::credencial($request->input('prompt_mcp'), $request->input('usuario_wp'), $request->input('app_password'));
+        if (! $valor) {
+            return '';
+        }
+        $variable = \App\Support\PromptElementor::variableAuth($c->proyecto->nombre);
+        if (\App\Support\Windows::guardarCredencial($variable, $valor)) {
+            $c->update(['credencial_en_equipo' => now()]);
+
+            return " La credencial quedó guardada en Windows como {$variable} (no en el panel).";
+        }
+
+        return " No pude guardar la credencial en Windows: revisa ALMA_PUENTE en .env o guárdala a mano como {$variable}.";
+    }
+
+    /** Escribe AGENTS.md y la configuración MCP de los agentes en la carpeta del proyecto. */
+    public static function actualizarCarpeta(\App\Models\Proyecto $p): string
+    {
+        $archivos = \App\Support\CarpetaProyecto::preparar($p);
+
+        return $archivos ? ' Archivos del agente actualizados en ' . \App\Support\CarpetaProyecto::rutaWindows($p->fresh()) . '.' : '';
     }
 
     public function comprobar(Request $request)

@@ -155,27 +155,30 @@ La ruta del panel también se puede forzar con la variable de entorno `ALMA_PANE
 
 ## 4. Uso con un proyecto nuevo
 
-1. **Crea el proyecto en el panel** (Nuevo proyecto). Puedes pegar ahí el prompt de Elementor: el panel toma el
-   sitio y el nombre del servidor, y guarda una copia **sin la contraseña**.
-2. **Crea una carpeta para el cliente en Windows**, por ejemplo `C:\Users\<tú>\clientes\ecocreations`.
-3. **Descarga su `AGENTS.md`** desde el panel (botón "AGENTS.md" en el proyecto) y guárdalo en esa carpeta.
-   Es el formato abierto que leen los agentes de código: así el agente sabe qué proyecto es, cómo hablar con el panel y el flujo.
-   - **Codex, Cursor y otros** leen `AGENTS.md` solos.
-   - **Claude Code** lee `CLAUDE.md`: crea uno al lado con una sola línea, `@AGENTS.md`, que importa el otro archivo.
-4. **Registra el servidor MCP de Elementor de ese sitio** en tu agente, con el nombre que muestra el panel
-   (sección 2.1). Comprueba que aparezcan figwright y ese servidor (`claude mcp list`, `codex mcp list`…).
-5. **Abre el archivo en Figma de escritorio** con el plugin figwright corriendo.
-6. **Primer mensaje**, por ejemplo:
-   > Lee el Figma del proyecto y cárgalo en el panel.
+1. **Crea el proyecto en el panel** (Nuevo proyecto) y pega el prompt de Elementor del sitio
+   (o usuario + contraseña de aplicación). Al guardar, el panel:
+   - crea la carpeta `%USERPROFILE%\AlmaProyectos\<Proyecto>\` (fuera del panel, para que los agentes no hereden sus reglas);
+   - escribe `AGENTS.md`, `CLAUDE.md` y la configuración MCP de los cuatro agentes: `.mcp.json` (Claude Code),
+     `.codex/config.toml` (Codex), `.cursor/mcp.json` (Cursor) y `opencode.json` (OpenCode), con figwright y el servidor del sitio;
+   - guarda la credencial como variable de usuario de Windows `ALMA_<PROYECTO>_AUTH` (el panel no la guarda) y la
+     configuración solo la nombra.
+2. **Abre el agente desde el proyecto:** botón "Abrir terminal aquí" (o "Abrir en Cursor"). Esa terminal ya ve la
+   credencial; ahí ejecuta `claude`, `codex` u `opencode`. La primera vez: Claude Code pide aprobar `.mcp.json`
+   y Codex marcar la carpeta como de confianza.
+3. **Abre el archivo en Figma de escritorio** con el plugin figwright corriendo.
+4. **Primer mensaje:**
+   > Lee el Figma del proyecto y guárdalo en el panel.
 
-   Después, para construir:
+   El agente comprueba la conexión, lee el diseño y lo guarda con `diseno:guardar` como `Design\v1` (con capturas).
+   La v1 queda en uso y el panel muestra sus páginas y secciones.
+5. **Para construir:**
    > Construye la página Inicio siguiendo la guía.
 
-Mientras el asistente trabaja, deja el panel abierto: se recarga solo con cada sección registrada,
-y ahí apruebas, pides correcciones y, al final, copias el mensaje de QA para el canal.
+**Si el Figma cambia:** pide "vuelve a leer el Figma". Se guarda como `Design\v2` y el panel **no cambia** hasta que
+pulses "Usar esta versión" en el proyecto, después de ver qué páginas y secciones son nuevas.
 
-En un chat nuevo de la misma carpeta no hace falta repetir nada: el `AGENTS.md` vuelve a cargarse. Basta con decir
-qué toca hoy (por ejemplo, "revisa la cola de correcciones y sigue con Nosotros").
+Mientras el agente trabaja, deja el panel abierto: se recarga solo con cada sección registrada. En un chat nuevo de
+la misma carpeta no hace falta repetir nada: el `AGENTS.md` vuelve a cargarse.
 
 ## 5. Comandos del panel
 
@@ -185,7 +188,8 @@ En Ubuntu se usan con `php artisan …`; desde Windows, con
 | Comando | Para qué |
 |---|---|
 | `guia:prompt "<Proyecto>" "<Página>"` | Guía actualizada: tokens, plan de secciones con su ID de Figma y reglas |
-| `registro:figma "<Proyecto>" --archivo=figma.json` | Cargar páginas, secciones (con ID de Figma y URL) y tokens |
+| `diseno:guardar "<Proyecto>" --archivo=figma.json` | Guardar la lectura del Figma como nueva versión (`Design/vN`) |
+| `registro:figma "<Proyecto>" --archivo=figma.json` | Cargar una lectura directo al panel, sin versionar |
 | `registro:add "<Proyecto>" "<Página>" "<Sección>" <min> --asistente=<min> --dev=<min>` | Registrar una sección construida |
 | `registro:cola "<Proyecto>"` | Correcciones pendientes de ese proyecto |
 | `conexion:comprobar` | Versiones de WordPress, Elementor y JetEngine de cada sitio |

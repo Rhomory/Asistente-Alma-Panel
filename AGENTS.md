@@ -9,12 +9,15 @@ Laravel 13 + SQLite, PHP 8.3, sin build de front (CSS plano en `public/css/panel
 
 La consola (el agente: Claude Code, Codex, Cursor…) escribe; el panel supervisa, aprueba y administra:
 - `registro:add`, `registro:cola`, `registro:paginas`, `registro:tokens`, `registro:figma`, `guia:prompt`,
-  `conexion:comprobar`, `jev:sugerencias` (`app/Console/Commands`).
+  `conexion:comprobar`, `diseno:guardar`, `jev:sugerencias` (`app/Console/Commands`).
 - Controladores: `PanelController` (inicio, proyecto, registro), `FlujoController` (página, plan, aprobación,
   QA), `GestionController` (catálogo, eliminar proyecto), `ConexionController`, `GuiaController`, `EstadoController`
   (huella para la recarga en vivo).
 - Lógica de apoyo en `app/Support`: `EntornoWP` (versiones de WP/Elementor/JetEngine en paralelo),
-  `PromptElementor` (sanea el prompt de Elementor), `PromptGuia` (guía, prompt y AGENTS.md del cliente).
+  `PromptElementor` (sanea el prompt de Elementor y extrae la credencial), `PromptGuia` (guía, prompt y AGENTS.md del cliente),
+  `CarpetaProyecto` (carpeta de cada proyecto en Windows), `ConfigAgentes` (MCP de Claude Code, Codex, Cursor y OpenCode),
+  `CargaFigma` y `Disenos` (lectura del Figma y sus versiones Design/vN), `Windows` (puente alma.ps1 por interop).
+- Las carpetas de proyectos viven FUERA de este repo (`ALMA_PROYECTOS_DIR`); en pruebas se usa una carpeta temporal.
 
 ## Reglas al cambiar código
 - Pruebas: `php artisan test` debe quedar en verde; agrega pruebas para cada función nueva (`tests/Feature`).

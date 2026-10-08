@@ -52,7 +52,7 @@ class PanelController extends Controller
 
     public function proyecto(Proyecto $proyecto)
     {
-        $proyecto->load('tokens', 'conexion');
+        $proyecto->load('tokens', 'conexion', 'disenos');
         $paginas = DB::table('reporte_pagina')
             ->join('paginas', 'paginas.id', '=', 'reporte_pagina.id')
             ->select('reporte_pagina.*', 'paginas.incluida', 'paginas.origen', 'paginas.secciones_total')

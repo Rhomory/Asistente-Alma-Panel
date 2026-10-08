@@ -164,6 +164,9 @@
                         @error('sitio_url')<span class="error">{{ $message }}</span>@enderror</div>
                     <div class="campo"><label for="usuario_wp">Usuario de WordPress</label>
                         <input id="usuario_wp" name="usuario_wp" type="text" value="{{ old('usuario_wp') }}" maxlength="80" placeholder="Opcional · se completa desde el prompt"></div>
+                    <div class="campo"><label for="app_password">Contraseña de aplicación</label>
+                        <input id="app_password" name="app_password" type="password" autocomplete="new-password" maxlength="80" placeholder="Opcional si pegaste el prompt">
+                        <small>Va directo a Windows como variable de usuario; el panel no la guarda.</small></div>
                 </div>
                 <div><button class="btn p" type="submit"><x-ic n="enchufe" />Guardar conexión</button></div>
             </form>

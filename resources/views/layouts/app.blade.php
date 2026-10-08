@@ -78,7 +78,17 @@
                     Asistente en espera @if ($asistente['hace'])<span>· último registro {{ $asistente['hace'] }}</span>@endif
                 @endif
             </div>
-            <span class="vivo" title="El panel se recarga solo cuando la consola registra algo"><i class="pulso"></i>En vivo</span>
+            {{-- Botones redondos de la barra (concepto A2): crear, buscar y avisos. --}}
+            <div class="barra-botones">
+                <a class="redondo" href="{{ route('proyecto.nuevo') }}" title="Nuevo proyecto" aria-label="Nuevo proyecto"><x-ic n="mas" /></a>
+                <button class="redondo" type="button" popovertarget="buscar" title="Buscar en el registro" aria-label="Buscar en el registro"><x-ic n="lupa" /></button>
+                <a class="redondo" href="{{ route('dashboard') }}#atencion" title="{{ $navCola ? $navCola . ' ' . ($navCola === 1 ? 'corrección' : 'correcciones') . ' en cola' : 'Sin correcciones en cola' }} · el panel se actualiza en vivo" aria-label="Avisos{{ $navCola ? ': ' . $navCola . ' en cola' : '' }}"><x-ic n="campana" />@if ($navCola)<i class="aviso-punto"></i>@endif</a>
+            </div>
+            <form id="buscar" popover class="buscar-pop" method="get" action="{{ route('registro') }}" role="search">
+                <x-ic n="lupa" />
+                <input type="search" name="q" placeholder="Buscar una sección en el registro…" aria-label="Buscar una sección en el registro" autocomplete="off">
+                <button class="btn chico p" type="submit">Buscar</button>
+            </form>
         </header>
 
         <main class="contenido">

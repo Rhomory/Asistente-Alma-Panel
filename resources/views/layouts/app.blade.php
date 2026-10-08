@@ -26,19 +26,21 @@
             <span><b>Asistente Alma</b><small>Panel de operaciones</small></span>
         </a>
         <nav class="nav">
-            <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'on' : '' }}" @if (request()->routeIs('dashboard')) aria-current="page" @endif><x-ic n="inicio" /><span class="txt">Panel</span>
+            <a href="{{ route('dashboard') }}" class="c-lav {{ request()->routeIs('dashboard') ? 'on' : '' }}" @if (request()->routeIs('dashboard')) aria-current="page" @endif><x-ic n="inicio" /><span class="txt">Panel</span>
                 @if ($navCola)<span class="cuenta alerta" title="Correcciones en cola">{{ $navCola }}</span>@endif</a>
-            <a href="{{ route('registro') }}" class="{{ request()->routeIs('registro') ? 'on' : '' }}" @if (request()->routeIs('registro')) aria-current="page" @endif><x-ic n="lista" /><span class="txt">Registro de cambios</span></a>
-            <a href="{{ route('conexion') }}" class="{{ request()->routeIs('conexion') ? 'on' : '' }}" @if (request()->routeIs('conexion')) aria-current="page" @endif><x-ic n="enchufe" /><span class="txt">Conexión</span></a>
-            <a href="{{ route('flujo') }}" class="{{ request()->routeIs('flujo') ? 'on' : '' }}" @if (request()->routeIs('flujo')) aria-current="page" @endif><x-ic n="libro" /><span class="txt">Cómo funciona</span></a>
+            <a href="{{ route('registro') }}" class="c-ok {{ request()->routeIs('registro') ? 'on' : '' }}" @if (request()->routeIs('registro')) aria-current="page" @endif><x-ic n="lista" /><span class="txt">Registro de cambios</span></a>
+            <a href="{{ route('conexion') }}" class="c-warn {{ request()->routeIs('conexion') ? 'on' : '' }}" @if (request()->routeIs('conexion')) aria-current="page" @endif><x-ic n="enchufe" /><span class="txt">Conexión</span></a>
+            <a href="{{ route('flujo') }}" class="c-lav {{ request()->routeIs('flujo') ? 'on' : '' }}" @if (request()->routeIs('flujo')) aria-current="page" @endif><x-ic n="libro" /><span class="txt">Cómo funciona</span></a>
         </nav>
         <div class="nav-grupo">Proyectos</div>
         <nav class="nav">
             @php $proyectoActual = request()->route('proyecto') ?? request()->route('pagina')?->proyecto; @endphp
             @foreach ($navProyectos as $p)
-                <a href="{{ route('proyecto', $p) }}" class="{{ $proyectoActual?->id === $p->id ? 'on' : '' }}" @if ($proyectoActual?->id === $p->id) aria-current="page" @endif><x-ic n="capas" /><span class="txt">{{ $p->nombre }}</span></a>
+                <a href="{{ route('proyecto', $p) }}" class="{{ $proyectoActual?->id === $p->id ? 'on' : '' }}" @if ($proyectoActual?->id === $p->id) aria-current="page" @endif><x-ic n="capas" /><span class="txt">{{ $p->nombre }}</span>
+                    @php [$est, $tit] = $p->p_total === 0 ? ['', 'Sin páginas'] : ($p->p_listas === $p->p_total ? ['lista', 'Páginas aprobadas'] : ($p->p_obra ? ['obra', 'En construcción'] : ['', 'Por empezar'])); @endphp
+                    <i class="estado-p {{ $est }}" title="{{ $tit }}" aria-label="{{ $tit }}"></i></a>
             @endforeach
-            <a href="{{ route('proyecto.nuevo') }}" class="{{ request()->routeIs('proyecto.nuevo') ? 'on' : '' }}" @if (request()->routeIs('proyecto.nuevo')) aria-current="page" @endif><x-ic n="mas" /><span class="txt">Nuevo proyecto</span></a>
+            <a href="{{ route('proyecto.nuevo') }}" class="c-ora {{ request()->routeIs('proyecto.nuevo') ? 'on' : '' }}" @if (request()->routeIs('proyecto.nuevo')) aria-current="page" @endif><x-ic n="mas" /><span class="txt">Nuevo proyecto</span></a>
         </nav>
         <div class="side-pie"><b><x-ic n="escudo" c="sm" />Nada se publica solo</b>El asistente construye en borrador y registra; tú apruebas cada sección antes de pedir QA.</div>
     </aside>

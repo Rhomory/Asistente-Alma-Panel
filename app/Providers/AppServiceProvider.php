@@ -25,7 +25,11 @@ class AppServiceProvider extends ServiceProvider
             $activo = $ultimo && $ultimo->created_at->gt(now()->subMinutes(20));
 
             $view->with([
-                'navProyectos' => Proyecto::orderByDesc('updated_at')->limit(6)->get(),
+                'navProyectos' => Proyecto::withCount([
+                    'paginas as p_total',
+                    'paginas as p_obra' => fn ($q) => $q->where('estado', 'construyendo'),
+                    'paginas as p_listas' => fn ($q) => $q->whereIn('estado', ['aprobada', 'en_qc']),
+                ])->orderByDesc('updated_at')->limit(6)->get(),
                 'navTotal'     => Proyecto::count(),
                 'navCola'      => Evento::where('tipo', 'solicitud_correccion')->where('resuelto', false)->count(),
                 'asistente'    => [

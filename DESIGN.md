@@ -32,5 +32,6 @@ Código y prompts en Cascadia Code / Consolas.
 - El naranja señala acción o lo actual, nunca decoración.
 - Sin bordes laterales de color, sin texto con degradado, sin tarjetas de métrica gigantes.
 - Motion (estilo dashboard): al abrir una vista los bloques entran en cascada (fundido + 6 px, 60 ms entre bloques), las filas se encienden una tras otra, las cifras cuentan hasta su valor y las barras crecen; avisos como toast abajo al centro y diálogo con pop leve. Menú lateral y barra superior nunca se animan. No se repite en recargas automáticas; `prefers-reduced-motion` lo desactiva.
+- Menú lateral: cápsula flotante (radio 20 px, separada 12 px del borde). Cada ítem lleva su icono en una pastilla de color (lavanda, verde, ámbar; naranja solo en "Nuevo proyecto"). El activo es una cápsula en relieve (luz arriba, sombra abajo) con el icono en naranja; el hover solo cambia el fondo. Los proyectos muestran un punto de estado: lavanda en construcción, verde aprobado, gris sin empezar.
 - El panel se recarga solo cuando la consola escribe (huella en `/estado/version`); si hay un formulario
   a medio escribir, muestra un aviso en lugar de recargar.

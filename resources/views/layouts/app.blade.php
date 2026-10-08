@@ -29,6 +29,7 @@
                 @if ($navCola)<span class="cuenta alerta" title="Correcciones en cola">{{ $navCola }}</span>@endif</a>
             <a href="{{ route('registro') }}" class="{{ request()->routeIs('registro') ? 'on' : '' }}" @if (request()->routeIs('registro')) aria-current="page" @endif><x-ic n="lista" /><span class="txt">Registro de cambios</span></a>
             <a href="{{ route('conexion') }}" class="{{ request()->routeIs('conexion') ? 'on' : '' }}" @if (request()->routeIs('conexion')) aria-current="page" @endif><x-ic n="enchufe" /><span class="txt">Conexión</span></a>
+            <a href="{{ route('flujo') }}" class="{{ request()->routeIs('flujo') ? 'on' : '' }}" @if (request()->routeIs('flujo')) aria-current="page" @endif><x-ic n="libro" /><span class="txt">Cómo funciona</span></a>
         </nav>
         <div class="nav-grupo">Proyectos</div>
         <nav class="nav">
@@ -59,18 +60,19 @@
         </header>
 
         <main class="contenido">
-            @if (session('ok'))
-                <div class="flash" role="status"><x-ic n="check" />{{ session('ok') }}</div>
-            @endif
             @yield('contenido')
         </main>
         <footer class="pie">Asistente Alma · Alma Industria Creativa E.I.R.L. — Arequipa</footer>
     </div>
 </div>
 
+@if (session('ok'))
+    <div class="toast" id="toast" role="status"><x-ic n="check" />{{ session('ok') }}</div>
+@endif
+
 <div class="aviso-vivo" id="aviso-vivo" hidden role="status">
     <x-ic n="refrescar" /> La consola registró cambios nuevos.
-    <button class="btn p chico" type="button" onclick="location.reload()">Ver cambios</button>
+    <button class="btn p chico" type="button" onclick="try { sessionStorage.setItem('alma-sin-entrada', '1'); } catch (e) {} location.reload()">Ver cambios</button>
 </div>
 
 <script>
@@ -100,6 +102,46 @@
         b.dispatchEvent(new CustomEvent('copiado', { bubbles: true }));
     });
 
+    // Entrada de la vista (estilo dashboard). No se repite en las recargas automáticas ni con "reducir movimiento".
+    let sinEntrada = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    try { if (sessionStorage.getItem('alma-sin-entrada')) { sinEntrada = true; sessionStorage.removeItem('alma-sin-entrada'); } } catch (e) {}
+    if (!sinEntrada) {
+        // 1. Bloques en cascada, en orden de lectura (cabecera, resumen, cajas).
+        const bloques = document.querySelectorAll('.contenido > .cabeza, .contenido > .caja, .contenido > form, .contenido .rejilla > .caja, .contenido .rejilla > .col > .caja, .contenido .guia > .col > .caja, .contenido .guia > .caja');
+        [...bloques].slice(0, 10).forEach((el, i) => { el.style.setProperty('--i', i); el.classList.add('entra'); });
+        // 2. Filas de cada lista, una tras otra (máx. 12 por lista).
+        document.querySelectorAll('.contenido .caja').forEach(caja => {
+            [...caja.querySelectorAll(':scope .pag:not(.cab), :scope .sec, :scope .pendiente, :scope .evento, :scope .proy, :scope .tabla tbody tr, :scope .token, :scope .cmd, :scope .ciclo > li, :scope .piezas > div, :scope .estados > div, :scope .reglas > p')]
+                .slice(0, 12).forEach((f, i) => { f.style.setProperty('--i', i); f.classList.add('entra-fila'); });
+        });
+        // 3. Barras de avance que crecen.
+        document.querySelectorAll('.contenido .barra-prog i, .contenido .seg i').forEach((b, i) => { b.style.setProperty('--i', i % 14); b.classList.add('crece'); });
+        // 4. Cifras que cuentan hasta su valor (formatos "187", "65 %", "0,6").
+        const facil = t => 1 - Math.pow(1 - t, 3);
+        document.querySelectorAll('.contenido .resumen b, .contenido .avance b').forEach(el => {
+            const m = el.textContent.trim().match(/^(\d+)(?:,(\d+))?(\s*%)?$/);
+            if (!m) return;
+            const final = parseFloat(m[1] + '.' + (m[2] || '0')), dec = m[2] ? m[2].length : 0, sufijo = m[3] || '';
+            if (!final) return;
+            const t0 = performance.now() + 250, dur = 800;
+            const paso = ahora => {
+                const t = Math.min(Math.max((ahora - t0) / dur, 0), 1);
+                el.textContent = (final * facil(t)).toFixed(dec).replace('.', ',') + sufijo;
+                if (t < 1) requestAnimationFrame(paso);
+            };
+            el.textContent = (0).toFixed(dec).replace('.', ',') + sufijo;
+            requestAnimationFrame(paso);
+        });
+    }
+
+    // Aviso flotante: se va solo a los 4,5 s (o al hacer clic).
+    const toast = document.getElementById('toast');
+    if (toast) {
+        const quitar = () => { toast.classList.add('saliendo'); setTimeout(() => toast.remove(), 320); };
+        setTimeout(quitar, 4500);
+        toast.addEventListener('click', quitar);
+    }
+
     // Recarga en vivo: si la consola escribe algo, la vista se recarga y muestra lo nuevo.
     // Si estás escribiendo en un formulario, no se recarga: aparece un aviso.
     try { const y = sessionStorage.getItem('alma-scroll'); if (y) { scrollTo(0, +y); sessionStorage.removeItem('alma-scroll'); } } catch (e) {}
@@ -117,7 +159,7 @@
             const { v } = await r.json();
             if (version && v !== version) {
                 if (editando()) { document.getElementById('aviso-vivo').hidden = false; }
-                else { try { sessionStorage.setItem('alma-scroll', scrollY); } catch (e) {} location.reload(); return; }
+                else { try { sessionStorage.setItem('alma-scroll', scrollY); sessionStorage.setItem('alma-sin-entrada', '1'); } catch (e) {} location.reload(); return; }
             }
             version = v;
         } catch (e) {}

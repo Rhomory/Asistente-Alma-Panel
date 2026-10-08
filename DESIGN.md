@@ -31,6 +31,6 @@ Código y prompts en Cascadia Code / Consolas.
 ## Reglas
 - El naranja señala acción o lo actual, nunca decoración.
 - Sin bordes laterales de color, sin texto con degradado, sin tarjetas de métrica gigantes.
-- Motion: sin transiciones en menú, barra, pestañas, cajas, botones ni diálogo (cambian al instante). Solo el texto del contenido aparece con un fundido de opacidad de 0,35 s, sin desplazarse. `prefers-reduced-motion` lo desactiva.
+- Motion (estilo dashboard): al abrir una vista los bloques entran en cascada (fundido + 6 px, 60 ms entre bloques), las filas se encienden una tras otra, las cifras cuentan hasta su valor y las barras crecen; avisos como toast abajo al centro y diálogo con pop leve. Menú lateral y barra superior nunca se animan. No se repite en recargas automáticas; `prefers-reduced-motion` lo desactiva.
 - El panel se recarga solo cuando la consola escribe (huella en `/estado/version`); si hay un formulario
   a medio escribir, muestra un aviso en lugar de recargar.

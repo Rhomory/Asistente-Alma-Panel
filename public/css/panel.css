@@ -407,13 +407,73 @@ pre.bloque { margin: 0; padding: 12px 14px; border-radius: 10px; background: var
 .btn.peligro-lleno:hover { filter: brightness(1.06); }
 .btn.peligro-lleno:disabled { filter: saturate(.3); opacity: .55; cursor: not-allowed; }
 
-/* Movimiento: nada se anima (menú, barra, pestañas, cajas, botones y diálogo cambian al instante).
-   Solo el texto del contenido aparece con un fundido suave de opacidad, sin desplazarse. */
-.contenido :is(h1, h2, h3, p, li, td, th, label, small, code, .det, .nota, .meta, .cita, .msg, .prompt) {
-    animation: texto-aparece .35s ease-out;
+/* ── Movimiento, estilo dashboard ────────────────────────────────────────────────
+   Al abrir una vista: los bloques entran en cascada (fundido + 6 px), las filas de cada lista se encienden
+   una tras otra, las cifras cuentan hasta su valor y las barras crecen. Lo marca el script del layout (clases
+   .entra/.entra-fila/.crece y la variable --i para el orden) y NO se repite cuando el panel se recarga solo.
+   El menú lateral y la barra superior nunca se animan. Sin JavaScript, todo se ve quieto y completo. */
+:root { --ease-salida: cubic-bezier(.22, 1, .36, 1); }
+
+.entra { animation: bloque-entra .55s var(--ease-salida) both; animation-delay: calc(var(--i, 0) * 60ms); }
+@keyframes bloque-entra { from { opacity: 0; transform: translateY(6px); } }
+
+.entra-fila { animation: fila-entra .4s ease-out both; animation-delay: calc(var(--i, 0) * 35ms + 180ms); }
+@keyframes fila-entra { from { opacity: 0; } }
+
+.barra-prog i.crece, .seg i.crece { transform-origin: left center; animation: barra-crece .8s var(--ease-salida) both; animation-delay: calc(var(--i, 0) * 40ms + 250ms); }
+@keyframes barra-crece { from { transform: scaleX(0); } }
+
+/* Botones: solo el cambio de color al pasar el mouse (el menú y las pestañas siguen sin transición). */
+.btn, .btn-subir, .copiar { transition: background-color .15s ease-out, border-color .15s ease-out, color .15s ease-out; }
+
+/* Diálogo: aparece con un "pop" leve y el fondo se desenfoca. */
+.dialogo { transition: opacity .2s ease-out, transform .26s var(--ease-salida), overlay .26s allow-discrete, display .26s allow-discrete; }
+.dialogo::backdrop { transition: opacity .2s ease-out, backdrop-filter .2s ease-out, overlay .26s allow-discrete, display .26s allow-discrete; }
+.dialogo:not([open]) { opacity: 0; transform: scale(.97); }
+.dialogo[open] { opacity: 1; transform: none; }
+.dialogo[open]::backdrop { backdrop-filter: blur(3px); }
+@starting-style {
+    .dialogo[open] { opacity: 0; transform: scale(.97); }
+    .dialogo[open]::backdrop { opacity: 0; backdrop-filter: blur(0); }
 }
-@keyframes texto-aparece { from { opacity: .15; } }
+
+/* Aviso flotante (toast) abajo al centro: confirma cada acción y se va solo. */
+.toast { position: fixed; left: 50%; bottom: 28px; z-index: 40; translate: -50% 0; display: flex; align-items: center; gap: 10px;
+         max-width: min(560px, calc(100vw - 32px)); padding: 10px 16px; border-radius: 99px; background: var(--ink); color: var(--bg);
+         font-size: 13px; font-weight: 500; box-shadow: var(--shadow); animation: toast-entra .45s var(--ease-salida) both; }
+.toast .i { color: var(--ok); flex-shrink: 0; }
+.toast.saliendo { animation: toast-sale .3s ease-in both; }
+@keyframes toast-entra { from { opacity: 0; transform: translateY(12px); } }
+@keyframes toast-sale { to { opacity: 0; transform: translateY(8px); } }
 
 @media (prefers-reduced-motion: reduce) {
-    .contenido * { animation: none !important; }
+    .entra, .entra-fila, .crece, .toast, .toast.saliendo { animation: none !important; }
+    .btn, .btn-subir, .copiar, .dialogo, .dialogo::backdrop { transition: none !important; }
+}
+
+/* ── Guía "Cómo funciona" ─────────────────────── */
+.piezas { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0; }
+.piezas > div { padding: 16px 18px; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
+.piezas > div:last-child { border-right: 0; }
+.piezas b { font-weight: 600; }
+.piezas p { font-size: 12.5px; color: var(--ink-2); }
+.ciclo { list-style: none; }
+.ciclo > li { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 14px; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+.ciclo > li:last-child { border-bottom: 0; }
+.ciclo .paso-n { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 600; font-size: 13px; background: var(--ora-soft); color: var(--ora-ink); }
+.ciclo b { font-weight: 600; }
+.ciclo p { color: var(--ink-2); font-size: 13px; margin: 2px 0 6px; max-width: 80ch; }
+.ciclo code { display: inline-block; font-size: 11.5px; }
+.estados { display: grid; gap: 10px; }
+.estados > div { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 10px; align-items: center; font-size: 12.5px; color: var(--ink-2); }
+.reglas p { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--ink-2); }
+.reglas .i { margin-top: 3px; color: var(--ink-3); }
+@media (max-width: 860px) { .piezas > div { border-right: 0; border-bottom: 1px solid var(--line); } .estados > div { grid-template-columns: 1fr; } }
+
+@media print {
+    .side, .barra, .pie, .aviso-vivo, .toast, .cabeza .btn { display: none !important; }
+    .app { display: block; }
+    .contenido { padding: 0; }
+    .caja { box-shadow: none; break-inside: avoid; }
+    .entra, .entra-fila, .crece { animation: none !important; }
 }

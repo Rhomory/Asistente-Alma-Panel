@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PanelController::class, 'dashboard'])->name('dashboard');
 Route::get('/registro', [PanelController::class, 'registro'])->name('registro');
+Route::view('/como-funciona', 'panel.flujo')->name('flujo');
 Route::get('/registro/export', [PanelController::class, 'exportCsv'])->name('registro.export');
 Route::get('/estado/version', [EstadoController::class, 'version'])->name('estado.version');
 

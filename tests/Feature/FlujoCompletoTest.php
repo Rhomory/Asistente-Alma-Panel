@@ -25,7 +25,7 @@ class FlujoCompletoTest extends TestCase
         $pagina->secciones()->create(['nombre' => 'Hero', 'estado' => 'planificada']);
         $pagina->secciones()->create(['nombre' => 'Galería', 'estado' => 'construida', 'minutos' => 9, 'inicio' => now(), 'fin' => now()]);
 
-        foreach (['/', '/conexion', '/registro', '/proyectos/nuevo', "/proyectos/{$p->id}", "/proyectos/{$p->id}/guia", "/paginas/{$pagina->id}"] as $ruta) {
+        foreach (['/', '/conexion', '/registro', '/como-funciona', '/proyectos/nuevo', "/proyectos/{$p->id}", "/proyectos/{$p->id}/guia", "/paginas/{$pagina->id}"] as $ruta) {
             $this->get($ruta)->assertOk();
         }
     }

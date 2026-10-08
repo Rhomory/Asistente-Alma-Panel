@@ -76,7 +76,7 @@
             </div>
         @empty
             <div class="caja-cuerpo">
-                <div class="aviso-suave"><x-ic n="figma" />Aún no hay versiones. Cuando el agente lea el Figma y ejecute <code>diseno:guardar</code>, aparecerá aquí como v1 y quedará en uso.</div>
+                <div class="aviso-suave"><x-ic n="figma" /><span>Aún no hay versiones. Cuando el agente lea el Figma y ejecute <code>diseno:guardar</code>, aparecerá aquí como v1 y quedará en uso.</span></div>
             </div>
         @endforelse
         @if ($proyecto->disenos->where('estado', 'nueva')->isNotEmpty())

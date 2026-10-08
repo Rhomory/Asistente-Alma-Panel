@@ -11,6 +11,8 @@
             const q = new URLSearchParams(location.search).get('tema');   // ?tema=claro|oscuro fija la preferencia
             if (q === 'claro' || q === 'oscuro') localStorage.setItem('alma-tema', q);
             document.documentElement.dataset.theme = localStorage.getItem('alma-tema') || 'oscuro';
+            // Menú lateral plegado (solo iconos) o completo; se recuerda por equipo.
+            document.documentElement.dataset.menu = localStorage.getItem('alma-menu') === 'corto' ? 'corto' : 'largo';
         } catch (e) {}
     </script>
     <link rel="preload" href="{{ asset('fonts/poppins-400.woff2') }}" as="font" type="font/woff2" crossorigin>
@@ -21,28 +23,46 @@
 <body>
 <div class="app">
     <aside class="side">
-        <a class="marca" href="{{ route('dashboard') }}">
-            <span class="marca-logo"><x-ic n="chispa" c="lg" /></span>
-            <span><b>Asistente Alma</b><small>Panel de operaciones</small></span>
-        </a>
-        <nav class="nav">
-            <a href="{{ route('dashboard') }}" class="c-lav {{ request()->routeIs('dashboard') ? 'on' : '' }}" @if (request()->routeIs('dashboard')) aria-current="page" @endif><x-ic n="inicio" /><span class="txt">Panel</span>
-                @if ($navCola)<span class="cuenta alerta" title="Correcciones en cola">{{ $navCola }}</span>@endif</a>
-            <a href="{{ route('registro') }}" class="c-ok {{ request()->routeIs('registro') ? 'on' : '' }}" @if (request()->routeIs('registro')) aria-current="page" @endif><x-ic n="lista" /><span class="txt">Registro de cambios</span></a>
-            <a href="{{ route('conexion') }}" class="c-warn {{ request()->routeIs('conexion') ? 'on' : '' }}" @if (request()->routeIs('conexion')) aria-current="page" @endif><x-ic n="enchufe" /><span class="txt">Conexión</span></a>
-            <a href="{{ route('flujo') }}" class="c-lav {{ request()->routeIs('flujo') ? 'on' : '' }}" @if (request()->routeIs('flujo')) aria-current="page" @endif><x-ic n="libro" /><span class="txt">Cómo funciona</span></a>
-        </nav>
-        <div class="nav-grupo">Proyectos</div>
-        <nav class="nav">
-            @php $proyectoActual = request()->route('proyecto') ?? request()->route('pagina')?->proyecto; @endphp
-            @foreach ($navProyectos as $p)
-                <a href="{{ route('proyecto', $p) }}" class="{{ $proyectoActual?->id === $p->id ? 'on' : '' }}" @if ($proyectoActual?->id === $p->id) aria-current="page" @endif><x-ic n="capas" /><span class="txt">{{ $p->nombre }}</span>
-                    @php [$est, $tit] = $p->p_total === 0 ? ['', 'Sin páginas'] : ($p->p_listas === $p->p_total ? ['lista', 'Páginas aprobadas'] : ($p->p_obra ? ['obra', 'En construcción'] : ['', 'Por empezar'])); @endphp
-                    <i class="estado-p {{ $est }}" title="{{ $tit }}" aria-label="{{ $tit }}"></i></a>
-            @endforeach
-            <a href="{{ route('proyecto.nuevo') }}" class="c-ora {{ request()->routeIs('proyecto.nuevo') ? 'on' : '' }}" @if (request()->routeIs('proyecto.nuevo')) aria-current="page" @endif><x-ic n="mas" /><span class="txt">Nuevo proyecto</span></a>
-        </nav>
-        <div class="side-pie"><b><x-ic n="escudo" c="sm" />Nada se publica solo</b>El asistente construye en borrador y registra; tú apruebas cada sección antes de pedir QA.</div>
+        <div class="side-cab">
+            <a class="marca" href="{{ route('dashboard') }}" title="Asistente Alma">
+                <span class="marca-logo"><x-ic n="chispa" c="lg" /></span>
+                <span class="txt"><b>Asistente Alma</b><small>Panel de operaciones</small></span>
+            </a>
+            <button class="plegar" type="button" id="plegar" aria-controls="menu-lateral" title="Plegar o desplegar el menú" aria-label="Plegar o desplegar el menú"><x-ic n="panel" /></button>
+        </div>
+        <div class="side-scroll" id="menu-lateral">
+            <nav class="nav">
+                <a href="{{ route('dashboard') }}" title="Panel" class="c-lav {{ request()->routeIs('dashboard') ? 'on' : '' }}" @if (request()->routeIs('dashboard')) aria-current="page" @endif><x-ic n="inicio" /><span class="txt">Panel</span>
+                    @if ($navCola)<span class="cuenta alerta" title="Correcciones en cola">{{ $navCola }}</span>@endif</a>
+                <a href="{{ route('registro') }}" title="Registro de cambios" class="c-ok {{ request()->routeIs('registro') ? 'on' : '' }}" @if (request()->routeIs('registro')) aria-current="page" @endif><x-ic n="lista" /><span class="txt">Registro de cambios</span></a>
+                <a href="{{ route('conexion') }}" title="Conexión" class="c-warn {{ request()->routeIs('conexion') ? 'on' : '' }}" @if (request()->routeIs('conexion')) aria-current="page" @endif><x-ic n="enchufe" /><span class="txt">Conexión</span></a>
+                <a href="{{ route('flujo') }}" title="Cómo funciona" class="c-lav {{ request()->routeIs('flujo') ? 'on' : '' }}" @if (request()->routeIs('flujo')) aria-current="page" @endif><x-ic n="libro" /><span class="txt">Cómo funciona</span></a>
+            </nav>
+            <div class="nav-grupo"><span class="txt">Proyectos</span></div>
+            <nav class="nav">
+                @php $proyectoActual = request()->route('proyecto') ?? request()->route('pagina')?->proyecto; @endphp
+                @foreach ($navProyectos as $p)
+                    @php
+                        [$est, $tit] = $p->p_total === 0 ? ['', 'Sin páginas'] : ($p->p_listas === $p->p_total ? ['lista', 'Páginas aprobadas'] : ($p->p_obra ? ['obra', 'En construcción'] : ['', 'Por empezar']));
+                        $ini = collect(preg_split('/\s+/', \Illuminate\Support\Str::ascii($p->nombre)))->filter()->take(2)->map(fn ($w) => mb_strtoupper(mb_substr($w, 0, 1)))->implode('');
+                    @endphp
+                    <a href="{{ route('proyecto', $p) }}" title="{{ $p->nombre }} · {{ $tit }}" class="proy-nav {{ $proyectoActual?->id === $p->id ? 'on' : '' }}" @if ($proyectoActual?->id === $p->id) aria-current="page" @endif><x-ic n="capas" /><span class="ini" aria-hidden="true">{{ $ini }}</span><span class="txt">{{ $p->nombre }}</span>
+                        <i class="estado-p {{ $est }}" aria-label="{{ $tit }}"></i></a>
+                @endforeach
+                <a href="{{ route('proyecto.nuevo') }}" title="Nuevo proyecto" class="c-ora {{ request()->routeIs('proyecto.nuevo') ? 'on' : '' }}" @if (request()->routeIs('proyecto.nuevo')) aria-current="page" @endif><x-ic n="mas" /><span class="txt">Nuevo proyecto</span></a>
+            </nav>
+            <div class="side-pie"><b><x-ic n="escudo" c="sm" />Nada se publica solo</b>El asistente construye en borrador y registra; tú apruebas cada sección antes de pedir QA.</div>
+        </div>
+        <div class="side-fin">
+            <button class="tema" type="button" id="tema" title="Cambiar a tema claro u oscuro" aria-label="Cambiar tema">
+                <x-ic n="sol" /><x-ic n="luna" /><span class="txt">Cambiar tema</span>
+            </button>
+            {{-- Solo visual por ahora: las cuentas y el inicio de sesión llegarán después. --}}
+            <div class="usuario" title="Cuenta (el inicio de sesión llega más adelante)">
+                <span class="avatar" aria-hidden="true">R</span>
+                <span class="txt"><b>Mi cuenta</b><small>Sesión local</small></span>
+            </div>
+        </div>
     </aside>
 
     <div class="cuerpo">
@@ -57,9 +77,6 @@
                 @endif
             </div>
             <span class="vivo" title="El panel se recarga solo cuando la consola registra algo"><i class="pulso"></i>En vivo</span>
-            <button class="tema" type="button" id="tema" title="Cambiar a tema claro u oscuro" aria-label="Cambiar tema">
-                <x-ic n="sol" /><x-ic n="luna" />
-            </button>
         </header>
 
         <main class="contenido">
@@ -85,6 +102,17 @@
         const nuevo = document.documentElement.dataset.theme === 'claro' ? 'oscuro' : 'claro';
         document.documentElement.dataset.theme = nuevo;
         try { localStorage.setItem('alma-tema', nuevo); } catch (e) {}
+    });
+
+    // Menú plegable: cambia al instante (el menú nunca se anima) y se recuerda.
+    const plegar = document.getElementById('plegar');
+    const marcarPlegado = () => plegar.setAttribute('aria-expanded', document.documentElement.dataset.menu === 'corto' ? 'false' : 'true');
+    marcarPlegado();
+    plegar.addEventListener('click', function () {
+        const nuevo = document.documentElement.dataset.menu === 'corto' ? 'largo' : 'corto';
+        document.documentElement.dataset.menu = nuevo;
+        try { localStorage.setItem('alma-menu', nuevo); } catch (e) {}
+        marcarPlegado();
     });
 
     // Alt+↑ sube un nivel (al destino del botón .btn-subir); Alt+← sigue siendo el historial del navegador.

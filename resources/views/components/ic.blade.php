@@ -32,6 +32,7 @@
         'basura'    => '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
         'lapiz'     => '<path d="M4 20h4L19 9l-4-4L4 16Z"/><path d="m13.5 6.5 4 4"/>',
         'x'         => '<path d="M6 6l12 12M18 6 6 18"/>',
+        'panel'     => '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/>',
     ];
 @endphp
 <svg {{ $attributes->merge(['class' => trim("i i-{$n} {$c}")]) }} viewBox="0 0 24 24" aria-hidden="true">{!! $trazos[$n] ?? '' !!}</svg>

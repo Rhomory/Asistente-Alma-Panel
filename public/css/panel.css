@@ -538,6 +538,9 @@ html:active-view-transition-type(menu)::view-transition-old(barra) { display: no
 html:active-view-transition-type(menu)::view-transition-new(contenido),
 html:active-view-transition-type(menu)::view-transition-new(barra) { animation: none; }
 html:active-view-transition-type(menu)::view-transition-old(menu-lateral) { animation-duration: 0.14s; }
+/* Cambio de tema: fundido suave de toda la pantalla, sin movimiento. */
+html:active-view-transition-type(tema)::view-transition-old(*),
+html:active-view-transition-type(tema)::view-transition-new(*) { animation-duration: 0.45s; animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
 @media (prefers-reduced-motion: reduce) {
     ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
 }

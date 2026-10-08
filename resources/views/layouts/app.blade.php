@@ -102,8 +102,14 @@
     // Tema
     document.getElementById('tema').addEventListener('click', function () {
         const nuevo = document.documentElement.dataset.theme === 'claro' ? 'oscuro' : 'claro';
-        document.documentElement.dataset.theme = nuevo;
-        try { localStorage.setItem('alma-tema', nuevo); } catch (e) {}
+        const aplicar = () => {
+            document.documentElement.dataset.theme = nuevo;
+            try { localStorage.setItem('alma-tema', nuevo); } catch (e) {}
+        };
+        // Fundido suave entre temas; sin soporte o con "reducir movimiento", al instante.
+        if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) return aplicar();
+        try { document.startViewTransition({ update: aplicar, types: ['tema'] }); }
+        catch (e) { document.startViewTransition(aplicar); }
     });
 
     // Menú plegable: cambia al instante (el menú nunca se anima) y se recuerda.

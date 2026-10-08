@@ -45,6 +45,8 @@ class FlujoController extends Controller
                 'total'     => $pagina->secciones->count(),
             ],
             'enVivo'      => $pagina->estado === 'construyendo',
+            // Pestañas del tablero: las páginas en alcance del mismo proyecto (y esta, aunque esté fuera).
+            'hermanas'    => $pagina->proyecto->paginas()->where(fn ($q) => $q->where('incluida', true)->orWhere('id', $pagina->id))->orderBy('id')->get(['id', 'nombre', 'estado']),
         ]);
     }
 

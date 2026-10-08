@@ -46,80 +46,108 @@
         </div>
     </div>
 
-    <section class="caja avance">
-        <span><b>{{ $resumen['aprobadas'] }} de {{ $resumen['total'] }}</b> aprobadas</span>
-        <div class="barra-prog">
-            <i class="a" style="width:{{ 100 * ($porEstado['aprobada'] ?? 0) / $total }}%"></i>
-            <i class="c" style="width:{{ 100 * ($porEstado['construida'] ?? 0) / $total }}%"></i>
-            <i class="r" style="width:{{ 100 * ($porEstado['construyendo'] ?? 0) / $total }}%"></i>
-        </div>
-        <span><b>{{ $resumen['real'] }}</b> min trabajados @if ($resumen['estimado']) · plan {{ $resumen['estimado'] }} min @endif</span>
-        <span><b>{{ $trabajo ? round(100 * $pagina->secciones->sum('min_asistente') / $trabajo) : 0 }} %</b> hecho por el asistente</span>
+    <div class="tablero-cab">
+        @if ($hermanas->count() > 1)
+            <nav class="pestanas" aria-label="Páginas del proyecto">
+                @foreach ($hermanas as $h)
+                    <a href="{{ route('pagina', $h) }}" class="{{ $h->id === $pagina->id ? 'on' : '' }}" @if ($h->id === $pagina->id) aria-current="page" @endif>{{ $h->nombre }}</a>
+                @endforeach
+            </nav>
+        @endif
+        <p class="tablero-resumen">
+            <span><b>{{ $resumen['aprobadas'] }} de {{ $resumen['total'] }}</b> aprobadas</span>
+            <span><b>{{ $resumen['real'] }}</b> min @if ($resumen['estimado'])de {{ $resumen['estimado'] }} planificados @endif</span>
+            <span><b>{{ $trabajo ? round(100 * $pagina->secciones->sum('min_asistente') / $trabajo) : 0 }} %</b> asistente</span>
+        </p>
+    </div>
+
+    {{-- Tablero de obra: una columna por estado, cada sección es una tarjeta. --}}
+    @php
+        $columnas = [
+            'planificada'  => ['Planificada', 'plan'],
+            'construyendo' => ['En construcción', 'obra'],
+            'construida'   => ['Por revisar', 'rev'],
+            'aprobada'     => ['Aprobada', 'ok'],
+        ];
+        $porColumna = $pagina->secciones->groupBy('estado');
+    @endphp
+    <section class="tablero" aria-label="Secciones por estado">
+        @foreach ($columnas as $estado => [$titulo, $tono])
+            @php $lista = $porColumna[$estado] ?? collect(); @endphp
+            <div class="columna c-{{ $tono }}">
+                <div class="columna-cab"><i class="punto"></i><h2>{{ $titulo }}</h2><span class="conteo {{ $lista->isNotEmpty() ? 'hay' : '' }}">{{ $lista->count() }}</span></div>
+                <div class="columna-lista">
+                    @foreach ($lista as $s)
+                        <article class="tarjeta {{ $estado === 'planificada' ? 'plan' : '' }} {{ $estado === 'aprobada' ? 'lista' : '' }}">
+                            @if ($estado === 'aprobada')
+                                <span class="tilde"><x-ic n="check" c="sm" /></span>
+                            @endif
+                            <div class="tarjeta-txt">
+                                <h3>{{ $s->nombre }}</h3>
+                                @if ($estado === 'construyendo' && $s->correcciones)<span class="tag rev">En corrección</span>@endif
+                                <p class="det">
+                                    @if ($estado !== 'aprobada'){{ $s->widget_plan ?? 'Widget sin definir' }}@if ($s->figma_id) · Figma {{ $s->figma_id }}@endif<br>@endif
+                                    @if ($estado === 'planificada')
+                                        {{ $s->min_estimado ? $s->min_estimado . ' min estimados' : 'Sin construir' }}
+                                    @else
+                                        {{ $s->minutos }} min · asistente {{ $s->min_asistente }}@if ($s->min_dev) · dev {{ $s->min_dev }}@endif
+                                        @if ($s->correcciones) · {{ $s->correcciones }} {{ $s->correcciones === 1 ? 'corrección' : 'correcciones' }}@endif
+                                    @endif
+                                </p>
+                                @if (isset($pendientes[$s->id]))
+                                    <div class="cola"><i class="pulso"></i><span>En cola para el asistente · “{{ $pendientes[$s->id]->last()->detalle }}”</span></div>
+                                @endif
+                            </div>
+                            @if ($estado === 'construida')
+                                <div class="btns">
+                                    <form method="post" action="{{ route('seccion.aprobar', $s) }}" class="inline">@csrf
+                                        <button class="btn chico p" type="submit"><x-ic n="check" c="sm" />Aprobar</button>
+                                    </form>
+                                    <button class="btn chico" type="button" onclick="const f=document.getElementById('corr-{{ $s->id }}'); f.hidden=!f.hidden; if(!f.hidden) f.querySelector('input').focus()">Pedir corrección</button>
+                                </div>
+                            @elseif ($estado === 'aprobada')
+                                <button class="btn chico fant icono" type="button" title="Pedir corrección" aria-label="Pedir corrección en {{ $s->nombre }}" onclick="const f=document.getElementById('corr-{{ $s->id }}'); f.hidden=!f.hidden; if(!f.hidden) f.querySelector('input').focus()"><x-ic n="lapiz" c="sm" /></button>
+                            @elseif ($estado === 'planificada')
+                                <form method="post" action="{{ route('seccion.plan.eliminar', $s) }}" class="inline quitar" onsubmit="return confirm('¿Quitar esta sección del plan?')">@csrf @method('DELETE')
+                                    <button class="btn chico fant" type="submit">Quitar</button>
+                                </form>
+                            @endif
+                            @if (in_array($estado, ['construida', 'aprobada']))
+                                <form method="post" action="{{ route('seccion.correccion', $s) }}" class="corr-form" id="corr-{{ $s->id }}" hidden>@csrf
+                                    <input type="text" name="detalle" maxlength="500" placeholder="Qué debe corregirse" required aria-label="Qué debe corregirse en {{ $s->nombre }}">
+                                    <button class="btn chico p" type="submit">Enviar a la cola</button>
+                                </form>
+                            @endif
+                        </article>
+                    @endforeach
+
+                    @if ($lista->isEmpty())
+                        @if ($estado === 'planificada' && $resumen['total'] === 0)
+                            <div class="columna-vacia">
+                                {{ $pagina->secciones_total > 0
+                                    ? "Figma detectó {$pagina->secciones_total} secciones, pero aún no tienen nombre. Vuelve a leer el Figma o aplica el plan estándar."
+                                    : 'Sin plan todavía. Aplica el plan estándar o agrega secciones abajo.' }}
+                            </div>
+                        @else
+                            <div class="columna-vacia">{{ ['planificada' => 'Nada pendiente de construir.', 'construyendo' => 'El asistente no está trabajando aquí.', 'construida' => 'Nada por revisar.', 'aprobada' => 'Aún no hay secciones aprobadas.'][$estado] }}</div>
+                        @endif
+                    @endif
+                </div>
+
+                @if ($estado === 'aprobada')
+                    <a class="tarjeta qa-mini" href="#qa">
+                        <b>Solicitar QA</b>
+                        <small>{{ $resumen['total'] && $resumen['aprobadas'] === $resumen['total'] ? 'Lista: copia el mensaje para el canal' : "Se habilita con {$resumen['total']} de {$resumen['total']} aprobadas" }}</small>
+                        <span class="barra-prog"><i class="a" style="width:{{ 100 * $resumen['aprobadas'] / $total }}%"></i></span>
+                        <em>{{ $resumen['aprobadas'] }} / {{ $resumen['total'] }}</em>
+                    </a>
+                @endif
+            </div>
+        @endforeach
     </section>
+    @error('detalle')<p class="error">{{ $message }}</p>@enderror
 
     <div class="rejilla flujo">
-        <section class="caja">
-            <div class="caja-cab"><h2>Secciones</h2><span class="cifra">{{ $resumen['total'] }}</span></div>
-            @forelse ($pagina->secciones as $i => $s)
-                @php
-                    $paso = ['aprobada' => 'a', 'construida' => 'c', 'construyendo' => 'r'][$s->estado] ?? '';
-                    $hecha = $s->estado !== 'planificada';
-                @endphp
-                <div class="sec {{ $hecha ? '' : 'plan' }}">
-                    <span class="paso {{ $paso }}">@if ($s->estado === 'aprobada')<x-ic n="check" c="sm" />@else{{ $i + 1 }}@endif</span>
-                    <div>
-                        <div class="nom"><b>{{ $s->nombre }}</b>
-                            @if ($s->estado === 'construyendo')<span class="tag obra">En corrección</span>@else @include('panel.partes.estado', ['estado' => $s->estado]) @endif
-                        </div>
-                        <div class="det">
-                            {{ $s->widget_plan ?? 'Widget sin definir' }}@if ($s->figma_id) <span title="ID en Figma">· Figma {{ $s->figma_id }}</span>@endif ·
-                            @if ($hecha)
-                                <em>{{ $s->minutos }} min</em>@if ($s->min_estimado) de {{ $s->min_estimado }} estimados @endif
-                                · asistente {{ $s->min_asistente }}@if ($s->min_dev) · dev {{ $s->min_dev }}@endif
-                                @if ($s->correcciones) · {{ $s->correcciones }} {{ $s->correcciones === 1 ? 'corrección' : 'correcciones' }}@endif
-                            @else
-                                {{ $s->min_estimado ? $s->min_estimado . ' min estimados' : 'sin estimado' }}
-                            @endif
-                        </div>
-                        @if (isset($pendientes[$s->id]))
-                            <div class="cola"><i class="pulso"></i>En cola para el asistente <span>· “{{ $pendientes[$s->id]->last()->detalle }}”</span></div>
-                        @endif
-                    </div>
-                    <div class="btns">
-                        @if ($s->estado === 'construida')
-                            <form method="post" action="{{ route('seccion.aprobar', $s) }}" class="inline">@csrf
-                                <button class="btn chico ok" type="submit"><x-ic n="check" c="sm" />Aprobar</button>
-                            </form>
-                        @endif
-                        @if (in_array($s->estado, ['construida', 'aprobada']))
-                            <button class="btn chico {{ $s->estado === 'aprobada' ? 'fant' : '' }}" type="button" onclick="const f=document.getElementById('corr-{{ $s->id }}'); f.hidden=!f.hidden; if(!f.hidden) f.querySelector('input').focus()">Pedir corrección</button>
-                        @endif
-                        @if ($s->estado === 'planificada')
-                            <form method="post" action="{{ route('seccion.plan.eliminar', $s) }}" class="inline" onsubmit="return confirm('¿Quitar esta sección del plan?')">@csrf @method('DELETE')
-                                <button class="btn chico fant" type="submit">Quitar</button>
-                            </form>
-                        @endif
-                    </div>
-                    @if (in_array($s->estado, ['construida', 'aprobada']))
-                        <form method="post" action="{{ route('seccion.correccion', $s) }}" class="corr-form" id="corr-{{ $s->id }}" hidden>@csrf
-                            <input type="text" name="detalle" maxlength="500" placeholder="Ej.: el título debe usar el color primario" required aria-label="Qué debe corregirse en {{ $s->nombre }}">
-                            <button class="btn p" type="submit">Enviar a la cola</button>
-                        </form>
-                    @endif
-                </div>
-            @empty
-                <div class="caja-cuerpo">
-                    @if ($pagina->secciones_total > 0)
-                        <div class="aviso-suave"><x-ic n="figma" />Figma detectó {{ $pagina->secciones_total }} secciones en esta página, pero aún no tienen nombre en el panel. Vuelve a leer el Figma con la skill actualizada (carga cada sección con su ID) o aplica el plan estándar.</div>
-                    @else
-                        <div class="aviso-suave"><x-ic n="lista" />Esta página aún no tiene plan. Aplica el plan estándar de la guía o agrega secciones a mano.</div>
-                    @endif
-                </div>
-            @endforelse
-            @error('detalle')<p class="error caja-cuerpo">{{ $message }}</p>@enderror
-        </section>
-
-        <div class="col">
             <section class="caja" id="qa">
                 <div class="caja-cab"><span class="icono-suave ora chico"><x-ic n="mensaje" c="sm" /></span><h2>Solicitud de QA</h2></div>
                 <div class="caja-cuerpo">
@@ -197,7 +225,6 @@
                     @error('nombre')<span class="error">{{ $message }}</span>@enderror
                 </div>
             </section>
-        </div>
     </div>
 
     <script>

@@ -476,6 +476,71 @@ pre.bloque { margin: 0; padding: 12px 14px; border-radius: 10px; background: var
     .resumen > div { border-right: 0; border-bottom: 1px solid var(--line); }
     .perdidas { grid-template-columns: 1fr; }
 }
+/* ── Tablero de obra (vista de página, concepto B2) ─────────────── */
+.tablero-cab { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; }
+.pestanas { display: flex; gap: 2px; padding: 4px; border-radius: 99px; background: var(--surface-2); border: 1px solid var(--line); max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.pestanas a { padding: 6px 16px; border-radius: 99px; font-size: 12.5px; font-weight: 500; color: var(--ink-2); white-space: nowrap; }
+.pestanas a:hover { background: var(--hover); color: var(--ink); }
+.pestanas a.on, .pestanas a.on:hover { background: var(--capsula); color: var(--ink); font-weight: 600; box-shadow: var(--capsula-sombra); }
+.tablero-resumen { display: flex; gap: 6px 18px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-2); margin-left: auto; }
+.tablero-resumen b { color: var(--ink); font-weight: 600; }
+.tablero { display: grid; grid-template-columns: repeat(auto-fit, minmax(232px, 1fr)); gap: 14px; align-items: stretch; }
+.columna { --tono: var(--ink-3); display: flex; flex-direction: column; gap: 10px; min-width: 0; min-height: 320px; padding: 12px; border-radius: 24px; border: 1px solid var(--line); background: color-mix(in oklch, var(--tono) 7%, var(--surface)); }
+.columna.c-obra { --tono: var(--lav); } .columna.c-rev { --tono: var(--ora); } .columna.c-ok { --tono: var(--ok); }
+.columna-cab { display: flex; align-items: center; gap: 8px; padding: 4px 6px 2px; }
+.columna-cab h2 { font-size: 13.5px; }
+.columna-cab .punto { width: 9px; height: 9px; border-radius: 50%; background: var(--tono); flex-shrink: 0; }
+.columna-cab .conteo { margin-left: auto; min-width: 26px; padding: 1px 8px; border-radius: 99px; text-align: center; font-size: 11.5px; font-weight: 600; background: color-mix(in oklch, var(--tono) 18%, transparent); color: var(--ink); }
+.columna.c-rev .conteo.hay { background: var(--ora-cap); color: var(--on-ora); box-shadow: var(--ora-sombra); }
+.columna-lista { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.columna-vacia { padding: 14px 8px; font-size: 12.5px; color: var(--ink-3); text-align: center; }
+.tarjeta { position: relative; display: flex; flex-direction: column; gap: 10px; padding: 14px 14px 13px; border-radius: 18px; background: var(--capsula); box-shadow: var(--capsula-sombra); min-width: 0; }
+.tarjeta h3 { font-size: 13.5px; font-weight: 600; overflow-wrap: anywhere; }
+.tarjeta .tag { margin-top: 6px; }
+.tarjeta .det { font-size: 12px; color: var(--ink-2); margin-top: 4px; line-height: 1.55; }
+.tarjeta .cola { margin-top: 8px; align-items: flex-start; }
+.tarjeta .cola .pulso { margin-top: 5px; }
+.tarjeta .btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.tarjeta .corr-form { display: flex; flex-direction: column; gap: 6px; margin: 0; }
+.tarjeta.plan { background: transparent; box-shadow: none; border: 1px dashed var(--line-2); }
+.tarjeta.plan .quitar { position: absolute; top: 8px; right: 8px; }
+.tarjeta.plan h3 { padding-right: 56px; }
+.tarjeta.lista { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 10px 10px 12px; border-radius: 22px; }
+.tarjeta.lista .tarjeta-txt { flex: 1; min-width: 0; }
+.tarjeta.lista .det { margin-top: 0; }
+.tarjeta.lista .corr-form { flex-basis: 100%; }
+.tilde { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; background: var(--ok-soft); color: var(--ok-ink); }
+.btn.icono { width: 30px; padding: 0; justify-content: center; }
+.qa-mini { gap: 6px; margin-top: auto; }
+.qa-mini b { font-size: 12.5px; font-weight: 600; }
+.qa-mini small { font-size: 11.5px; color: var(--ink-2); }
+.qa-mini .barra-prog { height: 8px; margin-top: 4px; }
+.qa-mini em { font-style: normal; font-size: 11.5px; font-weight: 600; color: var(--ok-ink); align-self: flex-end; }
+a.qa-mini:hover { box-shadow: var(--capsula-sombra), 0 0 0 2px var(--ok-soft); }
+
+/* ── Transiciones ───────────────────────────────────────────────
+   Entre páginas: fundido corto del contenido; el menú y la barra no se mueven (mismo nombre en
+   ambas páginas). Al plegar el menú: el riel y el contenido cambian de ancho con una curva suave,
+   sin estirar textos (las capturas conservan su tamaño y se recortan). */
+@view-transition { navigation: auto; }
+.side { view-transition-name: menu-lateral; }
+.barra { view-transition-name: barra; }
+.contenido { view-transition-name: contenido; }
+::view-transition-group(*) { animation-duration: 0.3s; animation-timing-function: cubic-bezier(0.25, 1, 0.5, 1); }
+::view-transition-old(*), ::view-transition-new(*) { height: 100%; width: auto; object-fit: none; object-position: left top; }
+::view-transition-group(menu-lateral) { overflow: clip; border-radius: 24px; }
+::view-transition-group(barra) { overflow: clip; border-radius: 28px; }
+::view-transition-old(root), ::view-transition-new(root), ::view-transition-old(contenido), ::view-transition-new(contenido) { animation-duration: 0.2s; }
+/* Al plegar: el contenido y la barra se deslizan ya con su forma final (sin doble imagen);
+   el riel funde sus textos mientras cambia de ancho. */
+html:active-view-transition-type(menu)::view-transition-old(contenido),
+html:active-view-transition-type(menu)::view-transition-old(barra) { display: none; }
+html:active-view-transition-type(menu)::view-transition-new(contenido),
+html:active-view-transition-type(menu)::view-transition-new(barra) { animation: none; }
+html:active-view-transition-type(menu)::view-transition-old(menu-lateral) { animation-duration: 0.14s; }
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}
 /* ── Diálogo de confirmación ───────────────── */
 .dialogo { margin: auto; width: min(480px, calc(100vw - 32px)); border: 1px solid var(--line-2); border-radius: 16px; background: var(--surface); color: var(--ink); box-shadow: 0 24px 60px -20px oklch(0 0 0 / 0.55); padding: 0; }
 .dialogo::backdrop { background: oklch(0.12 0.02 285 / 0.55); }

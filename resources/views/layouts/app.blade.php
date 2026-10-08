@@ -16,7 +16,9 @@
         } catch (e) {}
     </script>
     <link rel="preload" href="{{ asset('fonts/poppins-400.woff2') }}" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="{{ asset('fonts/poppins-500.woff2') }}" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="{{ asset('fonts/poppins-600.woff2') }}" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="{{ asset('fonts/poppins-700.woff2') }}" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="{{ asset('css/panel.css') }}?v={{ filemtime(public_path('css/panel.css')) }}">
     <script src="{{ asset('js/motion.js') }}?v=14.0.0"></script>
 </head>
@@ -110,9 +112,15 @@
     marcarPlegado();
     plegar.addEventListener('click', function () {
         const nuevo = document.documentElement.dataset.menu === 'corto' ? 'largo' : 'corto';
-        document.documentElement.dataset.menu = nuevo;
-        try { localStorage.setItem('alma-menu', nuevo); } catch (e) {}
-        marcarPlegado();
+        const aplicar = () => {
+            document.documentElement.dataset.menu = nuevo;
+            try { localStorage.setItem('alma-menu', nuevo); } catch (e) {}
+            marcarPlegado();
+        };
+        // Con View Transitions el riel cambia de ancho suavemente; sin soporte o con "reducir movimiento", al instante.
+        if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) return aplicar();
+        try { document.startViewTransition({ update: aplicar, types: ['menu'] }); }
+        catch (e) { document.startViewTransition(aplicar); }
     });
 
     // Alt+↑ sube un nivel (al destino del botón .btn-subir); Alt+← sigue siendo el historial del navegador.
@@ -138,6 +146,8 @@
     const M = window.Motion;
     let sinEntrada = !M || matchMedia('(prefers-reduced-motion: reduce)').matches;
     try { if (sessionStorage.getItem('alma-sin-entrada')) { sinEntrada = true; sessionStorage.removeItem('alma-sin-entrada'); } } catch (e) {}
+    // La cascada solo al abrir el panel; al moverse entre páginas basta el fundido (sin saltos).
+    try { if (sessionStorage.getItem('alma-visto')) sinEntrada = true; sessionStorage.setItem('alma-visto', '1'); } catch (e) {}
     if (!sinEntrada) {
         const { animate, stagger } = M;
         const suave = { type: 'spring', bounce: 0, visualDuration: 0.5 };

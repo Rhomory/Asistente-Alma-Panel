@@ -250,3 +250,4 @@ En Ubuntu se usan con `php artisan …`; desde Windows, con
 - `PRODUCT.md` y `DESIGN.md`: propósito del producto y sistema de diseño.
 - `SEGURIDAD.md`: manejo de credenciales.
 - `docs/GUIA-PLATAFORMA.pdf` y `docs/diagrama-flujo.png`: guía de uso y diagrama del flujo.
+- `docs/AUDITORIA-FLUJO.md`: auditoría del arranque de proyecto, la instalación y la conexión con Figma, con mejoras priorizadas.

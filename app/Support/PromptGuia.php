@@ -103,7 +103,7 @@ class PromptGuia
         $figma = $proyecto->archivo_figma ?: "[falta el archivo de Figma]";
         $lista = $paginas->isEmpty() ? "aún ninguna (léelas del Figma)" : $paginas->implode(", ");
         $fecha = now("America/Lima")->format("d/m/Y");
-        $urlPanel = rtrim(config("app.url"), "/") . "/proyectos/{$proyecto->id}";
+        $urlPanel = rtrim(config("app.url"), "/") . "/proyectos/{$proyecto->slug}";
 
         $varAuth = PromptElementor::variableAuth($nombre);
         $activa = $proyecto->disenoActivo()->first();

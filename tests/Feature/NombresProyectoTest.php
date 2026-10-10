@@ -37,6 +37,21 @@ class NombresProyectoTest extends TestCase
         $this->assertSame(3, Proyecto::count());
     }
 
+    public function test_la_url_del_proyecto_usa_su_nombre(): void
+    {
+        $p = Proyecto::create(['nombre' => 'Clínica del Sur']);
+        $nuevo = Proyecto::create(['nombre' => 'Nuevo']);
+
+        $this->assertSame('clinica-del-sur', $p->slug);
+        $this->assertSame('/proyectos/clinica-del-sur', parse_url(route('proyecto', $p), PHP_URL_PATH));
+        $this->assertSame('proyecto-nuevo', $nuevo->slug);   // "nuevo" es una ruta del panel
+
+        $this->get('/proyectos/clinica-del-sur')->assertOk()->assertSee('Clínica del Sur');
+        $this->get("/proyectos/{$p->id}")->assertOk();          // los enlaces antiguos siguen sirviendo
+        $this->get('/proyectos/nuevo')->assertOk()->assertSee('Nuevo proyecto');
+        $this->get('/proyectos/no-existe')->assertNotFound();
+    }
+
     public function test_la_consola_reusa_el_proyecto_y_frena_variantes(): void
     {
         Proyecto::create(['nombre' => 'Cota']);

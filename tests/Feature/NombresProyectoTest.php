@@ -52,6 +52,15 @@ class NombresProyectoTest extends TestCase
         $this->get('/proyectos/no-existe')->assertNotFound();
     }
 
+    public function test_el_agents_md_no_trae_caracteres_de_control(): void
+    {
+        // En un heredoc de PHP, "Design\vN" se vuelve un tabulador vertical: la ruta llegaba rota al agente.
+        $md = \App\Support\PromptGuia::agentsMd(Proyecto::create(['nombre' => 'Cota']));
+
+        $this->assertSame(0, preg_match('/[\x00-\x08\x0b\x0c\x0e-\x1f]/', $md));
+        $this->assertStringContainsString('Design\\vN', $md);
+    }
+
     public function test_la_consola_reusa_el_proyecto_y_frena_variantes(): void
     {
         Proyecto::create(['nombre' => 'Cota']);

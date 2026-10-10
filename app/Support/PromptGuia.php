@@ -127,7 +127,7 @@ class PromptGuia
         - `AGENTS.md` (este archivo) y `CLAUDE.md` (lo importa para Claude Code).
         - Configuración MCP ya lista para cada agente: `.mcp.json` (Claude Code), `.codex/config.toml` (Codex),
           `.cursor/mcp.json` (Cursor) y `opencode.json` (OpenCode). Incluye figwright y `{$mcp}`.
-        - `Design\vN\`: cada lectura del Figma (`lectura.json` + `capturas\`). Diseño en uso: {$disenoActivo}.
+        - `Design\\vN\`: cada lectura del Figma (`lectura.json` + `capturas\`). Diseño en uso: {$disenoActivo}.
 
         ## El proyecto
         - Sitio WordPress (staging): {$sitio}
@@ -148,7 +148,7 @@ class PromptGuia
 
         | Para | Comando |
         |---|---|
-        | Guardar la lectura del Figma como nueva versión (Design\vN) | `diseno:guardar "{$nombre}" --archivo=<ruta.json>` |
+        | Guardar la lectura del Figma como nueva versión (Design\\vN) | `diseno:guardar "{$nombre}" --archivo=<ruta.json>` |
         | Guía de una página: tokens, plan con IDs de Figma y reglas | `guia:prompt "{$nombre}" "<Página>"` |
         | Correcciones pendientes de este proyecto | `registro:cola "{$nombre}"` |
         | Registrar una sección terminada | `registro:add "{$nombre}" "<Página>" "<Sección>" <min> --asistente=<min> --dev=<min>` |
@@ -162,7 +162,7 @@ class PromptGuia
            - Si `{$mcp}` no autentica, la variable `{$varAuth}` no está: pide al desarrollador que pegue el prompt de Elementor en el panel (Conexión) y reinicie el agente desde el botón "Abrir terminal" del proyecto.
            Si tuviste que cambiar algo, pide reiniciar el agente antes de seguir.
         1. `registro:cola "{$nombre}"`: las correcciones pendientes van primero.
-        2. Si no hay diseño en uso, lee el Figma siguiendo `\$HOME\.claude\skills\alma-figma\SKILL.md` (en Claude Code se activa sola; los demás agentes deben leer ese archivo). Guarda la lectura con `diseno:guardar`, que crea `Design\vN`, y exporta ahí las capturas de cada página.
+        2. Si no hay diseño en uso, lee el Figma siguiendo `\$HOME\.claude\skills\alma-figma\SKILL.md` (en Claude Code se activa sola; los demás agentes deben leer ese archivo). Guarda la lectura con `diseno:guardar`, que crea `Design\\vN`, y exporta ahí las capturas de cada página.
         3. Si el Figma cambió, vuelve a leerlo y guárdalo con `diseno:guardar`: queda como versión nueva hasta que el desarrollador pulse "Usar esta versión" en el panel. Trabaja siempre con la versión en uso.
         4. Antes de construir una página, pide su guía con `guia:prompt`: trae el ID de Figma de cada sección (úsalo en vez de recorrer el archivo) y las capturas sirven de referencia visual.
         5. Construye **una sección a la vez** con `{$mcp}`, siempre en borrador, y regístrala con `registro:add`. El desarrollador la aprueba o pide corrección en el panel.

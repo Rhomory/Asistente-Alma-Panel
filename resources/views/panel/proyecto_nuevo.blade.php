@@ -51,7 +51,7 @@
             <div class="caja-cuerpo" style="display:flex;flex-direction:column;gap:14px">
                 <ol class="pasos">
                     <li><span>En el WordPress del cliente: <b>Elementor › Elementor MCP</b> › activar › tu agente (ej. <b>Claude Code</b>) › <b>Generate Prompt</b>.</span></li>
-                    <li><span>Pega ese prompt en tu agente, dentro de la carpeta del proyecto, y también aquí.</span></li>
+                    <li><span>Pégalo solo aquí: el panel arma la configuración de Claude Code, Codex, Cursor y OpenCode en la carpeta del proyecto y guarda la credencial en Windows.</span></li>
                 </ol>
                 <div class="campo"><label for="prompt_mcp">Prompt de conexión de Elementor</label>
                     <textarea id="prompt_mcp" name="prompt_mcp" rows="7" maxlength="8000" placeholder="Pega aquí el texto que generó Elementor. La contraseña se oculta antes de guardar."></textarea>

@@ -1,6 +1,6 @@
 ---
 name: alma-figma
-description: Lee un archivo de Figma de un proyecto de Alma y carga en el panel Asistente Alma sus páginas, secciones (con su ID de Figma) y tokens con registro:figma. Úsala siempre que abras o revises un archivo de Figma de un proyecto, o cuando pidan "leer el Figma", "detectar páginas", "cargar tokens" o preparar un proyecto para construir.
+description: Lee un archivo de Figma de un proyecto de Alma y carga en el panel Asistente Alma sus páginas, secciones (con su ID de Figma) y tokens como una versión del diseño (diseno:guardar). Úsala siempre que abras o revises un archivo de Figma de un proyecto, o cuando pidan "leer el Figma", "detectar páginas", "cargar tokens" o preparar un proyecto para construir.
 ---
 
 # Puente Figma → panel Asistente Alma
@@ -86,5 +86,5 @@ ID de Figma y la carpeta de capturas de la versión en uso.
 ## Reglas
 
 - Nunca pegues tokens de acceso de Figma ni contraseñas en el JSON, en mensajes ni en archivos.
-- Usa el nombre exacto del proyecto. No crees variantes ("Cota v2", "cotav1", "Cota copia"): un Figma nuevo se guarda como `DesignN` del mismo proyecto. `--forzar-variante` solo si el desarrollador lo confirma tras explicarle el riesgo.
+- Usa el nombre exacto del proyecto. No crees variantes ("Cota v2", "cotav1", "Cota copia"): un Figma nuevo se guarda como `Design\vN` del mismo proyecto. `--forzar-variante` solo si el desarrollador lo confirma tras explicarle el riesgo.
 - No inventes páginas, secciones ni colores: si un rol no es claro, usa `"nota": "sin rol"` y dilo.

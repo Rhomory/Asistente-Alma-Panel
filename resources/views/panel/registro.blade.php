@@ -21,10 +21,11 @@
                     @endforeach
                 </select>
             </div>
-            <div class="campo" style="max-width:280px">
-                <input type="search" name="q" placeholder="Buscar sección…" value="{{ $filtro['q'] ?? '' }}" aria-label="Buscar sección">
+            {{-- Buscador que se despliega desde la lupa (abierto si ya hay una búsqueda). --}}
+            <div class="expande" data-expande style="--ancho: 260px">
+                <input type="search" name="q" placeholder="Buscar sección…" value="{{ $filtro['q'] ?? '' }}" aria-label="Buscar sección" autocomplete="off">
+                <button class="redondo" type="submit" title="Buscar sección" aria-label="Buscar sección"><x-ic n="lupa" /></button>
             </div>
-            <button class="btn" type="submit">Filtrar</button>
             <span class="nota derecha">{{ $secciones->total() }} {{ $secciones->total() === 1 ? 'sección' : 'secciones' }}</span>
         </form>
         <div class="tabla-env">

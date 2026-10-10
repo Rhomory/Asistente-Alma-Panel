@@ -81,14 +81,13 @@
             {{-- Botones redondos de la barra (concepto A2): crear, buscar y avisos. --}}
             <div class="barra-botones">
                 <a class="redondo" href="{{ route('proyecto.nuevo') }}" title="Nuevo proyecto" aria-label="Nuevo proyecto"><x-ic n="mas" /></a>
-                <button class="redondo" type="button" popovertarget="buscar" title="Buscar en el registro" aria-label="Buscar en el registro"><x-ic n="lupa" /></button>
+                {{-- La lupa despliega el buscador hacia la izquierda; atajo: tecla "/". --}}
+                <form class="expande" data-expande id="buscar" method="get" action="{{ route('registro') }}" role="search">
+                    <input type="search" name="q" placeholder="Buscar una sección…" aria-label="Buscar una sección en el registro" autocomplete="off">
+                    <button class="redondo" type="submit" title="Buscar en el registro (/)" aria-label="Buscar en el registro" aria-keyshortcuts="/"><x-ic n="lupa" /></button>
+                </form>
                 <a class="redondo" href="{{ route('dashboard') }}#atencion" title="{{ $navCola ? $navCola . ' ' . ($navCola === 1 ? 'corrección' : 'correcciones') . ' en cola' : 'Sin correcciones en cola' }} · el panel se actualiza en vivo" aria-label="Avisos{{ $navCola ? ': ' . $navCola . ' en cola' : '' }}"><x-ic n="campana" />@if ($navCola)<i class="aviso-punto"></i>@endif</a>
             </div>
-            <form id="buscar" popover class="buscar-pop" method="get" action="{{ route('registro') }}" role="search">
-                <x-ic n="lupa" />
-                <input type="search" name="q" placeholder="Buscar una sección en el registro…" aria-label="Buscar una sección en el registro" autocomplete="off">
-                <button class="btn chico p" type="submit">Buscar</button>
-            </form>
         </header>
 
         <main class="contenido">
@@ -120,6 +119,27 @@
         if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) return aplicar();
         try { document.startViewTransition({ update: aplicar, types: ['tema'] }); }
         catch (e) { document.startViewTransition(aplicar); }
+    });
+
+    // Buscadores que se despliegan desde la lupa: el primer clic abre, el siguiente busca;
+    // Escape (o salir con el campo vacío) lo vuelve a cerrar.
+    document.querySelectorAll('[data-expande]').forEach(function (caja) {
+        const campo = caja.querySelector('input'), boton = caja.querySelector('button');
+        const abrir = (enfocar) => { caja.classList.add('abierto'); campo.tabIndex = 0; boton.setAttribute('aria-expanded', 'true'); if (enfocar) setTimeout(() => campo.focus(), 30); };
+        const cerrar = () => { caja.classList.remove('abierto'); campo.tabIndex = -1; boton.setAttribute('aria-expanded', 'false'); };
+        campo.value.trim() ? abrir(false) : cerrar();
+        boton.addEventListener('click', function (ev) {
+            if (!caja.classList.contains('abierto')) { ev.preventDefault(); abrir(true); }
+            else if (!campo.value.trim()) { ev.preventDefault(); cerrar(); }
+        });
+        campo.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { campo.value = ''; cerrar(); boton.focus(); } });
+        caja.addEventListener('focusout', function (ev) { if (!caja.contains(ev.relatedTarget) && !campo.value.trim()) cerrar(); });
+    });
+    document.addEventListener('keydown', function (ev) {
+        const buscar = document.getElementById('buscar');
+        if (ev.key !== '/' || !buscar || ev.target.closest('input, textarea, select, [contenteditable]')) return;
+        ev.preventDefault();
+        buscar.classList.contains('abierto') ? buscar.querySelector('input').focus() : buscar.querySelector('button').click();
     });
 
     // Menú plegable: cambia al instante (el menú nunca se anima) y se recuerda.

@@ -118,6 +118,31 @@ ejecutar el instalador. `alma.ps1 diagnostico` avisa si algún agente sigue con 
 
 ## 3. Instalación (una sola vez por equipo)
 
+**Forma rápida (recomendada).** En PowerShell, con Node 20.19+ y Git para Windows instalados:
+
+```powershell
+npx github:Rhomory/Asistente-Alma-Panel
+```
+
+El instalador revisa Node, WSL y los agentes; clona el panel en Ubuntu si no está; instala lo que falte de PHP
+(pide tu contraseña de Ubuntu antes de usar `sudo`); prepara dependencias, `.env` y base de datos; instala el puente,
+la skill y el comando `alma`; registra figwright con la versión fija en Claude Code, Codex y OpenCode; y descarga el
+plugin de figwright para importarlo en Figma. Termina con el diagnóstico. Puedes repetirlo sin riesgo: solo completa
+lo que falte.
+
+Después, en una terminal nueva:
+
+| Comando | Para qué |
+|---|---|
+| `alma panel` | Enciende el panel en su propia ventana y lo abre en el navegador |
+| `alma diagnostico` | Revisa todo el entorno |
+| `alma actualizar` | Trae la última versión del panel y reinstala lo de Windows |
+| `alma registro:cola "Cota"` | Cualquier comando del panel |
+
+Opciones del instalador: `--distro Ubuntu`, `--panel /home/<usuario>/<ruta>` y `--si` (responde que sí a todo).
+
+**Forma manual**, si prefieres hacerlo paso a paso:
+
 **3.1 Clonar y preparar el panel** (terminal de Ubuntu):
 
 ```bash

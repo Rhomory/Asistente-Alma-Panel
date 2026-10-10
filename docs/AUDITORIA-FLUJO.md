@@ -14,8 +14,8 @@ importa y qué hacer. Lo marcado como **hecho** ya está en el repo.
 | 4 | figwright se registra con `@latest`, pero el plugin de Figma se actualiza a mano | Alto: si sale una versión nueva, servidor y plugin quedan desfasados y la conexión falla sin aviso claro | **Hecho**: versión fija `ALMA_FIGWRIGHT`, aviso en el diagnóstico y en el paso 0 del agente |
 | 5 | Primer arranque del agente: aprobar `.mcp.json` (Claude Code) y marcar la carpeta de confianza (Codex) a mano | Medio | Propuesto |
 | 6 | No hay una vista de "qué falta para empezar" en el proyecto | Medio | **Hecho**: tarjeta "Para empezar" con mensajes para copiar |
-| 7 | Instalar el panel son ~10 comandos en dos sistemas | Medio | Propuesto |
-| 8 | `composer setup` ejecuta `npm install` y `npm run build`, que el panel no usa | Medio: falla en una Ubuntu sin Node | Propuesto |
+| 7 | Instalar el panel son ~10 comandos en dos sistemas | Medio | **Hecho**: `npx github:Rhomory/Asistente-Alma-Panel` y el comando `alma` |
+| 8 | `composer setup` ejecuta `npm install` y `npm run build`, que el panel no usa | Medio: falla en una Ubuntu sin Node | **Hecho**: sin npm ni Vite |
 | 9 | Al construir, cada sección se vuelve a pedir a Figma aunque ya se haya leído | Medio: tokens y tiempo en correcciones | **Hecho**: el lector de Figma deja `Design\vN\secciones\<id>.json` y la guía pide usarlo |
 | 11 | Un solo agente hace todo en serie (leer Figma, construir, registrar) | Alto: el constructor espera a Figma en cada sección | **Hecho**: roles `alma-conexion` y `alma-figma-lector` para trabajar en paralelo |
 | 10 | La calidad del Figma (auto layout, variables, nombres) decide cuánto tarda construir | Alto | Guía abajo |

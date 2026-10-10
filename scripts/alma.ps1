@@ -83,11 +83,31 @@ function Diagnostico {
 }
 
 if ($args.Count -eq 0 -or @('ayuda', '-h', '--help') -contains $args[0]) {
-    Write-Host 'Uso: alma.ps1 <comando artisan> [argumentos]   |   alma.ps1 diagnostico'
-    Write-Host 'Ej.: alma.ps1 registro:cola "Cota"'
+    Write-Host 'Uso: alma <comando artisan> [argumentos]   |   alma panel   |   alma diagnostico   |   alma actualizar'
+    Write-Host 'Ej.: alma registro:cola "Cota"'
     exit 0
 }
 if ($args[0] -eq 'diagnostico') { Diagnostico; exit 0 }
+
+# alma panel: enciende el panel en una ventana propia (si no lo está) y lo abre en el navegador.
+if ($args[0] -eq 'panel') {
+    if (-not (Panel-Existe)) { Write-Host "No encuentro el panel en '$panel'. Instala con: npx github:Rhomory/Asistente-Alma-Panel" -ForegroundColor Yellow; exit 2 }
+    $puerto = (wsl -d $distro --cd $panel -- sh -c "grep -E '^SERVER_PORT=' .env | cut -d= -f2" 2>$null)
+    if (-not $puerto) { $puerto = '8000' }
+    $url = "http://127.0.0.1:$($puerto.Trim())"
+    $vivo = { try { (Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 "$url/estado/version").StatusCode -eq 200 } catch { $false } }
+    if (-not (& $vivo)) {
+        Start-Process cmd.exe -ArgumentList '/c', 'start', '"Asistente Alma - panel"', 'wsl.exe', '-d', $distro, '--cd', $panel, '--', 'php', 'artisan', 'serve', "--port=$($puerto.Trim())"
+        Write-Host -NoNewline '  Encendiendo el panel'
+        for ($i = 0; $i -lt 40 -and -not (& $vivo); $i++) { Start-Sleep -Milliseconds 500; Write-Host -NoNewline '.' }
+        Write-Host ''
+    }
+    if (& $vivo) { Write-Host "  [OK] Panel en $url" -ForegroundColor Green; Start-Process $url; exit 0 }
+    Write-Host '  El panel no respondió: mira la ventana "Asistente Alma - panel".' -ForegroundColor Yellow; exit 1
+}
+
+# alma actualizar: trae la última versión del panel y reinstala lo de Windows (vía el instalador npx).
+if ($args[0] -eq 'actualizar') { npx -y github:Rhomory/Asistente-Alma-Panel actualizar; exit $LASTEXITCODE }
 
 # --- Acciones que pide el panel (desde WSL) --------------------------------------------
 # Recarga las variables de usuario (ej. ALMA_COTA_AUTH recién guardada) en este proceso, para que

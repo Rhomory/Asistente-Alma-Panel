@@ -40,10 +40,10 @@
             <div class="caja-cab"><h2>Una vez por equipo</h2></div>
             <div class="caja-cuerpo">
                 <ol class="pasos">
-                    <li><span><b>Panel en Ubuntu:</b> clonar, <code>composer install</code>, <code>.env</code>, <code>php artisan migrate</code>. Requiere PHP 8.3+ con sqlite3, mbstring, curl, xml y zip.</span></li>
-                    <li><span><b>Lado Windows:</b> ejecutar <code>scripts\instalar-windows.ps1 -RegistrarFigwright</code>. Instala el puente, la skill para todos los agentes y registra figwright.</span></li>
-                    <li><span><b>Figma de escritorio</b> con el plugin figwright (se importa desde su zip de GitHub y se actualiza a mano).</span></li>
-                    <li><span><b>Comprobar:</b> <code>alma.ps1 diagnostico</code>. Todo debe salir en verde.</span></li>
+                    <li><span><b>Un comando en PowerShell:</b> <code>npx github:Rhomory/Asistente-Alma-Panel</code>. Prepara el panel en Ubuntu (PHP, dependencias y base), el puente, la skill, el comando <code>alma</code> y figwright con versión fija en los agentes.</span></li>
+                    <li><span><b>Figma de escritorio:</b> importa el plugin que dejó el instalador (Plugins › Development › Import plugin from manifest).</span></li>
+                    <li><span><b>Cada día:</b> <code>alma panel</code> enciende el panel y lo abre. Para revisar todo: <code>alma diagnostico</code>.</span></li>
+                    <li><span><b>Actualizar:</b> <code>alma actualizar</code> trae la última versión y reinstala lo de Windows.</span></li>
                 </ol>
             </div>
         </section>
@@ -108,7 +108,7 @@
             <div class="caja-cab"><h2>Cada día</h2></div>
             <div class="caja-cuerpo">
                 <ol class="pasos">
-                    <li><span>En Ubuntu: <code>cd ~/proyectos/asistente-alma-panel && php artisan serve</code> → http://127.0.0.1:8090.</span></li>
+                    <li><span><code>alma panel</code> en cualquier terminal de Windows: enciende el panel y abre http://127.0.0.1:8090.</span></li>
                     <li><span>Abre el agente en la carpeta del cliente y Figma con el plugin figwright.</span></li>
                     <li><span>Un chat nuevo no necesita contexto: el <code>AGENTS.md</code> se carga solo. Basta con “revisa la cola de correcciones y sigue con Nosotros”.</span></li>
                     <li><span>Deja el panel abierto al lado: se recarga solo con cada sección registrada. Empieza por el Inicio: ahí está lo que espera tu revisión.</span></li>

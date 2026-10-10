@@ -110,7 +110,7 @@ En OpenCode `command` es una lista y lleva `"type"`; el formato `command` + `arg
 
 **Versión de figwright.** El plugin de Figma se actualiza a mano, así que el servidor va con la misma versión fija
 (`ALMA_FIGWRIGHT` en `.env`, hoy 0.6.0); nada de `@latest`, que adelanta el servidor y rompe la conexión. Para subir
-de versión: actualiza el plugin, cambia `ALMA_FIGWRIGHT`, pulsa "Actualizar carpeta" en cada proyecto y vuelve a
+de versión: actualiza el plugin, cambia `ALMA_FIGWRIGHT`, pulsa "Actualizar archivos" en cada proyecto y vuelve a
 ejecutar el instalador. `alma.ps1 diagnostico` avisa si algún agente sigue con `@latest`.
 
 **No inicies figwright a mano** en otra consola: lo arranca el agente al abrirse. Varias sesiones pueden compartirlo

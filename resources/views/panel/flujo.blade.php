@@ -90,6 +90,19 @@
         </ol>
     </section>
 
+    <section class="caja">
+        <div class="caja-cab"><h2>Trabajo en paralelo con varios agentes</h2><span class="nota derecha">Más rápido: uno lee Figma mientras otro construye</span></div>
+        <div class="caja-cuerpo">
+            <p class="nota">La carpeta de cada proyecto trae dos roles de apoyo. El agente principal es el <b>constructor</b>: el único que usa el MCP de Elementor y registra secciones.</p>
+            <div class="piezas">
+                <div><span class="icono-suave ok"><x-ic n="enchufe" /></span><b>alma-conexion</b><p>Comprueba figwright (y que el plugin coincida con la versión fija), el servidor de Elementor y el puente al panel. Solo lee.</p></div>
+                <div><span class="icono-suave lav"><x-ic n="figma" /></span><b>alma-figma-lector</b><p>Lee el Figma y deja cada sección lista en <code>Design\vN\secciones\&lt;id&gt;.json</code>, en el orden del plan. El constructor la usa sin volver a pedirla.</p></div>
+                <div><span class="icono-suave ora"><x-ic n="robot" /></span><b>Claude Code y OpenCode</b><p>Lo hacen solos con sus subagentes: “Construye la página Inicio siguiendo la guía; usa el lector de Figma en paralelo.”</p></div>
+                <div><span class="icono-suave"><x-ic n="terminal" /></span><b>Codex y Cursor</b><p>Abre una segunda terminal desde el proyecto y dile: “Lee <code>.alma/roles/alma-figma-lector.md</code> y prepara las secciones de Inicio”. En la primera, construye.</p></div>
+            </div>
+        </div>
+    </section>
+
     <div class="rejilla">
         <section class="caja">
             <div class="caja-cab"><h2>Cada día</h2></div>

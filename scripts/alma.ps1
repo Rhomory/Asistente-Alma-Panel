@@ -76,6 +76,8 @@ function Diagnostico {
     $codex = (Test-Path "$HOME\.codex\config.toml") -and (Select-String -Path "$HOME\.codex\config.toml" -Pattern 'mcp_servers\.figwright' -Quiet)
     $oc = "$HOME\.config\opencode\opencode.json"
     $opencode = (Test-Path $oc) -and (Select-String -Path $oc -Pattern '"figwright"' -Quiet)
+    $flotante = @("$HOME\.claude.json", "$HOME\.codex\config.toml", $oc) | Where-Object { (Test-Path $_) -and (Select-String -Path $_ -Pattern 'figwright/mcp@latest' -Quiet) }
+    Escribir (-not $flotante) "figwright con versión fija (no @latest)" "Usa la misma versión que el plugin de Figma (ej. @figwright/mcp@0.6.0) en: $($flotante -join ', '). Con @latest el servidor se adelanta al plugin y la conexión falla."
     Write-Host ("  figwright registrado -> Claude Code: {0} | Codex: {1} | OpenCode: {2}" -f $(if ($claude) {'si'} else {'no'}), $(if ($codex) {'si'} else {'no'}), $(if ($opencode) {'si'} else {'no'}))
     Write-Host "       (basta con el agente que uses; ejemplos de configuracion en el README, seccion MCP por agente)"
 }

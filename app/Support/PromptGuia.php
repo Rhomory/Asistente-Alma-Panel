@@ -63,7 +63,7 @@ class PromptGuia
             $lineas[] = "- {$t->nota}: {$t->valor}";
         }
         if ($g['colores']->isEmpty() && $g['tipografias']->isEmpty()) {
-            $lineas[] = '- (aún no hay tokens: léelos del Figma y regístralos con `php artisan registro:figma` antes de empezar)';
+            $lineas[] = '- (aún no hay tokens: lee el Figma y guárdalo con `diseno:guardar` antes de empezar)';
         }
         $lineas[] = '';
         $lineas[] = 'Plan de secciones, una por vez y en este orden:';
@@ -74,6 +74,7 @@ class PromptGuia
         }
         if ($conIds) {
             $lineas[] = 'Para leer cada sección usa su ID guardado: `get_design_context` con ese nodeId y `detail: "full"`. No vuelvas a recorrer el archivo para buscarla.';
+            $lineas[] = 'Si ya existe `Design\\vN\\secciones\\<id>.json` (lo deja el lector de Figma, con `:` cambiado por `-`), úsalo en vez de pedirla otra vez a Figma.';
         }
         $lineas[] = '';
         $lineas[] = 'Reglas:';
@@ -155,7 +156,7 @@ class PromptGuia
         | Comprobar el sitio | `conexion:comprobar "{$nombre}"` |
 
         ## Flujo de trabajo
-        0. **Conexión primero.** Comprueba que tienes las herramientas de figwright (`ping`) y de `{$mcp}`. Si falta alguna:
+        0. **Conexión primero.** Comprueba que tienes las herramientas de figwright (`ping`) y de `{$mcp}`. Si `ping` muestra `versionSkew` o `buildSkew`, el plugin de Figma no coincide con el servidor: pide actualizarlo antes de leer. Si falta alguna:
            - Claude Code: aprueba los servidores de `.mcp.json` cuando lo pida (o `/mcp`).
            - Codex: la carpeta debe estar marcada como de confianza para leer `.codex/config.toml`.
            - Cursor: activa los servidores en Settings › MCP.
@@ -167,6 +168,18 @@ class PromptGuia
         4. Antes de construir una página, pide su guía con `guia:prompt`: trae el ID de Figma de cada sección (úsalo en vez de recorrer el archivo) y las capturas sirven de referencia visual.
         5. Construye **una sección a la vez** con `{$mcp}`, siempre en borrador, y regístrala con `registro:add`. El desarrollador la aprueba o pide corrección en el panel.
         6. Nunca publiques ni borres contenido del sitio. Nada se publica sin aprobación en el panel.
+
+        ## Trabajo en paralelo (más rápido)
+        La carpeta trae dos roles de apoyo: **alma-conexion** (comprueba figwright, `{$mcp}` y el panel; solo lee) y
+        **alma-figma-lector** (lee el Figma y deja cada sección en `Design\\vN\\secciones\\<id>.json`). Tú eres el
+        **constructor**: el único que usa `{$mcp}` y registra con `registro:add`.
+        - **Claude Code:** lanza el subagente `alma-conexion` al empezar. Para construir una página, lanza
+          `alma-figma-lector` en segundo plano con "prepara las secciones de <Página>" y construye cada sección en cuanto
+          aparezca su archivo (lista en `_listas.txt`).
+        - **OpenCode:** igual, con `@alma-conexion` y `@alma-figma-lector`.
+        - **Codex o Cursor:** pide al desarrollador una segunda terminal ("Abrir terminal" otra vez en el panel). Ahí:
+          "Lee `.alma/roles/alma-figma-lector.md` y prepara las secciones de <Página>". En esta, construyes.
+        Si el lector no ha llegado a una sección, léela tú con su ID; no esperes sin hacer nada.
 
         ## Reglas
         - Lee el Figma en modo económico: `get_design_context` solo acepta marcos (no IDs de página) y para el inventario va con `detail: "minimal"`; `full` solo para la sección que construyes. Nunca `get_document` ni `get_node` para inventario.

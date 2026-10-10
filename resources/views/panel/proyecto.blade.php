@@ -19,7 +19,7 @@
             </div>
             <p>
                 {{ $proyecto->cliente ? $proyecto->cliente . '.' : '' }}
-                {{ $alcance->count() ? "{$listas} de {$alcance->count()} páginas listas." : 'Aún sin páginas: el asistente las carga al leer el Figma (registro:figma).' }}
+                {{ $alcance->count() ? "{$listas} de {$alcance->count()} páginas listas." : 'Aún sin páginas: el asistente las carga al leer el Figma.' }}
             </p>
             {{-- Píldora = enlace (con ↗ si sale del panel). Los datos fijos van como texto plano. --}}
             <div class="enlaces">
@@ -48,6 +48,8 @@
     </div>
 
     @include('panel.partes.eliminar-proyecto')
+
+    @include('panel.partes.para-empezar')
 
     @include('panel.partes.carpeta-diseno')
 

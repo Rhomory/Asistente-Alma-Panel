@@ -13,6 +13,7 @@ param(
     [string]$Distro,
     [string]$Panel,
     [string]$Proyectos,   # carpeta base de los proyectos en Windows (por defecto %USERPROFILE%\AlmaProyectos)
+    [string]$Figwright,   # versión fija de figwright; por defecto la de ALMA_FIGWRIGHT en el .env del panel, o 0.6.0
     [switch]$RegistrarFigwright
 )
 
@@ -57,6 +58,15 @@ if (Test-Path $envPanel) {
     Write-Host "  No encontré ${envPanel}: crea el .env del panel y vuelve a ejecutar el instalador." -ForegroundColor Yellow
 }
 
+# 2c. Versión fija de figwright: debe coincidir con la del plugin de Figma (que se actualiza a mano)
+if (-not $Figwright -and (Test-Path $envPanel)) {
+    $linea = Get-Content $envPanel | Where-Object { $_ -match '^ALMA_FIGWRIGHT=' } | Select-Object -First 1
+    if ($linea) { $Figwright = ($linea -split '=', 2)[1].Trim().Trim('"', "'") }
+}
+if (-not $Figwright) { $Figwright = '0.6.0' }
+$paqueteFigwright = "@figwright/mcp@$Figwright"
+Write-Host "  figwright fijado en $Figwright (actualiza el plugin de Figma a la misma versión)"
+
 # 3. Skill en una carpeta propia por agente (evita que SKILL.md quede suelto en skills\)
 $skillOrigen = Join-Path $raiz '.claude\skills\alma-figma\SKILL.md'
 foreach ($base in @("$HOME\.claude\skills", "$HOME\.agents\skills")) {
@@ -75,13 +85,13 @@ if ((Test-Path $suelto) -and (Select-String -Path $suelto -Pattern 'name: alma-f
 if ($RegistrarFigwright) {
     if (Get-Command claude -ErrorAction SilentlyContinue) {
         $ya = claude mcp get figwright 2>$null
-        if ($LASTEXITCODE -ne 0) { claude mcp add figwright --scope user -- cmd /c npx -y '@figwright/mcp@latest' | Out-Null; Write-Host '  figwright registrado en Claude Code' }
-        else { Write-Host '  Claude Code ya tiene figwright' }
+        if ($LASTEXITCODE -ne 0) { claude mcp add figwright --scope user -- cmd /c npx -y $paqueteFigwright | Out-Null; Write-Host "  figwright $Figwright registrado en Claude Code" }
+        else { Write-Host '  Claude Code ya tiene figwright (si usa @latest, cámbialo: claude mcp remove figwright y vuelve a ejecutar este instalador)' }
     }
     $toml = "$HOME\.codex\config.toml"
     if (Test-Path (Split-Path $toml)) {
         if (-not ((Test-Path $toml) -and (Select-String -Path $toml -Pattern 'mcp_servers\.figwright' -Quiet))) {
-            Add-Content -Encoding UTF8 $toml "`n[mcp_servers.figwright]`ncommand = `"cmd`"`nargs = [`"/c`", `"npx`", `"-y`", `"@figwright/mcp@latest`"]`n"
+            Add-Content -Encoding UTF8 $toml "`n[mcp_servers.figwright]`ncommand = `"cmd`"`nargs = [`"/c`", `"npx`", `"-y`", `"$paqueteFigwright`"]`n"
             Write-Host '  figwright agregado a ~\.codex\config.toml'
         } else { Write-Host '  Codex ya tiene figwright' }
     }

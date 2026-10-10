@@ -74,7 +74,7 @@ class CarpetaProyecto
             $p->forceFill(['carpeta' => self::nombreCarpeta($p->nombre)])->saveQuietly();
         }
         $raiz = self::ruta($p);
-        foreach (['', '/Design', '/.codex', '/.cursor'] as $sub) {
+        foreach (['', '/Design', '/.codex', '/.cursor', '/.claude/agents', '/.opencode/agents', '/.alma/roles'] as $sub) {
             if (! is_dir($raiz . $sub)) {
                 mkdir($raiz . $sub, 0775, true);
             }
@@ -88,7 +88,7 @@ class CarpetaProyecto
             '.codex/config.toml' => ConfigAgentes::codex($p, $p->conexion),
             '.cursor/mcp.json'   => ConfigAgentes::cursor($p, $p->conexion),
             'opencode.json'      => ConfigAgentes::opencode($p, $p->conexion),
-        ];
+        ] + RolesAgentes::archivos($p);
         foreach ($archivos as $nombre => $contenido) {
             file_put_contents($raiz . '/' . $nombre, $contenido);
         }
@@ -106,8 +106,10 @@ class CarpetaProyecto
             self::preparar($p);
         }
         $dir = self::ruta($p) . "/Design/v{$version}";
-        if (! is_dir($dir . '/capturas')) {
-            mkdir($dir . '/capturas', 0775, true);
+        foreach (['/capturas', '/secciones'] as $sub) {
+            if (! is_dir($dir . $sub)) {
+                mkdir($dir . $sub, 0775, true);
+            }
         }
 
         return $dir;

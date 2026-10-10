@@ -16,7 +16,11 @@ use App\Models\Proyecto;
  */
 class ConfigAgentes
 {
-    private const FIGWRIGHT = '@figwright/mcp@latest';
+    /** Paquete de figwright con la versión fija del panel (ver config/alma.php). */
+    public static function figwright(): string
+    {
+        return '@figwright/mcp@' . config('alma.figwright', '0.6.0');
+    }
 
     /** @return array<string, array{titulo: string, archivo: string, codigo: string}> */
     public static function todos(Proyecto $p, ?Conexion $c = null): array
@@ -38,7 +42,7 @@ class ConfigAgentes
 
     public static function claude(Proyecto $p, ?Conexion $c): string
     {
-        $servidores = ['figwright' => ['type' => 'stdio', 'command' => 'cmd', 'args' => ['/c', 'npx', '-y', self::FIGWRIGHT]]];
+        $servidores = ['figwright' => ['type' => 'stdio', 'command' => 'cmd', 'args' => ['/c', 'npx', '-y', self::figwright()]]];
         if ($c) {
             $servidores[$c->nombre_mcp] = ['type' => 'http', 'url' => self::urlSitio($c),
                 'headers' => ['Authorization' => '${' . PromptElementor::variableAuth($p->nombre) . '}']];
@@ -49,7 +53,7 @@ class ConfigAgentes
 
     public static function cursor(Proyecto $p, ?Conexion $c): string
     {
-        $servidores = ['figwright' => ['type' => 'stdio', 'command' => 'npx', 'args' => ['-y', self::FIGWRIGHT]]];
+        $servidores = ['figwright' => ['type' => 'stdio', 'command' => 'npx', 'args' => ['-y', self::figwright()]]];
         if ($c) {
             $servidores[$c->nombre_mcp] = ['url' => self::urlSitio($c),
                 'headers' => ['Authorization' => '${env:' . PromptElementor::variableAuth($p->nombre) . '}']];
@@ -60,7 +64,7 @@ class ConfigAgentes
 
     public static function opencode(Proyecto $p, ?Conexion $c): string
     {
-        $mcp = ['figwright' => ['type' => 'local', 'command' => ['npx', '-y', self::FIGWRIGHT]]];
+        $mcp = ['figwright' => ['type' => 'local', 'command' => ['npx', '-y', self::figwright()]]];
         if ($c) {
             $mcp[$c->nombre_mcp] = ['type' => 'remote', 'url' => self::urlSitio($c),
                 'headers' => ['Authorization' => '{env:' . PromptElementor::variableAuth($p->nombre) . '}']];
@@ -72,7 +76,7 @@ class ConfigAgentes
     public static function codex(Proyecto $p, ?Conexion $c): string
     {
         $toml = "# Generado por el panel Asistente Alma. Codex lo lee si la carpeta está marcada como de confianza.\n"
-            . "[mcp_servers.figwright]\ncommand = \"cmd\"\nargs = [\"/c\", \"npx\", \"-y\", \"" . self::FIGWRIGHT . "\"]\n";
+            . "[mcp_servers.figwright]\ncommand = \"cmd\"\nargs = [\"/c\", \"npx\", \"-y\", \"" . self::figwright() . "\"]\n";
         if ($c) {
             $toml .= "\n[mcp_servers.{$c->nombre_mcp}]\nurl = \"" . self::urlSitio($c) . "\"\n"
                 . 'env_http_headers = { "Authorization" = "' . PromptElementor::variableAuth($p->nombre) . "\" }\n";

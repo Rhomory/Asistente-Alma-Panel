@@ -43,7 +43,7 @@ Nada se publica solo: el asistente trabaja en borrador y cada sección se aprueb
 
 | Herramienta | Para qué | Cómo se agrega | Alcance |
 |---|---|---|---|
-| **figwright** (MCP) | Leer páginas, variables y estructura del Figma | Registro por agente en la sección 2.1 (con `@latest` se actualiza solo al arrancar) | Todas las carpetas |
+| **figwright** (MCP) | Leer páginas, variables y estructura del Figma | Registro por agente en la sección 2.1, con **versión fija** (`ALMA_FIGWRIGHT`, hoy 0.6.0) igual a la del plugin | Todas las carpetas |
 | **Elementor MCP** (oficial) | Construir en el sitio del cliente | En WordPress: Elementor › Elementor MCP › activar › elegir tu agente › Generate Prompt. Registro por agente en la sección 2.1 | Un servidor por sitio, con el nombre del proyecto (ej. `elementor-cota`) |
 | **JetEngine MCP** (opcional) | Tipos de contenido y campos dinámicos | Según la documentación de Crocoblock, en la carpeta del cliente | Solo esa carpeta |
 | **Framelink** (opcional) | Leer el Figma sin la app abierta, vía API REST | `claude mcp add framelink --scope user -e FIGMA_API_KEY=<token> -- cmd /c npx -y figma-developer-mcp --stdio` (útil solo con asiento Dev/Full) | Todas las carpetas |
@@ -70,7 +70,7 @@ $b64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes('usuario:xxxx xx
 **Claude Code** (`~/.claude.json`, por comandos):
 
 ```powershell
-claude mcp add figwright --scope user -- cmd /c npx -y '@figwright/mcp@latest'
+claude mcp add figwright --scope user -- cmd /c npx -y '@figwright/mcp@0.6.0'
 # Elementor: pega el prompt que generó Elementor dentro de la carpeta del cliente (lo registra solo). Comprueba con:
 claude mcp list
 ```
@@ -80,7 +80,7 @@ claude mcp list
 ```toml
 [mcp_servers.figwright]
 command = "cmd"
-args = ["/c", "npx", "-y", "@figwright/mcp@latest"]
+args = ["/c", "npx", "-y", "@figwright/mcp@0.6.0"]
 
 [mcp_servers.elementor-cota]                  # uno por sitio, con el nombre que muestra el panel
 url = "http://localhost:8883/wp-json/…"       # el endpoint del prompt de Elementor
@@ -96,7 +96,7 @@ apuntando a otro puerto), el agente no verá el del proyecto actual: cada sitio 
 {
   "$schema": "https://opencode.ai/config.json",
   "mcp": {
-    "figwright": { "type": "local", "command": ["npx", "-y", "@figwright/mcp@latest"] },
+    "figwright": { "type": "local", "command": ["npx", "-y", "@figwright/mcp@0.6.0"] },
     "elementor-cota": {
       "type": "remote",
       "url": "http://localhost:8883/wp-json/…",
@@ -107,6 +107,11 @@ apuntando a otro puerto), el agente no verá el del proyecto actual: cada sitio 
 ```
 
 En OpenCode `command` es una lista y lleva `"type"`; el formato `command` + `args` de Claude no funciona ahí.
+
+**Versión de figwright.** El plugin de Figma se actualiza a mano, así que el servidor va con la misma versión fija
+(`ALMA_FIGWRIGHT` en `.env`, hoy 0.6.0); nada de `@latest`, que adelanta el servidor y rompe la conexión. Para subir
+de versión: actualiza el plugin, cambia `ALMA_FIGWRIGHT`, pulsa "Actualizar carpeta" en cada proyecto y vuelve a
+ejecutar el instalador. `alma.ps1 diagnostico` avisa si algún agente sigue con `@latest`.
 
 **No inicies figwright a mano** en otra consola: lo arranca el agente al abrirse. Varias sesiones pueden compartirlo
 (una hace de principal y las demás de seguidoras).
@@ -184,6 +189,23 @@ la misma carpeta no hace falta repetir nada: el `AGENTS.md` vuelve a cargarse.
 ("Cota v2", "cotav1", "Cota copia"): comparten servidor MCP y credencial parecidos y el agente puede trabajar en el
 equivocado. Si el Figma cambió, se relee y queda como `Design\v2` del mismo proyecto. Forzar una variante pide
 confirmación en el formulario (o `--forzar-variante` en consola, solo si el desarrollador lo confirma).
+
+### Trabajo en paralelo (varios agentes)
+
+La carpeta de cada proyecto trae dos roles de apoyo, en el formato de cada agente (`.claude/agents/`,
+`.opencode/agents/` y `.alma/roles/`):
+
+- **alma-conexion:** comprueba figwright (y que el plugin coincida con la versión), el servidor de Elementor y el puente. Solo lee.
+- **alma-figma-lector:** lee el Figma y deja cada sección en `Design\vN\secciones\<id>.json`, en el orden del plan,
+  para que el constructor no vuelva a pedirla.
+
+El agente principal es el **constructor**: el único que usa el MCP de Elementor y registra secciones. En Claude Code y
+OpenCode basta con pedir "Construye la página Inicio siguiendo la guía; usa el lector de Figma en paralelo". En Codex o
+Cursor abre una segunda terminal desde el proyecto y dile "Lee `.alma/roles/alma-figma-lector.md` y prepara las
+secciones de Inicio".
+
+La tarjeta **Para empezar** del proyecto marca sola lo que falta (carpeta, conexión, Figma leído, primera sección) y da
+el mensaje exacto para copiar al agente.
 
 ### 4.1 Cómo usar el panel
 

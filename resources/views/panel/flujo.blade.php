@@ -16,11 +16,22 @@
     <section class="caja">
         <div class="caja-cab"><h2>Las piezas</h2></div>
         <div class="piezas">
-            <div><span class="icono-suave lav"><x-ic n="robot" /></span><b>Agente</b><p>Claude Code, Codex u OpenCode, abierto en la carpeta del cliente (Windows). Lee el Figma y construye en Elementor, siempre en borrador.</p></div>
+            <div><span class="icono-suave lav"><x-ic n="robot" /></span><b>Agente</b><p>Claude Code, Codex, Cursor u OpenCode, abierto en la carpeta del cliente (Windows). Lee el Figma y construye en Elementor, siempre en borrador.</p></div>
             <div><span class="icono-suave ora"><x-ic n="inicio" /></span><b>Panel</b><p>Esta web, corriendo en WSL Ubuntu. Muestra el avance en vivo, guarda tokens, conexiones y tiempos, y es donde se aprueba.</p></div>
             <div><span class="icono-suave"><x-ic n="figma" /></span><b>figwright</b><p>MCP que lee el diseño desde Figma de escritorio (con su plugin abierto).</p></div>
             <div><span class="icono-suave"><x-ic n="enchufe" /></span><b>MCP de Elementor</b><p>Uno por sitio, con el nombre del proyecto (ej. <code>elementor-cota</code>). Es el que construye en WordPress.</p></div>
             <div><span class="icono-suave ok"><x-ic n="terminal" /></span><b>Puente <code>alma.ps1</code></b><p>Lleva los comandos del agente (Windows) al panel (Ubuntu). Lo instala <code>scripts\instalar-windows.ps1</code>.</p></div>
+        </div>
+    </section>
+
+    <section class="caja">
+        <div class="caja-cab"><h2>Usar el panel</h2><span class="nota derecha">Qué hay en cada pantalla</span></div>
+        <div class="piezas">
+            <div><span class="icono-suave lav"><x-ic n="inicio" /></span><b>Inicio</b><p>Lo que espera tu revisión (correcciones en cola y páginas listas para QA), los minutos por página frente a la base de 480, el avance de cada proyecto y la actividad.</p></div>
+            <div><span class="icono-suave ora"><x-ic n="capas" /></span><b>Proyecto</b><p>Carpeta del cliente (abrir carpeta, terminal o Cursor), versiones del diseño, páginas con su switch de alcance y tokens.</p></div>
+            <div><span class="icono-suave ok"><x-ic n="lista" /></span><b>Página</b><p>Tablero de obra: pestañas para cambiar de página y columnas Planificada, En construcción, Por revisar y Aprobada. Aquí apruebas y pides correcciones.</p></div>
+            <div><span class="icono-suave warn"><x-ic n="campana" /></span><b>Barra superior</b><p>Estado del asistente, <b>+</b> nuevo proyecto, lupa para buscar una sección en el registro y campana con aviso si hay cola.</p></div>
+            <div><span class="icono-suave"><x-ic n="panel" /></span><b>Menú lateral</b><p>Se pliega con el botón junto al logo y recuerda tu elección. Al pie: cambiar tema y la cuenta, que por ahora es solo visual.</p></div>
         </div>
     </section>
 
@@ -60,7 +71,7 @@
             </li>
             <li>
                 <span class="paso-n">2</span>
-                <div><b>Revisar en el panel</b><p>En el proyecto, el switch decide qué páginas se maquetan y qué tokens entran a la guía. Corrige aquí lo que no corresponda.</p></div>
+                <div><b>Revisar en el panel</b><p>En el proyecto, el switch decide qué páginas se maquetan y qué tokens entran a la guía. Corrige aquí lo que no corresponda. Si el Figma cambia, la nueva lectura queda como v2 y la eliges con “Usar esta versión”.</p></div>
             </li>
             <li>
                 <span class="paso-n">3</span>
@@ -69,12 +80,12 @@
             </li>
             <li>
                 <span class="paso-n">4</span>
-                <div><b>Aprobar o pedir corrección</b><p>En la página, cada sección aparece “Por revisar”. Apruébala o escribe qué corregir: la corrección vuelve a la cola del agente, que la atiende primero.</p>
+                <div><b>Aprobar o pedir corrección</b><p>Abre la página: su tablero tiene una columna por estado. Lo recién construido cae en “Por revisar”; apruébalo o escribe qué corregir. La corrección vuelve a la cola del agente, que la atiende primero, y la campana de la barra se marca en ámbar.</p>
                     <code>{{ $alma }} registro:cola "Cota"</code></div>
             </li>
             <li>
                 <span class="paso-n">5</span>
-                <div><b>Solicitar QA</b><p>Con todas las secciones aprobadas, pega el link de Trello y copia el mensaje estándar para el canal. La página pasa a “QA solicitado”.</p></div>
+                <div><b>Solicitar QA</b><p>Con todas las secciones aprobadas, “Solicitar QA” (al pie de la columna Aprobada) te lleva al mensaje: pega el link de Trello y cópialo para el canal. La página pasa a “QA solicitado”.</p></div>
             </li>
         </ol>
     </section>
@@ -87,7 +98,7 @@
                     <li><span>En Ubuntu: <code>cd ~/proyectos/asistente-alma-panel && php artisan serve</code> → http://127.0.0.1:8090.</span></li>
                     <li><span>Abre el agente en la carpeta del cliente y Figma con el plugin figwright.</span></li>
                     <li><span>Un chat nuevo no necesita contexto: el <code>AGENTS.md</code> se carga solo. Basta con “revisa la cola de correcciones y sigue con Nosotros”.</span></li>
-                    <li><span>Deja el panel abierto al lado: se recarga solo con cada sección registrada.</span></li>
+                    <li><span>Deja el panel abierto al lado: se recarga solo con cada sección registrada. Empieza por el Inicio: ahí está lo que espera tu revisión.</span></li>
                 </ol>
             </div>
         </section>

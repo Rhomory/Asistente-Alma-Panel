@@ -689,6 +689,9 @@ html:active-view-transition-type(tema)::view-transition-new(*) { animation-durat
     .app { display: block; }
     .contenido { padding: 0; }
     .caja { box-shadow: none; break-inside: avoid; }
+    /* Impresión limpia: sin luces de fondo y sin estados intermedios de la animación de entrada. */
+    body { background: var(--bg) !important; }
+    .contenido, .contenido * { opacity: 1 !important; transform: none !important; }
 }
 
 /* ── Carpeta del proyecto y versiones del diseño ── */

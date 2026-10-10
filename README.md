@@ -180,6 +180,27 @@ pulses "Usar esta versión" en el proyecto, después de ver qué páginas y secc
 Mientras el agente trabaja, deja el panel abierto: se recarga solo con cada sección registrada. En un chat nuevo de
 la misma carpeta no hace falta repetir nada: el `AGENTS.md` vuelve a cargarse.
 
+**Nombres de proyecto únicos.** "Cota", "cota" y "Cotá" son el mismo proyecto. Tampoco se crean variantes
+("Cota v2", "cotav1", "Cota copia"): comparten servidor MCP y credencial parecidos y el agente puede trabajar en el
+equivocado. Si el Figma cambió, se relee y queda como `Design\v2` del mismo proyecto. Forzar una variante pide
+confirmación en el formulario (o `--forzar-variante` en consola, solo si el desarrollador lo confirma).
+
+### 4.1 Cómo usar el panel
+
+| Pantalla | Qué ves y qué haces |
+|---|---|
+| **Inicio** | Lo que espera tu revisión: correcciones en cola y páginas listas para QA, cada una con su botón. Debajo, los minutos por página frente a la base de 480, el avance de cada proyecto, el % hecho por el asistente y la actividad reciente. |
+| **Proyecto** | La carpeta del cliente (abrir carpeta, terminal o Cursor), las versiones del diseño (`Design\vN`, "Usar esta versión"), las páginas con el switch de alcance y los tokens de diseño. |
+| **Página** | Tablero de obra con pestañas para cambiar de página y cuatro columnas: Planificada, En construcción, Por revisar y Aprobada. En "Por revisar" apruebas o pides corrección; la corrección vuelve a la cola del agente. Al pie de "Aprobada" está "Solicitar QA", que lleva al mensaje para el canal. |
+| **Registro de cambios** | Todas las secciones con sus tiempos; se filtra por proyecto o nombre y se exporta a CSV. |
+| **Conexión** | Sitios WordPress y servidores MCP de cada proyecto, y la configuración lista para cada agente. |
+| **Cómo funciona** | Esta guía resumida dentro del panel, con versión PDF. |
+
+En la barra superior: el estado del asistente y tres botones (**+** nuevo proyecto, **lupa** para buscar una sección en
+el registro y **campana**, que marca en ámbar si hay correcciones en cola). El menú lateral se pliega con el botón junto
+al logo y recuerda tu elección; al pie están "Cambiar tema" (oscuro o claro) y la cuenta, que por ahora es solo visual
+(el panel no tiene inicio de sesión).
+
 ## 5. Comandos del panel
 
 En Ubuntu se usan con `php artisan …`; desde Windows, con
@@ -192,6 +213,7 @@ En Ubuntu se usan con `php artisan …`; desde Windows, con
 | `registro:figma "<Proyecto>" --archivo=figma.json` | Cargar una lectura directo al panel, sin versionar |
 | `registro:add "<Proyecto>" "<Página>" "<Sección>" <min> --asistente=<min> --dev=<min>` | Registrar una sección construida |
 | `registro:cola "<Proyecto>"` | Correcciones pendientes de ese proyecto |
+| `… --forzar-variante` | En `registro:add/figma/paginas/tokens`: crear un proyecto aunque se parezca a otro (solo con confirmación) |
 | `conexion:comprobar` | Versiones de WordPress, Elementor y JetEngine de cada sitio |
 | `jev:sugerencias` | Revisión automática con Jev (necesita `OPENROUTER_API_KEY` en `.env`) |
 
@@ -213,6 +235,8 @@ En Ubuntu se usan con `php artisan …`; desde Windows, con
   o define `ALMA_HOST_WINDOWS=<ip>` en `.env`.
 - **El asistente no ve el servidor de Elementor:** se registró en otra carpeta. Abre tu agente en la carpeta del cliente y vuelve a pegar el prompt.
 - **El panel no cambia al registrar:** confirma que `php artisan serve` siga corriendo; la recarga en vivo consulta el panel cada 4 s.
+- **"Este nombre parece una variante de otro proyecto":** ya existe uno con el mismo nombre base. Usa ese proyecto; si
+  de verdad es otro, marca "crearlo igual". En consola, el comando se detiene y explica el motivo.
 
 ## 7. Seguridad
 

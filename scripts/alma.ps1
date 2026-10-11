@@ -15,13 +15,14 @@ $cfg = $null
 $archivoConfig = Join-Path $PSScriptRoot 'alma.config.json'
 if (Test-Path $archivoConfig) { $cfg = Get-Content $archivoConfig -Raw | ConvertFrom-Json }
 
-$panel = $env:ALMA_PANEL
-if (-not $panel -and $cfg) { $panel = $cfg.panel }
-if (-not $panel) { $panel = '/home/romino/proyectos/asistente-alma-panel' }
-
 $distro = $env:ALMA_DISTRO
 if (-not $distro -and $cfg) { $distro = $cfg.distro }
 if (-not $distro) { $distro = 'Ubuntu' }
+
+$panel = $env:ALMA_PANEL
+if (-not $panel -and $cfg) { $panel = $cfg.panel }
+# Sin configuración: la ruta por defecto dentro del home del usuario de Ubuntu de este equipo (sin nombres fijos).
+if (-not $panel) { $panel = ((wsl -d $distro -- sh -c 'echo $HOME' 2>$null) -as [string]).Trim() + '/proyectos/asistente-alma-panel' }
 
 function Escribir($ok, $texto, $ayuda) {
     if ($ok) { Write-Host "  [OK] $texto" -ForegroundColor Green }

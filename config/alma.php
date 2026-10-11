@@ -5,10 +5,10 @@
  * Los escribe scripts/instalar-windows.ps1 en .env; sin ellos, el panel funciona igual pero sin carpetas.
  */
 return [
-    // Carpeta base de los proyectos, vista desde WSL (ej. /mnt/c/Users/Romino/AlmaProyectos).
+    // Carpeta base de los proyectos, vista desde WSL (ej. /mnt/c/Users/<usuario>/AlmaProyectos).
     'proyectos_dir' => env('ALMA_PROYECTOS_DIR'),
 
-    // Puente de Windows (ej. C:\Users\Romino\.alma\alma.ps1): abre carpetas/terminales y guarda credenciales.
+    // Puente de Windows (ej. C:\Users\<usuario>\.alma\alma.ps1): abre carpetas/terminales y guarda credenciales.
     'puente' => env('ALMA_PUENTE'),
 
     // Versión fija de figwright (servidor MCP). Debe coincidir con la del plugin instalado en Figma, que se

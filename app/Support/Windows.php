@@ -39,6 +39,12 @@ class Windows
         return self::puente('guardar-credencial', [$nombre], ['ALMA_VALOR' => $valor]);
     }
 
+    /** Quita la variable de entorno de usuario $nombre (solo acepta ALMA_<PROYECTO>_AUTH). */
+    public static function borrarCredencial(string $nombre): bool
+    {
+        return preg_match('/^ALMA_[A-Z0-9_]+_AUTH$/', $nombre) === 1 && self::puente('borrar-credencial', [$nombre]);
+    }
+
     private static function puente(string $accion, array $args, array $env = []): bool
     {
         if (app()->environment('testing')) {

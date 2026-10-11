@@ -39,6 +39,24 @@
             <p class="nota">También se elimina su conexión MCP del panel.</p>
         @endif
 
+        @php
+            $carpetaRuta = \App\Support\CarpetaProyecto::ruta($proyecto);
+            $hayCarpeta = $proyecto->carpeta && $carpetaRuta && is_dir($carpetaRuta);
+        @endphp
+        <fieldset class="opciones-eliminar">
+            <legend>Al eliminar</legend>
+            <label class="opcion"><input type="checkbox" name="respaldo" value="1" @checked(! $conteo['en_blanco'])>
+                <span><b>Guardar un respaldo</b><small>Un archivo de pocos KB con páginas, secciones, tiempos, tokens y versiones del diseño (sin contraseñas ni capturas). Se puede restaurar después.</small></span></label>
+            @if ($hayCarpeta)
+                <label class="opcion"><input type="checkbox" name="borrar_carpeta" value="1" checked>
+                    <span><b>Borrar también la carpeta</b><small>{{ \App\Support\CarpetaProyecto::rutaWindows($proyecto) }} (AGENTS.md, configuración y Design\vN con sus capturas).</small></span></label>
+            @endif
+            @if ($proyecto->conexion)
+                <label class="opcion"><input type="checkbox" name="borrar_credencial" value="1" checked>
+                    <span><b>Quitar su credencial de Windows</b><small>La variable {{ \App\Support\PromptElementor::variableAuth($proyecto->nombre) }} deja de existir.</small></span></label>
+            @endif
+        </fieldset>
+
         <div class="dialogo-pie">
             <button class="btn fant" type="button" onclick="this.closest('dialog').close()">Cancelar</button>
             <button class="btn peligro-lleno" type="submit" id="eliminar-ok" @disabled(! $conteo['en_blanco'])>

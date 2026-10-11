@@ -134,6 +134,12 @@ switch ($accion) {
         if (Get-Command cursor -ErrorAction SilentlyContinue) { Start-Process cursor -ArgumentList "`"$objetivo`""; exit 0 }
         Write-Host 'No encuentro el comando "cursor" (instala Cursor y su comando de shell).'; exit 3
     }
+    'borrar-credencial' {
+        # Solo variables del asistente: ALMA_<PROYECTO>_AUTH.
+        if ($objetivo -notmatch '^ALMA_[A-Z0-9_]+_AUTH$') { Write-Host 'Nombre de variable no permitido.'; exit 3 }
+        [Environment]::SetEnvironmentVariable($objetivo, $null, 'User')
+        exit 0
+    }
     'guardar-credencial' {
         # El valor llega por la entrada estándar (o ALMA_VALOR), nunca por la línea de comandos.
         $valor = $env:ALMA_VALOR

@@ -7,7 +7,11 @@ use App\Models\Pagina;
 use App\Models\Proyecto;
 use App\Models\Seccion;
 use App\Models\Token;
+use App\Support\ArchivoProyecto;
+use App\Support\CarpetaProyecto;
 use App\Support\NombresProyecto;
+use App\Support\PromptElementor;
+use App\Support\Windows;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -102,20 +106,52 @@ class GestionController extends Controller
         }
 
         $mcp = $proyecto->conexion?->nombre_mcp;
+        $tieneCarpeta = (bool) $proyecto->carpeta && is_dir((string) CarpetaProyecto::ruta($proyecto));
+
+        // 1. Respaldo liviano antes de borrar nada (si falla, no se borra).
+        $respaldo = null;
+        if ($request->boolean('respaldo')) {
+            try {
+                $respaldo = ArchivoProyecto::guardar($proyecto);
+            } catch (\RuntimeException $e) {
+                return back()->withErrors(['confirmacion' => $e->getMessage() . ' No se eliminó nada.']);
+            }
+        }
 
         DB::transaction(function () use ($proyecto) {
             // Los eventos solo quedarían huérfanos (seccion_id → null); se borran con el proyecto.
             Evento::whereIn('seccion_id', Seccion::whereIn('pagina_id', $proyecto->paginas()->select('id'))->select('id'))->delete();
-            $proyecto->delete(); // páginas, secciones, tokens y conexiones caen en cascada
+            $proyecto->delete(); // páginas, secciones, tokens, conexiones y versiones del diseño caen en cascada
         });
 
-        Evento::create(['tipo' => 'proyecto_eliminado', 'detalle' => $conteo['en_blanco']
-            ? "Proyecto \"{$proyecto->nombre}\" eliminado (estaba en blanco)"
-            : "Proyecto \"{$proyecto->nombre}\" eliminado con {$conteo['paginas']} páginas, {$conteo['secciones']} secciones y {$conteo['tokens']} tokens"]);
+        // 2. Carpeta y credencial, según lo elegido.
+        $carpetaBorrada = $tieneCarpeta && $request->boolean('borrar_carpeta') && CarpetaProyecto::eliminar($proyecto);
+        $credencialQuitada = $mcp && $request->boolean('borrar_credencial')
+            && Windows::borrarCredencial(PromptElementor::variableAuth($proyecto->nombre));
 
-        return redirect()->route('dashboard')->with('ok', "Proyecto \"{$proyecto->nombre}\" eliminado"
-            . ($conteo['en_blanco'] ? '.' : ' junto con todos sus registros.')
-            . ($mcp ? " Quita también su servidor MCP de tu agente (en Claude Code: claude mcp remove {$mcp})" : ''));
+        $kb = $respaldo ? max(1, (int) round(filesize($respaldo) / 1024)) : 0;
+        Evento::create(['tipo' => 'proyecto_eliminado', 'detalle' => ($conteo['en_blanco']
+            ? "Proyecto \"{$proyecto->nombre}\" eliminado (estaba en blanco)"
+            : "Proyecto \"{$proyecto->nombre}\" eliminado con {$conteo['paginas']} páginas, {$conteo['secciones']} secciones y {$conteo['tokens']} tokens")
+            . ($respaldo ? '; respaldo ' . basename($respaldo) : '')]);
+
+        $partes = ["Proyecto \"{$proyecto->nombre}\" eliminado" . ($conteo['en_blanco'] ? '.' : ' junto con todos sus registros.')];
+        if ($respaldo) {
+            $partes[] = "Respaldo de {$kb} KB en " . (CarpetaProyecto::aWindows($respaldo) ?? $respaldo) . ' (se restaura con: alma proyecto:restaurar).';
+        }
+        if ($carpetaBorrada) {
+            $partes[] = 'Su carpeta se borró.';
+        } elseif ($tieneCarpeta) {
+            $partes[] = 'Su carpeta se conservó.';
+        }
+        if ($credencialQuitada) {
+            $partes[] = 'Su credencial de Windows se quitó.';
+        }
+        if ($mcp && ! $carpetaBorrada) {
+            $partes[] = "Si registraste {$mcp} de forma global en tu agente, quítalo (Claude Code: claude mcp remove {$mcp}).";
+        }
+
+        return redirect()->route('dashboard')->with('ok', implode(' ', $partes));
     }
 
     public function guardarPagina(Request $request, Proyecto $proyecto)

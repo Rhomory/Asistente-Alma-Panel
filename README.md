@@ -261,8 +261,13 @@ En Ubuntu se usan con `php artisan …`; desde Windows, con
 | `registro:add "<Proyecto>" "<Página>" "<Sección>" <min> --asistente=<min> --dev=<min>` | Registrar una sección construida |
 | `registro:cola "<Proyecto>"` | Correcciones pendientes de ese proyecto |
 | `… --forzar-variante` | En `registro:add/figma/paginas/tokens`: crear un proyecto aunque se parezca a otro (solo con confirmación) |
+| `proyecto:restaurar [respaldo]` | Lista los respaldos de proyectos eliminados o restaura uno (páginas, secciones, tiempos, tokens y versiones del diseño) |
 | `conexion:comprobar` | Versiones de WordPress, Elementor y JetEngine de cada sitio |
 | `jev:sugerencias` | Revisión automática con Jev (necesita `OPENROUTER_API_KEY` en `.env`) |
+
+**Eliminar un proyecto.** El diálogo permite guardar un respaldo (`.json.gz` de pocos KB en
+`AlmaProyectos\_archivo\`, sin contraseñas ni capturas), borrar también su carpeta y quitar su credencial de Windows.
+La carpeta solo se borra si está dentro de la carpeta de proyectos. Para recuperarlo: `alma proyecto:restaurar`.
 
 ## 6. Problemas frecuentes
 

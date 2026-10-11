@@ -96,6 +96,25 @@ class CarpetaProyecto
         return array_keys($archivos);
     }
 
+    /**
+     * Borra la carpeta del proyecto. Por seguridad solo borra una carpeta que esté directamente dentro de la
+     * carpeta base de proyectos (nunca la base ni nada fuera de ella).
+     */
+    public static function eliminar(Proyecto $p): bool
+    {
+        $ruta = self::ruta($p);
+        if (! $ruta || ! $p->carpeta || ! is_dir($ruta)) {
+            return false;
+        }
+        $real = realpath($ruta);
+        $base = realpath(self::base());
+        if (! $real || ! $base || $real === $base || dirname($real) !== $base) {
+            return false;
+        }
+
+        return \Illuminate\Support\Facades\File::deleteDirectory($real);
+    }
+
     /** Carpeta Design/vN del proyecto (vista desde WSL), creándola si hace falta. */
     public static function carpetaVersion(Proyecto $p, int $version): ?string
     {

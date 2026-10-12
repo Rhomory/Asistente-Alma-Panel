@@ -240,6 +240,7 @@ class PromptGuia
            - OpenCode: ábrelo con el botón "Abrir OpenCode" del panel (o `opencode --standalone` en esta carpeta). Si se abrió con el servicio de fondo, puede no ver la credencial recién guardada.
            - Si `{$mcp}` no autentica, la variable `{$varAuth}` no está: pide al desarrollador que pegue el prompt de Elementor en el panel (Conexión) y reinicie el agente desde el botón "Abrir terminal" del proyecto.
            Si tuviste que cambiar algo, pide reiniciar el agente antes de seguir.
+           **No arranques figwright a mano** (ni `npx @figwright/mcp`, ni scripts propios, ni pidas "dejar abierto el puerto 3055"): lo inicia el agente con la configuración de esta carpeta y lo mantiene vivo. Si no ves sus herramientas, dilo y detente.
         1. `registro:cola "{$nombre}"`: las correcciones pendientes van primero.
         2. Si no hay diseño en uso, lee el Figma con la skill **alma-figma** (en Claude Code y OpenCode se carga sola; en Codex o Cursor lee `\$HOME\.agents\skills\alma-figma\SKILL.md`). Guarda la lectura con `diseno:guardar`, que crea `Design\\vN`, y exporta ahí las capturas de cada página.
         3. Si el Figma cambió, vuelve a leerlo y guárdalo con `diseno:guardar`: queda como versión nueva hasta que el desarrollador pulse "Usar esta versión" en el panel. Trabaja siempre con la versión en uso.

@@ -65,6 +65,7 @@ class RolesAgentes
            - Si `plugin` es `null`: pide abrir Figma de escritorio con el plugin figwright en {FIGMA}.
            - Si aparece `versionSkew` o `buildSkew`: el plugin y el servidor no coinciden. El panel fija el servidor en {VERSION}; pide actualizar el plugin a esa versión.
            - Si hay varios archivos abiertos, `list_files` y `use_file` con el del proyecto.
+           - Si no tienes la herramienta `ping`, figwright no cargó: no lo arranques a mano ni con scripts; avisa que el agente debe abrirse desde la carpeta del proyecto (botón "Abrir OpenCode").
         2. **{MCP}:** usa una herramienta de solo lectura (listar páginas o el kit del sitio). Si falla la autenticación, falta la variable de Windows `{VAR}`: hay que pegar el prompt de Elementor en el panel (Conexión) y reabrir el agente con "Abrir terminal".
         3. **Puente al panel:** `{ALMA} registro:cola "{PROYECTO}"`. Si falla, ejecuta `{ALMA} diagnostico` y copia lo que salga en rojo.
 

@@ -102,3 +102,26 @@ Elementor; uno desordenado obliga al agente a adivinar medidas y a corregir. Ped
 3. `scripts/instalar.sh` y `composer setup` sin npm.
 4. Caché de secciones (`Design\vN\secciones\`) y mapeo de tokens a Elementor.
 5. Compartir la tabla de la sección 4 con diseño como requisito del Figma que se entrega.
+
+## 6. Auditoría del 11/10/2026: OpenCode 2 con modelos gratuitos
+
+Revisión antes de construir un sitio real con OpenCode 2.0.18. Todo lo marcado quedó corregido y con pruebas.
+
+| Prioridad | Hallazgo | Arreglo |
+|---|---|---|
+| Bloqueaba | `powershell -File alma.ps1` fallaba por la política de ejecución (Restricted) | Todos los textos usan `-ExecutionPolicy Bypass` |
+| Bloqueaba | El rol `alma-figma-lector` no cargaba: `"Design\vN\secciones"` en YAML con comillas dobles | Descripción entre comillas simples; OpenCode lo lista como subagente |
+| Bloqueaba | El servicio de fondo de OpenCode no ve una credencial guardada después de arrancar | Botón "Abrir OpenCode" con `--standalone` |
+| Bloqueaba | Sin `pwsh`, OpenCode usa `cmd.exe` y el puente falla | `shell` fijo en `opencode.json` (pwsh o powershell) |
+| Lento | figwright con `npx -y` tardaba 3-5 s por arranque y dependía de la red | Instalado en `~\.alma\mcp` y lanzado con `node` (~1 s); vuelve a npx si falta |
+| Lento | Reintento por el host de Windows esperaba 2 s si el firewall descarta | Conexión local con límite de 0,7 s |
+| Contexto | 117 herramientas de figwright, Code Mode y MCP globales (Pencil) en cada sesión | `mcp.servers` v2 con `codemode: false`, permisos que dejan 14 herramientas de lectura y la skill `alma-figma` |
+| Contexto | El inventario con `scan_nodes_by_types` es recursivo | Ctrl+A en Figma y `get_design_context` sobre la selección (`depth: 1`) |
+| Contexto | Tras compactar, el agente no sabía por dónde iba | `guia:prompt "<P>" "<Página>" --siguiente` y estados en el plan |
+| Confuso | `diseno:guardar` descartaba en silencio `tipografía`, claves en inglés y `rgb()`, y creaba vN vacías | `LecturaFigma` normaliza, avisa lo omitido, rechaza 0 páginas y no duplica versiones |
+| Confuso | JSON con BOM o UTF-16 (PowerShell 5.1) daba "Falta un JSON válido" | Se convierte; los errores dicen la causa |
+| Confuso | `registro:cola`/`conexion:comprobar` con nombre sin tilde decían "vacío"; `registro:add "inicio"` duplicaba la página | Búsqueda sin tildes ni mayúsculas; error con la lista de páginas |
+| Confuso | Escribir en `%TEMP%` pide permiso en OpenCode | La lectura va en `Design\lectura-borrador.json` |
+
+Pendiente para verificar en vivo (requiere Figma abierto): que `get_design_context` sin `nodeId` con varios marcos
+seleccionados devuelva marcos y secciones como describe su documentación.

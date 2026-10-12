@@ -232,6 +232,10 @@ se compacta o abres un chat nuevo, basta con: "retoma la página Inicio".
 
 ### OpenCode con modelos gratuitos
 
+Guía de una página por paso, con diagrama y solución de problemas: [`public/docs/flujo-opencode.pdf`](public/docs/flujo-opencode.pdf)
+(también en el panel, "Cómo funciona" › Guía con OpenCode).
+
+
 - Abre con **"Abrir OpenCode"** (o `opencode --standalone` en la carpeta del proyecto).
 - Trabaja **sin el lector en paralelo**: una sección a la vez, leída con su ID justo antes de construirla.
 - Pide páginas cortas: "Construye solo la sección Hero de Inicio", y luego "sigue con la siguiente".

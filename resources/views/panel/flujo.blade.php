@@ -11,6 +11,7 @@
             <p>El agente construye en la consola y registra; el panel supervisa y tú apruebas. Esta guía resume qué se hace una vez, qué se hace por cada proyecto y cómo es el ciclo diario.</p>
         </div>
         <a class="btn" href="{{ asset('docs/flujo-de-trabajo.pdf') }}" target="_blank" rel="noopener"><x-ic n="externo" />Versión PDF</a>
+        <a class="btn" href="{{ asset('docs/flujo-opencode.pdf') }}" target="_blank" rel="noopener"><x-ic n="externo" />Guía con OpenCode</a>
     </div>
 
     <section class="caja">

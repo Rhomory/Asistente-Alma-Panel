@@ -15,7 +15,8 @@ use Illuminate\Console\Command;
  */
 class GuiaPrompt extends Command
 {
-    protected $signature = 'guia:prompt {proyecto} {pagina? : Página a construir (opcional)}';
+    protected $signature = 'guia:prompt {proyecto} {pagina? : Página a construir (opcional)}
+        {--siguiente : Solo la próxima sección por construir (para retomar con poco contexto)}';
     protected $description = 'Muestra la guía y el prompt de construcción de un proyecto o página';
 
     public function handle(): int
@@ -29,12 +30,23 @@ class GuiaPrompt extends Command
 
         $pagina = null;
         if ($nombre = $this->argument('pagina')) {
-            $pagina = $proyecto->paginas()->whereRaw('LOWER(nombre) = ?', [mb_strtolower($nombre)])->first();
+            $pagina = NombresProyecto::pagina($proyecto, $nombre);
             if (! $pagina) {
                 $this->error("La página \"{$nombre}\" no está en {$proyecto->nombre}. Páginas: " . $proyecto->paginas()->pluck('nombre')->implode(', '));
 
                 return self::FAILURE;
             }
+        }
+
+        if ($this->option('siguiente')) {
+            if (! $pagina) {
+                $this->error('--siguiente necesita la página: guia:prompt "' . $proyecto->nombre . '" "<Página>" --siguiente');
+
+                return self::FAILURE;
+            }
+            $this->line(PromptGuia::siguiente($proyecto, $pagina));
+
+            return self::SUCCESS;
         }
 
         $this->line(PromptGuia::prompt($proyecto, $pagina));

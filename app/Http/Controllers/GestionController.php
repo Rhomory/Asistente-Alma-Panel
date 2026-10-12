@@ -93,6 +93,26 @@ class GestionController extends Controller
         return $c;
     }
 
+    /** Restaura un proyecto eliminado desde su respaldo (lo mismo que `proyecto:restaurar`, desde el panel). */
+    public function restaurar(Request $request)
+    {
+        $nombre = (string) $request->input('archivo');
+        $r = collect(ArchivoProyecto::lista())->firstWhere('nombre', $nombre);   // solo archivos de la carpeta de respaldos
+        if (! $r) {
+            return back()->withErrors(['archivo' => 'No encuentro ese respaldo.']);
+        }
+        try {
+            $p = ArchivoProyecto::restaurar($r['ruta']);
+        } catch (\RuntimeException $e) {
+            return back()->withErrors(['archivo' => $e->getMessage()]);
+        }
+        CarpetaProyecto::preparar($p);
+        Evento::create(['tipo' => 'proyecto_restaurado', 'detalle' => "Proyecto {$p->nombre} restaurado desde {$nombre}"]);
+
+        return redirect()->route('proyecto', $p)->with('ok', "Proyecto \"{$p->nombre}\" restaurado con sus páginas, tiempos y tokens."
+            . ($p->conexion ? ' La credencial no viaja en el respaldo: vuelve a pegar el prompt de Elementor en Conexión.' : ''));
+    }
+
     /**
      * Elimina el proyecto. En blanco: basta la confirmación del navegador.
      * Con registros: hay que escribir el nombre exacto del proyecto; se borra todo lo relacionado.

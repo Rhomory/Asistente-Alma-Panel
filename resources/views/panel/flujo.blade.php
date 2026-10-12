@@ -2,7 +2,7 @@
 @section('titulo', 'Cómo funciona')
 @section('migas')<a href="{{ route('dashboard') }}" class="raiz"><x-ic n="inicio" c="sm" />Panel</a> / <b aria-current="page">Cómo funciona</b>@endsection
 
-@php $alma = 'powershell -NoProfile -File "$HOME\.alma\alma.ps1"'; @endphp
+@php $alma = 'powershell -NoProfile -ExecutionPolicy Bypass -File "$HOME\.alma\alma.ps1"'; @endphp
 
 @section('contenido')
     <div class="cabeza">

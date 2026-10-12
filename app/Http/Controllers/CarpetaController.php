@@ -23,7 +23,7 @@ class CarpetaController extends Controller
 
     public function abrir(Proyecto $proyecto, string $que)
     {
-        abort_unless(in_array($que, ['carpeta', 'diseno', 'terminal', 'cursor'], true), 404);
+        abort_unless(in_array($que, ['carpeta', 'diseno', 'terminal', 'opencode', 'cursor'], true), 404);
         if (! $proyecto->carpeta) {
             CarpetaProyecto::preparar($proyecto);
             $proyecto->refresh();
@@ -37,6 +37,7 @@ class CarpetaController extends Controller
             'carpeta'  => Windows::abrirCarpeta($ruta),
             'diseno'   => Windows::abrirCarpeta($ruta . '\Design'),
             'terminal' => Windows::abrirTerminal($ruta),
+            'opencode' => Windows::abrirOpenCode($ruta),
             'cursor'   => Windows::abrirCursor($ruta),
         };
 
@@ -45,6 +46,7 @@ class CarpetaController extends Controller
                 'carpeta'  => "Carpeta abierta: {$ruta}",
                 'diseno'   => "Carpeta del diseño abierta: {$ruta}\Design",
                 'terminal' => 'Terminal abierta en la carpeta del proyecto. Inicia ahí tu agente (claude, codex u opencode).',
+                'opencode' => 'OpenCode abierto en la carpeta del proyecto, con su propio servidor: ve la credencial recién guardada.',
                 'cursor'   => 'Cursor abierto en la carpeta del proyecto.',
             }
             : 'No pude abrirlo desde el panel: revisa ALMA_PUENTE en .env (lo escribe el instalador).');

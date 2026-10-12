@@ -95,18 +95,28 @@ apuntando a otro puerto), el agente no verá el del proyecto actual: cada sitio 
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
+  "shell": "pwsh",
   "mcp": {
-    "figwright": { "type": "local", "command": ["npx", "-y", "@figwright/mcp@0.6.0"] },
-    "elementor-cota": {
-      "type": "remote",
-      "url": "http://localhost:8883/wp-json/…",
-      "headers": { "Authorization": "{env:ALMA_COTA_AUTH}" }
+    "servers": {
+      "figwright": { "type": "local", "command": ["node", "C:\\Users\\<usuario>\\.alma\\mcp\\node_modules\\@figwright\\mcp\\dist\\index.mjs"], "codemode": false },
+      "elementor-cota": {
+        "type": "remote", "url": "http://localhost:8883/wp-json/…", "oauth": false, "codemode": false,
+        "headers": { "Authorization": "{env:ALMA_COTA_AUTH}" }
+      }
     }
-  }
+  },
+  "permissions": [
+    { "action": "figwright_*", "resource": "*", "effect": "deny" },
+    { "action": "figwright_get_design_context", "resource": "*", "effect": "allow" }
+  ]
 }
 ```
 
-En OpenCode `command` es una lista y lleva `"type"`; el formato `command` + `args` de Claude no funciona ahí.
+El panel genera este archivo completo en cada proyecto (OpenCode 2, formato `mcp.servers`):
+- `codemode: false`: los modelos gratuitos llaman mejor las herramientas directas. Con la forma antigua (`mcp.<nombre>`), OpenCode 2 ignora esta opción.
+- `permissions`: deja a la vista solo las ~14 herramientas de lectura de figwright (de 117), solo la skill `alma-figma` y oculta los MCP globales ajenos al flujo (Pencil, etc.). La última regla que coincide gana.
+- `shell`: fija PowerShell (sin esto OpenCode puede usar `cmd.exe` y los comandos del puente fallan).
+- `oauth: false`: si falta la credencial, el error es un 401 claro.
 
 **Versión de figwright.** El plugin de Figma se actualiza a mano, así que el servidor va con la misma versión fija
 (`ALMA_FIGWRIGHT` en `.env`, hoy 0.6.0); nada de `@latest`, que adelanta el servidor y rompe la conexión. Para subir
@@ -115,6 +125,10 @@ ejecutar el instalador. `alma.ps1 diagnostico` avisa si algún agente sigue con 
 
 **No inicies figwright a mano** en otra consola: lo arranca el agente al abrirse. Varias sesiones pueden compartirlo
 (una hace de principal y las demás de seguidoras).
+
+**Arranque rápido.** El instalador deja figwright en `%USERPROFILE%\.alma\mcp` y los agentes lo lanzan con `node`:
+arranca en ~1 s en vez de los 3-5 s de `npx -y` (que consulta npm en cada arranque) y funciona sin red. Si esa
+instalación falta o tiene otra versión, el panel vuelve a `npx` solo. `alma diagnostico` dice cuál se usa.
 
 ## 3. Instalación (una sola vez por equipo)
 
@@ -180,7 +194,7 @@ Usa la ruta real de tu panel en Ubuntu (las rutas de WSL distinguen mayúsculas)
 - con `-RegistrarFigwright`, registra figwright en Claude Code y Codex si falta;
 - termina con un diagnóstico de todo.
 
-Para revisar el entorno en cualquier momento: `powershell -NoProfile -File "$HOME\.alma\alma.ps1" diagnostico`.
+Para revisar el entorno en cualquier momento: `powershell -NoProfile -ExecutionPolicy Bypass -File "$HOME\.alma\alma.ps1" diagnostico`.
 La ruta del panel también se puede forzar con la variable de entorno `ALMA_PANEL` (y `ALMA_DISTRO`).
 
 ## 4. Uso con un proyecto nuevo
@@ -194,7 +208,8 @@ La ruta del panel también se puede forzar con la variable de entorno `ALMA_PANE
      configuración solo la nombra.
 2. **Abre el agente desde el proyecto:** botón "Abrir terminal aquí" (o "Abrir en Cursor"). Esa terminal ya ve la
    credencial; ahí ejecuta `claude`, `codex` u `opencode`. La primera vez: Claude Code pide aprobar `.mcp.json`
-   y Codex marcar la carpeta como de confianza.
+   y Codex marcar la carpeta como de confianza. Para OpenCode usa **"Abrir OpenCode"**: lo inicia con `--standalone`,
+   porque el servicio de fondo de OpenCode conserva el entorno con el que arrancó y no vería una credencial recién guardada.
 3. **Abre el archivo en Figma de escritorio** con el plugin figwright corriendo.
 4. **Primer mensaje:**
    > Lee el Figma del proyecto y guárdalo en el panel.
@@ -209,6 +224,20 @@ pulses "Usar esta versión" en el proyecto, después de ver qué páginas y secc
 
 Mientras el agente trabaja, deja el panel abierto: se recarga solo con cada sección registrada. En un chat nuevo de
 la misma carpeta no hace falta repetir nada: el `AGENTS.md` vuelve a cargarse.
+
+**Sin perder el hilo.** El avance vive en el panel, no en la memoria del agente. Tras cada sección el agente pide
+`guia:prompt "<Proyecto>" "<Página>" --siguiente`, que en ~6 líneas trae solo la próxima sección (correcciones
+primero): su ID de Figma, su detalle en caché si existe, las variables y el comando para registrarla. Si el contexto
+se compacta o abres un chat nuevo, basta con: "retoma la página Inicio".
+
+### OpenCode con modelos gratuitos
+
+- Abre con **"Abrir OpenCode"** (o `opencode --standalone` en la carpeta del proyecto).
+- Trabaja **sin el lector en paralelo**: una sección a la vez, leída con su ID justo antes de construirla.
+- Pide páginas cortas: "Construye solo la sección Hero de Inicio", y luego "sigue con la siguiente".
+- Si el modelo se pierde, no le expliques todo de nuevo: "ejecuta guia:prompt … --siguiente y continúa".
+- `diseno:guardar` acepta claves en inglés, "tipografía" con tilde y colores `rgb()`, avisa lo que omite y no crea
+  otra versión si la lectura es igual a la anterior.
 
 **Nombres de proyecto únicos.** "Cota", "cota" y "Cotá" son el mismo proyecto. Tampoco se crean variantes
 ("Cota v2", "cotav1", "Cota copia"): comparten servidor MCP y credencial parecidos y el agente puede trabajar en el
@@ -251,7 +280,7 @@ al logo y recuerda tu elección; al pie están "Cambiar tema" (oscuro o claro) y
 ## 5. Comandos del panel
 
 En Ubuntu se usan con `php artisan …`; desde Windows, con
-`powershell -NoProfile -File "$HOME\.alma\alma.ps1" …`. Pasa los JSON siempre con `--archivo=`, nunca en línea.
+`powershell -NoProfile -ExecutionPolicy Bypass -File "$HOME\.alma\alma.ps1" …`. Pasa los JSON siempre con `--archivo=`, nunca en línea.
 
 | Comando | Para qué |
 |---|---|

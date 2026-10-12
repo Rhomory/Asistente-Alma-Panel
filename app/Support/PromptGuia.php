@@ -12,14 +12,86 @@ use App\Models\Proyecto;
  */
 class PromptGuia
 {
+    /** Cómo se ve cada estado de sección en el plan que lee el agente. */
+    public const ESTADOS = [
+        'planificada'  => 'pendiente',
+        'construyendo' => 'CORRECCIÓN PEDIDA',
+        'construida'   => 'hecha, espera revisión',
+        'aprobada'     => 'aprobada',
+    ];
+
+    /**
+     * Solo la próxima sección a construir, en pocas líneas: lo que necesita un agente con poco contexto para
+     * seguir sin releer todo (tras compactar o en una sesión nueva). Las correcciones pedidas van primero.
+     */
+    public static function siguiente(Proyecto $proyecto, Pagina $pagina): string
+    {
+        $secciones = $pagina->secciones()->orderBy('id')->get();
+        $nombre = $proyecto->nombre;
+        $alma = 'powershell -NoProfile -ExecutionPolicy Bypass -File "$HOME\.alma\alma.ps1"';
+        if ($secciones->isEmpty()) {
+            return "La página \"{$pagina->nombre}\" no tiene secciones guardadas. Lee el Figma y guárdalo con `diseno:guardar`, o pide la guía completa: `guia:prompt \"{$nombre}\" \"{$pagina->nombre}\"`.";
+        }
+
+        $hechas = $secciones->whereIn('estado', ['construida', 'aprobada'])->count();
+        $porRevisar = $secciones->where('estado', 'construida')->count();
+        $s = $secciones->firstWhere('estado', 'construyendo') ?? $secciones->firstWhere('estado', 'planificada');
+
+        $l = [];
+        $l[] = "Proyecto \"{$nombre}\" · página \"{$pagina->nombre}\" · avance {$hechas}/{$secciones->count()}" . ($porRevisar ? " ({$porRevisar} esperan revisión)" : '');
+        if (! $s) {
+            $l[] = 'No quedan secciones por construir en esta página. Avisa al desarrollador para que revise y apruebe en el panel.';
+
+            return implode("\n", $l);
+        }
+
+        $n = $secciones->search(fn ($x) => $x->id === $s->id) + 1;
+        $l[] = "Siguiente: {$n}. {$s->nombre}" . ($s->widget_plan ? " — {$s->widget_plan}" : '') . ($s->min_estimado ? " (~{$s->min_estimado} min)" : '');
+        if ($s->estado === 'construyendo') {
+            $pedido = $s->eventos()->where('tipo', 'solicitud_correccion')->where('resuelto', false)->latest('id')->value('detalle');
+            $l[] = 'Es una CORRECCIÓN: ' . ($pedido ?: 'revisa el comentario en el panel') . '. Edita la sección que ya existe en el borrador; no la dupliques.';
+        }
+        if ($s->figma_id) {
+            $cache = self::cacheSeccion($proyecto, $s->figma_id);
+            $l[] = $cache
+                ? "Detalle listo: {$cache} (léelo en vez de pedirlo a Figma)."
+                : "Diseño: `get_design_context` con nodeId \"{$s->figma_id}\" y detail \"full\". No recorras el archivo.";
+        }
+
+        $g = self::guia($proyecto, $pagina);
+        $vars = $g['colores']->map(fn ($t) => trim("{$t->nota} {$t->valor}"))
+            ->merge($g['tipografias']->map(fn ($t) => trim("{$t->nota} {$t->valor}")));
+        if ($vars->isNotEmpty()) {
+            $l[] = 'Variables globales (úsalas, no valores sueltos): ' . $vars->implode(' · ');
+        }
+        $l[] = 'Construye en borrador con ' . ($proyecto->conexion?->nombre_mcp ?? PromptElementor::nombreSugerido($nombre)) . ', con widgets nativos de Elementor.';
+        $l[] = "Al terminar: {$alma} registro:add \"{$nombre}\" \"{$pagina->nombre}\" \"{$s->nombre}\" <min> --asistente=<min> --dev=<min>";
+        $l[] = "Luego vuelve a pedir: {$alma} guia:prompt \"{$nombre}\" \"{$pagina->nombre}\" --siguiente";
+
+        return implode("\n", $l);
+    }
+
+    /** Ruta de Windows del detalle de una sección que dejó el lector de Figma, si existe. */
+    public static function cacheSeccion(Proyecto $proyecto, string $figmaId): ?string
+    {
+        $activa = $proyecto->disenoActivo()->first();
+        $ruta = $activa ? CarpetaProyecto::ruta($proyecto) : null;
+        if (! $ruta) {
+            return null;
+        }
+        $archivo = "/Design/v{$activa->version}/secciones/" . str_replace(':', '-', $figmaId) . '.json';
+
+        return is_file($ruta . $archivo) ? CarpetaProyecto::aWindows($ruta . $archivo) : null;
+    }
+
     /** @return array{colores: \Illuminate\Support\Collection, tipografias: \Illuminate\Support\Collection, espaciados: \Illuminate\Support\Collection, otros: \Illuminate\Support\Collection, plan: array} */
     public static function guia(Proyecto $proyecto, ?Pagina $pagina = null): array
     {
         $tokens = $proyecto->tokens()->where('incluido', true)->orderBy('id')->get();
 
         $plan = $pagina && $pagina->secciones()->exists()
-            ? $pagina->secciones()->orderBy('id')->get()->map(fn ($s) => [$s->nombre, $s->widget_plan ?? '—', $s->min_estimado, $s->figma_id])->all()
-            : array_map(fn ($fila) => array_pad($fila, 4, null), FlujoController::PLAN_ESTANDAR);
+            ? $pagina->secciones()->orderBy('id')->get()->map(fn ($s) => [$s->nombre, $s->widget_plan ?? '—', $s->min_estimado, $s->figma_id, $s->estado])->all()
+            : array_map(fn ($fila) => array_pad($fila, 5, null), FlujoController::PLAN_ESTANDAR);
 
         return [
             'colores'     => $tokens->where('tipo', 'color')->filter(fn ($t) => self::esColor($t->valor))->values(),
@@ -68,9 +140,13 @@ class PromptGuia
         $lineas[] = '';
         $lineas[] = 'Plan de secciones, una por vez y en este orden:';
         $conIds = false;
-        foreach ($g['plan'] as $i => [$nombre, $widget, $min, $figmaId]) {
+        foreach ($g['plan'] as $i => [$nombre, $widget, $min, $figmaId, $estado]) {
             $conIds = $conIds || (bool) $figmaId;
-            $lineas[] = ($i + 1) . ". {$nombre} — {$widget}" . ($min ? " (~{$min} min)" : '') . ($figmaId ? " · Figma {$figmaId}" : '');
+            $lineas[] = ($i + 1) . ". {$nombre} — {$widget}" . ($min ? " (~{$min} min)" : '') . ($figmaId ? " · Figma {$figmaId}" : '')
+                . (isset(self::ESTADOS[$estado]) ? ' · ' . self::ESTADOS[$estado] : '');
+        }
+        if ($pagina) {
+            $lineas[] = "Para retomar (sesión nueva o contexto compactado): `guia:prompt \"{$proyecto->nombre}\" \"{$nombrePagina}\" --siguiente` da solo la próxima sección.";
         }
         if ($conIds) {
             $lineas[] = 'Para leer cada sección usa su ID guardado: `get_design_context` con ese nodeId y `detail: "full"`. No vuelvas a recorrer el archivo para buscarla.';
@@ -83,7 +159,7 @@ class PromptGuia
         $lineas[] = '- Usa contenedores y widgets nativos de Elementor; nada de HTML incrustado.';
         $lineas[] = "- Antes de empezar revisa las correcciones pendientes: `php artisan registro:cola \"{$proyecto->nombre}\"`.";
         $lineas[] = "- Al terminar cada sección regístrala: `php artisan registro:add \"{$proyecto->nombre}\" \"{$nombrePagina}\" \"<sección>\" <min> --asistente=<min> --dev=<min>`.";
-        $lineas[] = '- Si trabajas desde Windows, los comandos del panel van por el puente: `powershell -NoProfile -File "$HOME\\.alma\\alma.ps1" <comando>` (en lugar de `php artisan`).';
+        $lineas[] = '- Si trabajas desde Windows, los comandos del panel van por el puente: `powershell -NoProfile -ExecutionPolicy Bypass -File "$HOME\\.alma\\alma.ps1" <comando>` (en lugar de `php artisan`).';
 
         return implode("\n", $lineas);
     }
@@ -98,7 +174,7 @@ class PromptGuia
     {
         $nombre = $proyecto->nombre;
         $mcp = $proyecto->conexion?->nombre_mcp ?? PromptElementor::nombreSugerido($nombre);
-        $alma = 'powershell -NoProfile -File "$HOME\\.alma\\alma.ps1"';
+        $alma = 'powershell -NoProfile -ExecutionPolicy Bypass -File "$HOME\\.alma\\alma.ps1"';
         $paginas = $proyecto->paginas()->where('incluida', true)->orderBy('id')->pluck('nombre');
         $sitio = $proyecto->sitio_wp ?: "[falta la URL del sitio]";
         $figma = $proyecto->archivo_figma ?: "[falta el archivo de Figma]";
@@ -151,6 +227,7 @@ class PromptGuia
         |---|---|
         | Guardar la lectura del Figma como nueva versión (Design\\vN) | `diseno:guardar "{$nombre}" --archivo=<ruta.json>` |
         | Guía de una página: tokens, plan con IDs de Figma y reglas | `guia:prompt "{$nombre}" "<Página>"` |
+        | Solo la próxima sección (para retomar) | `guia:prompt "{$nombre}" "<Página>" --siguiente` |
         | Correcciones pendientes de este proyecto | `registro:cola "{$nombre}"` |
         | Registrar una sección terminada | `registro:add "{$nombre}" "<Página>" "<Sección>" <min> --asistente=<min> --dev=<min>` |
         | Comprobar el sitio | `conexion:comprobar "{$nombre}"` |
@@ -160,14 +237,21 @@ class PromptGuia
            - Claude Code: aprueba los servidores de `.mcp.json` cuando lo pida (o `/mcp`).
            - Codex: la carpeta debe estar marcada como de confianza para leer `.codex/config.toml`.
            - Cursor: activa los servidores en Settings › MCP.
+           - OpenCode: ábrelo con el botón "Abrir OpenCode" del panel (o `opencode --standalone` en esta carpeta). Si se abrió con el servicio de fondo, puede no ver la credencial recién guardada.
            - Si `{$mcp}` no autentica, la variable `{$varAuth}` no está: pide al desarrollador que pegue el prompt de Elementor en el panel (Conexión) y reinicie el agente desde el botón "Abrir terminal" del proyecto.
            Si tuviste que cambiar algo, pide reiniciar el agente antes de seguir.
         1. `registro:cola "{$nombre}"`: las correcciones pendientes van primero.
-        2. Si no hay diseño en uso, lee el Figma siguiendo `\$HOME\.claude\skills\alma-figma\SKILL.md` (en Claude Code se activa sola; los demás agentes deben leer ese archivo). Guarda la lectura con `diseno:guardar`, que crea `Design\\vN`, y exporta ahí las capturas de cada página.
+        2. Si no hay diseño en uso, lee el Figma con la skill **alma-figma** (en Claude Code y OpenCode se carga sola; en Codex o Cursor lee `\$HOME\.agents\skills\alma-figma\SKILL.md`). Guarda la lectura con `diseno:guardar`, que crea `Design\\vN`, y exporta ahí las capturas de cada página.
         3. Si el Figma cambió, vuelve a leerlo y guárdalo con `diseno:guardar`: queda como versión nueva hasta que el desarrollador pulse "Usar esta versión" en el panel. Trabaja siempre con la versión en uso.
         4. Antes de construir una página, pide su guía con `guia:prompt`: trae el ID de Figma de cada sección (úsalo en vez de recorrer el archivo) y las capturas sirven de referencia visual.
         5. Construye **una sección a la vez** con `{$mcp}`, siempre en borrador, y regístrala con `registro:add`. El desarrollador la aprueba o pide corrección en el panel.
-        6. Nunca publiques ni borres contenido del sitio. Nada se publica sin aprobación en el panel.
+        6. Después de cada `registro:add`, pide `guia:prompt "{$nombre}" "<Página>" --siguiente`: trae solo la próxima sección (con su ID, su detalle en caché si existe, las variables y el comando para registrarla). Repite hasta que diga que no quedan.
+        7. Nunca publiques ni borres contenido del sitio. Nada se publica sin aprobación en el panel.
+
+        ## Si pierdes el hilo
+        El avance vive en el panel, no en tu memoria. En una sesión nueva o tras compactar el contexto, no releas todo:
+        ejecuta `registro:cola "{$nombre}"` y luego `guia:prompt "{$nombre}" "<Página>" --siguiente`, y sigue desde ahí.
+        No guardes respuestas grandes de Figma en la conversación: si una sección ya tiene `Design\\vN\\secciones\\<id>.json`, lee ese archivo.
 
         ## Trabajo en paralelo (más rápido)
         La carpeta trae dos roles de apoyo: **alma-conexion** (comprueba figwright, `{$mcp}` y el panel; solo lee) y
@@ -180,6 +264,8 @@ class PromptGuia
         - **Codex o Cursor:** pide al desarrollador una segunda terminal ("Abrir terminal" otra vez en el panel). Ahí:
           "Lee `.alma/roles/alma-figma-lector.md` y prepara las secciones de <Página>". En esta, construyes.
         Si el lector no ha llegado a una sección, léela tú con su ID; no esperes sin hacer nada.
+        **Con modelos gratuitos o de poco contexto, no uses el lector:** trabaja solo, una sección a la vez, y lee cada
+        sección con su ID justo antes de construirla (`--siguiente` te dice cuál). Copiar respuestas de Figma a archivos gasta el doble.
 
         ## Reglas
         - Lee el Figma en modo económico: `get_design_context` solo acepta marcos (no IDs de página) y para el inventario va con `detail: "minimal"`; `full` solo para la sección que construyes. Nunca `get_document` ni `get_node` para inventario.

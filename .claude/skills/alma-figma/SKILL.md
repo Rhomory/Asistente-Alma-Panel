@@ -14,7 +14,7 @@ archivo. El panel abierto en el navegador se recarga solo.
 - **Un solo proyecto.** Trabaja solo en el proyecto indicado en el `AGENTS.md` de esta carpeta. Usa su nombre
   exacto en cada comando; no mires ni cargues datos de otros proyectos.
 - **Puente al panel.** Desde Windows, los comandos del panel van por
-  `powershell -NoProfile -File "$HOME\.alma\alma.ps1" <comando>` (en Ubuntu, dentro del panel: `php artisan <comando>`).
+  `powershell -NoProfile -ExecutionPolicy Bypass -File "$HOME\.alma\alma.ps1" <comando>` (en Ubuntu, dentro del panel: `php artisan <comando>`).
   Si falla, ejecuta `alma.ps1 diagnostico`, muestra el resultado y detente: no inventes rutas ni otros caminos.
 - **figwright.** Llama a `ping`: si `plugin` es `null`, pide abrir Figma de escritorio y ejecutar
   Plugins › Development › Figwright. Si hay varios archivos abiertos, `list_files` y luego `use_file` con el del proyecto.
@@ -22,13 +22,15 @@ archivo. El panel abierto en el navegador se recarga solo.
 ## Leer el diseño (pocos tokens)
 
 1. `get_pages` → lista de páginas de Figma (`id`, `name`).
-2. Por cada página de Figma que tenga diseño del sitio:
-   `scan_nodes_by_types` con `root: <id de la página>` y `types: ["FRAME", "SECTION"]`.
-   Quédate solo con los nodos cuyo `parent.id` es el id de la página: son los **marcos de primer nivel**,
-   normalmente una página del sitio cada uno (Inicio, Nosotros…). Ignora los demás.
-3. Por cada marco de página del sitio: `get_design_context` con `nodeId: <id del marco>`, `depth: 1`,
-   `detail: "minimal"`. Sus hijos directos son las **secciones** (Hero, Servicios…): guarda nombre e `id`.
-4. Tokens: `get_variable_defs` (variables con sus modos) y `get_styles`. Asigna el rol de cada color:
+2. **Marcos y secciones en una sola llamada (lo más liviano):** pide al desarrollador que en Figma abra la página
+   con el diseño del sitio y pulse **Ctrl+A** (selecciona solo los marcos de primer nivel, no lo de adentro).
+   Luego `get_design_context` **sin `nodeId`** (usa la selección), con `depth: 1` y `detail: "minimal"`.
+   Cada marco es una página del sitio (Inicio, Nosotros…) y sus hijos directos son sus **secciones**
+   (Hero, Servicios…): guarda nombre e `id` de cada uno. Repite por cada página de Figma con diseño del sitio.
+   - Si el desarrollador no está, o el archivo es pequeño: `scan_nodes_by_types` con `root: <id de la página>` y
+     `types: ["FRAME", "SECTION"]`, y quédate con los nodos cuyo `parent.id` es la página. Ojo: es recursivo y en
+     archivos grandes devuelve miles de nodos.
+3. Tokens: `get_variable_defs` (variables con sus modos) y `get_styles`. Asigna el rol de cada color:
    primario, secundario, fondo, texto, acento.
 
 **Errores conocidos, no los repitas:**
@@ -38,8 +40,9 @@ archivo. El panel abierto en el navegador se recarga solo.
 
 ## Cargar en el panel
 
-Escribe el JSON en un archivo temporal (en Windows, `%TEMP%\alma-figma.json`) y pásalo con `--archivo=`.
-Nunca lo mandes en línea: las comillas entre PowerShell y WSL se rompen.
+Escribe el JSON en `Design\lectura-borrador.json` dentro de la carpeta del proyecto (fuera de ella el agente pide
+permiso) y pásalo con `--archivo=`. Nunca lo mandes en línea: las comillas entre PowerShell y WSL se rompen.
+Usa estas claves en español tal cual; si el comando avisa que omitió algo, corrígelo y vuelve a guardar.
 
 ```json
 {
@@ -61,7 +64,7 @@ Nunca lo mandes en línea: las comillas entre PowerShell y WSL se rompen.
 Guárdalo como **nueva versión del diseño**:
 
 ```powershell
-powershell -NoProfile -File "$HOME\.alma\alma.ps1" diseno:guardar "<Proyecto>" --archivo=$env:TEMP\alma-figma.json
+powershell -NoProfile -ExecutionPolicy Bypass -File "$HOME\.alma\alma.ps1" diseno:guardar "<Proyecto>" --archivo=Design\lectura-borrador.json
 ```
 
 - Crea `Design\vN\` en la carpeta del proyecto (`lectura.json` + `capturas\`) y te dice la ruta de `capturas`.
@@ -69,7 +72,7 @@ powershell -NoProfile -File "$HOME\.alma\alma.ps1" diseno:guardar "<Proyecto>" -
   el desarrollador pulse "Usar esta versión". Sigue trabajando con la versión en uso.
 - `url` es la ruta de la página en el sitio (`/` para Inicio). Si no la sabes, omítela: el panel la arma desde el nombre.
 - Tipos de token: `color`, `tipografia`, `espaciado`, `otro`. Colores en hexadecimal.
-- Borra el JSON temporal al terminar.
+- Si repites la misma lectura no se crea otra versión. La lectura guardada queda en `Design\vN\lectura.json`.
 
 ## Capturas de referencia
 

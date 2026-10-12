@@ -105,4 +105,24 @@ class EliminarProyectoTest extends TestCase
 
         \Illuminate\Support\Facades\File::deleteDirectory($tmp);
     }
+
+    public function test_el_respaldo_se_restaura_desde_el_panel(): void
+    {
+        $tmp = sys_get_temp_dir() . '/alma-panel-' . uniqid();
+        mkdir($tmp);
+        config(['alma.proyectos_dir' => $tmp]);
+        $p = Proyecto::create(['nombre' => 'Cota']);
+        $p->paginas()->create(['nombre' => 'Inicio'])->secciones()->create(['nombre' => 'Hero', 'estado' => 'aprobada']);
+
+        $this->delete("/proyectos/{$p->slug}", ['confirmacion' => 'Cota', 'respaldo' => '1'])->assertRedirect('/');
+        $archivo = basename(glob("{$tmp}/_archivo/cota-*.json.gz")[0]);
+
+        $this->get('/')->assertOk()->assertSee('Proyectos eliminados con respaldo')->assertSee($archivo, false);
+        $this->post('/respaldos/restaurar', ['archivo' => '../../.env'])->assertSessionHasErrors('archivo');
+        $this->post('/respaldos/restaurar', ['archivo' => $archivo])->assertRedirect('/proyectos/cota')->assertSessionHas('ok');
+        $this->assertSame(1, Proyecto::where('nombre', 'Cota')->firstOrFail()->paginas()->count());
+        $this->post('/respaldos/restaurar', ['archivo' => $archivo])->assertSessionHasErrors('archivo');   // ya existe
+
+        \Illuminate\Support\Facades\File::deleteDirectory($tmp);
+    }
 }

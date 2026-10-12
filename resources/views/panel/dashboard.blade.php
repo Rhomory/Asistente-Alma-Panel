@@ -18,8 +18,8 @@
         $ahora = now('America/Lima');
         $saludo = ($ahora->hour < 12 ? 'Buenos días' : ($ahora->hour < 19 ? 'Buenas tardes' : 'Buenas noches')) . ' · ' . $ahora->translatedFormat('l j \d\e F');
         $correccionesPorProyecto = $pendientes->groupBy(fn ($e) => $e->seccion?->pagina?->proyecto_id)->map->count();
-        $tonos = ['construccion' => 'lav', 'aprobacion' => 'ok', 'solicitud_correccion' => 'warn', 'correccion' => 'warn', 'envio_qc' => 'ora', 'qa_solicitado' => 'ora', 'proyecto_eliminado' => 'err'];
-        $verbos = ['construccion' => 'Construida', 'aprobacion' => 'Aprobada', 'solicitud_correccion' => 'Corrección pedida en', 'correccion' => 'Corregida', 'envio_qc' => 'QA solicitado para', 'qa_solicitado' => 'QA solicitado para', 'token' => 'Token de diseño', 'figma' => 'Figma leído', 'proyecto_eliminado' => 'Proyecto eliminado'];
+        $tonos = ['construccion' => 'lav', 'aprobacion' => 'ok', 'solicitud_correccion' => 'warn', 'correccion' => 'warn', 'envio_qc' => 'ora', 'qa_solicitado' => 'ora', 'proyecto_eliminado' => 'err', 'proyecto_restaurado' => 'ok'];
+        $verbos = ['construccion' => 'Construida', 'aprobacion' => 'Aprobada', 'solicitud_correccion' => 'Corrección pedida en', 'correccion' => 'Corregida', 'envio_qc' => 'QA solicitado para', 'qa_solicitado' => 'QA solicitado para', 'token' => 'Token de diseño', 'figma' => 'Figma leído', 'proyecto_eliminado' => 'Proyecto eliminado', 'proyecto_restaurado' => 'Proyecto restaurado'];
         $base = $stats['linea_base'];
         $tope = max($base, $ritmo->max('min_total') ?? 0) * 1.08;
     @endphp
@@ -118,6 +118,20 @@
             @empty
                 <p class="vacio caja">Crea tu primer proyecto con el botón + de arriba.</p>
             @endforelse
+
+            @if ($respaldos)
+                <details class="respaldos caja">
+                    <summary><x-ic n="carpeta" c="sm" />Proyectos eliminados con respaldo <span class="cifra">{{ count($respaldos) }}</span></summary>
+                    <ul>
+                        @foreach ($respaldos as $r)
+                            <li>
+                                <div class="min0"><b>{{ preg_replace('/-\d{8,14}\.json\.gz$/', '', $r['nombre']) }}</b><small>{{ date('d/m/Y H:i', $r['fecha']) }} · {{ max(1, (int) round($r['bytes'] / 1024)) }} KB</small></div>
+                                <form method="post" action="{{ route('respaldo.restaurar') }}">@csrf<input type="hidden" name="archivo" value="{{ $r['nombre'] }}"><button class="btn chico" type="submit"><x-ic n="refrescar" c="sm" />Restaurar</button></form>
+                            </li>
+                        @endforeach
+                    </ul>
+                </details>
+            @endif
 
             <div class="cifras">
                 <div class="cifra-cap lav"><small>Hecho por el asistente</small><b>{{ $stats['pct_asistente'] }}<small>%</small></b><span>del tiempo de construcción</span></div>

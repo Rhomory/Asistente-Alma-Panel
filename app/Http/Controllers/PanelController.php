@@ -45,6 +45,7 @@ class PanelController extends Controller
             'actividad'  => Evento::with('seccion.pagina.proyecto')->orderByDesc('created_at')->orderByDesc('id')->limit(8)->get(),
             'ultimas'    => Seccion::with('pagina.proyecto')->where('estado', '!=', 'planificada')->orderByDesc('updated_at')->limit(5)->get(),
             'proyectos'  => Proyecto::with('paginas')->orderByDesc('updated_at')->get(),
+            'respaldos'  => array_slice(\App\Support\ArchivoProyecto::lista(), 0, 6),
             'listasQa'   => Pagina::with('proyecto')->where('incluida', true)->where('estado', 'aprobada')->orderByDesc('updated_at')->get(),
             // Ritmo: minutos de las últimas 8 páginas medidas, frente a la base manual.
             'ritmo'      => $medidas->sortByDesc('id')->take(8)->reverse()->values(),

@@ -49,6 +49,14 @@ class NombresProyecto
             ?->fresh();
     }
 
+    /** La página del proyecto con ese nombre, sin distinguir mayúsculas ni tildes ("inicio" = "Inicio"). */
+    public static function pagina(Proyecto $proyecto, string $nombre): ?\App\Models\Pagina
+    {
+        $clave = self::clave($nombre);
+
+        return $proyecto->paginas()->get()->first(fn ($p) => self::clave($p->nombre) === $clave);
+    }
+
     /** Proyectos de los que $nombre sería una variante (misma base, distinto nombre). */
     public static function variantesDe(string $nombre, ?int $excepto = null): array
     {

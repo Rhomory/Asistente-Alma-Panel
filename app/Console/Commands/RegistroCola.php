@@ -17,13 +17,22 @@ class RegistroCola extends Command
 
     public function handle(): int
     {
+        $proyecto = null;
+        if ($nombre = $this->argument('proyecto')) {
+            $proyecto = \App\Support\NombresProyecto::buscar($nombre);
+            if (! $proyecto) {
+                $this->error("No existe el proyecto \"{$nombre}\". Proyectos: " . \App\Models\Proyecto::pluck('nombre')->implode(', '));
+
+                return self::FAILURE;
+            }
+        }
         $pendientes = Evento::with('seccion.pagina.proyecto')
             ->where('tipo', 'solicitud_correccion')->where('resuelto', false)
-            ->when($this->argument('proyecto'), fn ($q, $n) => $q->whereHas('seccion.pagina.proyecto', fn ($p) => $p->where('nombre', $n)))
+            ->when($proyecto, fn ($q, $pr) => $q->whereHas('seccion.pagina', fn ($p) => $p->where('proyecto_id', $pr->id)))
             ->orderBy('created_at')->get();
 
         if ($pendientes->isEmpty()) {
-            $this->info('Cola vacía: no hay correcciones pendientes' . ($this->argument('proyecto') ? ' en "' . $this->argument('proyecto') . '".' : '.'));
+            $this->info('Cola vacía: no hay correcciones pendientes' . ($proyecto ? ' en "' . $proyecto->nombre . '".' : '.'));
 
             return self::SUCCESS;
         }
@@ -39,7 +48,7 @@ class RegistroCola extends Command
                 $e->detalle,
             ])
         );
-        $this->line('Atiende cada una y re-registra la sección con: php artisan registro:add "proyecto" "página" "sección" <min> ...');
+        $this->line('Atiende cada una (edita la sección que ya existe) y vuelve a registrarla con registro:add "<proyecto>" "<página>" "<sección>" <min> --asistente=<min> --dev=<min>.');
 
         return self::SUCCESS;
     }

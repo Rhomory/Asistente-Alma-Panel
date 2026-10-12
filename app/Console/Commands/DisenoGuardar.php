@@ -7,6 +7,7 @@ use App\Models\Proyecto;
 use App\Support\NombresProyecto;
 use App\Support\CarpetaProyecto;
 use App\Support\Disenos;
+use App\Support\LecturaFigma;
 use Illuminate\Console\Command;
 
 /**
@@ -36,9 +37,9 @@ class DisenoGuardar extends Command
 
     public function handle(): int
     {
-        $datos = $this->leerJson();
-        if ($datos === null || (empty($datos['paginas']) && empty($datos['tokens']))) {
-            $this->error('Falta un JSON válido con páginas o tokens (usa --archivo, --json o --stdin).');
+        $crudo = $this->leerJson();
+        if ($crudo === null) {
+            $this->error($this->errorJson);
 
             return self::FAILURE;
         }
@@ -48,6 +49,26 @@ class DisenoGuardar extends Command
             $this->error('No existe el proyecto "' . $this->argument('proyecto') . '". Créalo primero en el panel.');
 
             return self::FAILURE;
+        }
+
+        ['datos' => $datos, 'avisos' => $avisos] = LecturaFigma::normalizar($crudo);
+        foreach ($avisos as $aviso) {
+            $this->warn($aviso);
+        }
+        if (! $datos['paginas']) {
+            $this->error('La lectura no tiene páginas: no se guardó ninguna versión. Formato esperado (claves en español):');
+            $this->line('{"figma": "https://www.figma.com/design/…", "paginas": [{"nombre": "Inicio", "figma_id": "12:3", "url": "/", '
+                . '"secciones": [{"nombre": "Hero", "figma_id": "12:4"}]}], "tokens": [{"tipo": "color", "valor": "#2F6B4F", "nota": "primario"}]}');
+
+            return self::FAILURE;
+        }
+
+        // Reintentar con la misma lectura no crea otra versión.
+        $ultima = $proyecto->disenos()->orderByDesc('version')->first();
+        if ($ultima && $ultima->lectura() == $datos) {
+            $this->info("Es igual al diseño v{$ultima->version}: no se creó otra versión. " . Disenos::texto($ultima->resumen) . '.');
+
+            return self::SUCCESS;
         }
 
         $d = Disenos::guardar($proyecto, $datos);

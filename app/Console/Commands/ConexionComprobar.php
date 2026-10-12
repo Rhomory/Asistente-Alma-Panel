@@ -14,8 +14,17 @@ class ConexionComprobar extends Command
 
     public function handle(): int
     {
+        $proyecto = null;
+        if ($nombre = $this->argument('proyecto')) {
+            $proyecto = \App\Support\NombresProyecto::buscar($nombre);
+            if (! $proyecto) {
+                $this->error("No existe el proyecto \"{$nombre}\".");
+
+                return self::FAILURE;
+            }
+        }
         $conexiones = Conexion::with('proyecto')
-            ->when($this->argument('proyecto'), fn ($q, $n) => $q->whereHas('proyecto', fn ($p) => $p->where('nombre', $n)))
+            ->when($proyecto, fn ($q, $pr) => $q->where('proyecto_id', $pr->id))
             ->get();
 
         if ($conexiones->isEmpty()) {

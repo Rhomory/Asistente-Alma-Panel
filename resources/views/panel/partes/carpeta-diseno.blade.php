@@ -14,7 +14,7 @@
             @else
                 <p class="ruta-carpeta"><x-ic n="carpeta" c="sm" /><code>{{ $ruta ?? 'aún sin crear' }}</code></p>
                 <div class="acciones">
-                    @foreach (['terminal' => ['terminal', 'Abrir terminal aquí'], 'cursor' => ['externo', 'Abrir en Cursor'], 'carpeta' => ['carpeta', 'Abrir carpeta']] as $que => [$icono, $texto])
+                    @foreach (['terminal' => ['terminal', 'Abrir terminal aquí'], 'opencode' => ['terminal', 'Abrir OpenCode'], 'cursor' => ['externo', 'Abrir en Cursor'], 'carpeta' => ['carpeta', 'Abrir carpeta']] as $que => [$icono, $texto])
                         <form method="post" action="{{ route('proyecto.abrir', [$proyecto, $que]) }}">@csrf
                             <button class="btn {{ $que === 'terminal' ? 'p' : '' }}" type="submit"><x-ic :n="$icono" />{{ $texto }}</button>
                         </form>
@@ -37,7 +37,7 @@
                         @endif
                     </li>
                 </ul>
-                <p class="nota">Abre el agente desde “Abrir terminal aquí”: esa terminal ya ve la credencial. La primera vez, Claude Code pide aprobar <code>.mcp.json</code> y Codex marcar la carpeta como de confianza.</p>
+                <p class="nota">Abre el agente desde “Abrir terminal aquí” o “Abrir OpenCode” (lo inicia con <code>--standalone</code>): así ve la credencial recién guardada. La primera vez, Claude Code pide aprobar <code>.mcp.json</code> y Codex marcar la carpeta como de confianza.</p>
             @endif
         </div>
     </section>

@@ -81,6 +81,25 @@ if (-not $Figwright) { $Figwright = '0.6.0' }
 $paqueteFigwright = "@figwright/mcp@$Figwright"
 Write-Host "  figwright fijado en $Figwright (actualiza el plugin de Figma a la misma versión)"
 
+# 2d. figwright instalado en %USERPROFILE%\.alma\mcp y lanzado con node: arranca en ~0,5 s en vez de los 3-5 s
+#     de "npx -y" (que consulta el registro de npm en cada arranque) y funciona sin red.
+$mcpDir = Join-Path $destAlma 'mcp'
+$pkgFig = Join-Path $mcpDir 'node_modules\@figwright\mcp\package.json'
+function Version-Local { if (Test-Path $pkgFig) { (Get-Content $pkgFig -Raw | ConvertFrom-Json).version } }
+if ((Version-Local) -ne $Figwright -and (Get-Command npm -ErrorAction SilentlyContinue)) {
+    New-Item -ItemType Directory -Force $mcpDir | Out-Null
+    npm install --prefix $mcpDir $paqueteFigwright --no-audit --no-fund --loglevel=error 2>&1 | Out-Null
+}
+$comandoFigwright = @('npx', '-y', $paqueteFigwright)   # respaldo si no se pudo instalar
+if ((Version-Local) -eq $Figwright) {
+    $binFig = (Get-Content $pkgFig -Raw | ConvertFrom-Json).bin.'figwright-mcp'
+    $entradaFig = [IO.Path]::GetFullPath((Join-Path (Split-Path $pkgFig) $binFig))
+    $comandoFigwright = @('node', $entradaFig)
+    Write-Host "  figwright $Figwright instalado en $mcpDir (arranque rápido con node)"
+} else {
+    Write-Host "  No pude instalar figwright en $mcpDir; los agentes usarán npx (más lento)." -ForegroundColor Yellow
+}
+
 # 3. Skill en una carpeta propia por agente (evita que SKILL.md quede suelto en skills\)
 $skillOrigen = Join-Path $raiz '.claude\skills\alma-figma\SKILL.md'
 foreach ($base in @("$HOME\.claude\skills", "$HOME\.agents\skills")) {
@@ -97,28 +116,35 @@ if ((Test-Path $suelto) -and (Select-String -Path $suelto -Pattern 'name: alma-f
 
 # 4. figwright en los agentes, con la versión fija (registra lo que falta y corrige lo que tenga otra versión)
 if ($RegistrarFigwright) {
+    # En Claude Code y Codex, npx necesita "cmd /c" en Windows; node no.
+    $comandoWin = if ($comandoFigwright[0] -eq 'node') { $comandoFigwright } else { @('cmd', '/c') + $comandoFigwright }
+    $huella = $comandoFigwright[-1]   # ruta de index.mjs o paquete con versión: distingue una entrada vieja
+
     if (Get-Command claude -ErrorAction SilentlyContinue) {
         $actual = (claude mcp get figwright 2>$null) -join "`n"
         if ($LASTEXITCODE -ne 0) {
-            claude mcp add figwright --scope user -- cmd /c npx -y $paqueteFigwright | Out-Null
+            claude mcp add figwright --scope user -- @comandoWin | Out-Null
             Write-Host "  figwright $Figwright registrado en Claude Code"
-        } elseif ($actual -notmatch [regex]::Escape($paqueteFigwright)) {
+        } elseif ($actual -notmatch [regex]::Escape($huella)) {
             claude mcp remove figwright --scope user 2>$null | Out-Null
-            claude mcp add figwright --scope user -- cmd /c npx -y $paqueteFigwright | Out-Null
-            Write-Host "  figwright de Claude Code actualizado a la versión fija $Figwright"
+            claude mcp add figwright --scope user -- @comandoWin | Out-Null
+            Write-Host "  figwright de Claude Code actualizado ($Figwright, $($comandoWin[0]))"
         } else { Write-Host "  Claude Code ya tiene figwright $Figwright" }
     }
 
     $toml = "$HOME\.codex\config.toml"
     if (Test-Path (Split-Path $toml)) {
         $texto = if (Test-Path $toml) { Get-Content $toml -Raw } else { '' }
+        $argsToml = ($comandoWin[1..($comandoWin.Count - 1)] | ForEach-Object { "'$_'" }) -join ', '   # literales TOML: sin escapar \
+        $bloque = "[mcp_servers.figwright]`ncommand = `"$($comandoWin[0])`"`nargs = [$argsToml]`n"
         if ($texto -notmatch '\[mcp_servers\.figwright\]') {
-            Add-Content -Encoding UTF8 $toml "`n[mcp_servers.figwright]`ncommand = `"cmd`"`nargs = [`"/c`", `"npx`", `"-y`", `"$paqueteFigwright`"]`n"
+            Add-Content -Encoding UTF8 $toml "`n$bloque"
             Write-Host "  figwright $Figwright agregado a ~\.codex\config.toml"
-        } elseif ($texto -match '@figwright/mcp@(?!' + [regex]::Escape($Figwright) + '")[^"]+') {
-            $texto = [regex]::Replace($texto, '@figwright/mcp@[^"]+', $paqueteFigwright)
+        } elseif (-not $texto.Contains($huella)) {
+            # Reemplaza la sección completa hasta el siguiente encabezado [..]
+            $texto = [regex]::Replace($texto, '(?ms)^\[mcp_servers\.figwright\]\s*\r?\n.*?(?=^\[|\z)', { param($m) $bloque + "`n" })
             [IO.File]::WriteAllText($toml, $texto, (New-Object Text.UTF8Encoding $false))
-            Write-Host "  figwright de Codex actualizado a la versión fija $Figwright"
+            Write-Host "  figwright de Codex actualizado ($Figwright, $($comandoWin[0]))"
         } else { Write-Host "  Codex ya tiene figwright $Figwright" }
     }
 
@@ -128,7 +154,7 @@ if ($RegistrarFigwright) {
         try {
             $conf = if (Test-Path $oc) { Get-Content $oc -Raw | ConvertFrom-Json } else { [pscustomobject]@{ '$schema' = 'https://opencode.ai/config.json' } }
             if (-not $conf.PSObject.Properties['mcp']) { $conf | Add-Member -NotePropertyName mcp -NotePropertyValue ([pscustomobject]@{}) }
-            $entrada = [pscustomobject]@{ type = 'local'; command = @('npx', '-y', $paqueteFigwright); enabled = $true }
+            $entrada = [pscustomobject]@{ type = 'local'; command = $comandoFigwright; enabled = $true }
             $previa = $conf.mcp.PSObject.Properties['figwright']
             if ($previa -and (($previa.Value.command -join ' ') -eq ($entrada.command -join ' '))) {
                 Write-Host "  OpenCode ya tiene figwright $Figwright"

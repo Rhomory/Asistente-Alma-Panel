@@ -26,6 +26,7 @@ class RegistroAdd extends Command
         {--widget= : Widget aplicado según la guía técnica}
         {--correcciones=0 : Número de correcciones pedidas}
         {--aprobada : Marcar la sección como aprobada}
+        {--nueva-pagina : Crear la página si el proyecto no la tiene}
         {--forzar-variante : Crear el proyecto aunque se parezca a otro (solo si el usuario lo confirma)}';
 
     protected $description = 'Registra una sección construida (lo escribe la consola, el panel solo lee)';
@@ -36,10 +37,15 @@ class RegistroAdd extends Command
         if (! $proyecto) {
             return self::FAILURE;
         }
-        $pagina = Pagina::firstOrCreate(
-            ['proyecto_id' => $proyecto->id, 'nombre' => $this->argument('pagina')],
-            ['estado' => 'construyendo']
-        );
+        // Misma página aunque cambien mayúsculas o tildes; si el proyecto ya tiene páginas, no se inventa otra.
+        $pagina = NombresProyecto::pagina($proyecto, $this->argument('pagina'));
+        if (! $pagina && $proyecto->paginas()->exists() && ! $this->option('nueva-pagina')) {
+            $this->error('La página "' . $this->argument('pagina') . '" no está en ' . $proyecto->nombre . '. Páginas: '
+                . $proyecto->paginas()->pluck('nombre')->implode(', ') . '. Usa una de ellas (o --nueva-pagina si de verdad es otra).');
+
+            return self::FAILURE;
+        }
+        $pagina ??= Pagina::create(['proyecto_id' => $proyecto->id, 'nombre' => $this->argument('pagina'), 'estado' => 'construyendo']);
 
         $min = (int) $this->argument('minutos');
         $asis = (int) $this->option('asistente');

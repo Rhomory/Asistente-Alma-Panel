@@ -26,6 +26,7 @@ Route::get('/proyectos/nuevo', [GestionController::class, 'crear'])->name('proye
 Route::post('/proyectos', [GestionController::class, 'guardar'])->name('proyecto.guardar');
 Route::get('/proyectos/{proyecto}', [PanelController::class, 'proyecto'])->name('proyecto');
 Route::delete('/proyectos/{proyecto}', [GestionController::class, 'eliminar'])->name('proyecto.eliminar');
+Route::post('/respaldos/restaurar', [GestionController::class, 'restaurar'])->name('respaldo.restaurar');
 Route::get('/proyectos/{proyecto}/guia', [GuiaController::class, 'show'])->name('proyecto.guia');
 Route::get('/proyectos/{proyecto}/agents-md', [GuiaController::class, 'agentsMd'])->name('proyecto.agents');
 Route::post('/proyectos/{proyecto}/paginas', [GestionController::class, 'guardarPagina'])->name('pagina.guardar');

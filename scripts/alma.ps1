@@ -1,8 +1,8 @@
 ﻿# Puente Windows -> panel Asistente Alma (Laravel en WSL).
 # Lo instala scripts/instalar-windows.ps1 en %USERPROFILE%\.alma\alma.ps1. Compatible con Windows PowerShell 5.1.
 #
-#   powershell -NoProfile -File "$HOME\.alma\alma.ps1" <comando artisan> [argumentos]
-#   powershell -NoProfile -File "$HOME\.alma\alma.ps1" diagnostico
+#   powershell -NoProfile -ExecutionPolicy Bypass -File "$HOME\.alma\alma.ps1" <comando artisan> [argumentos]
+#   powershell -NoProfile -ExecutionPolicy Bypass -File "$HOME\.alma\alma.ps1" diagnostico
 #
 # Dónde está el panel (en este orden): variables ALMA_PANEL / ALMA_DISTRO, luego alma.config.json
 # junto a este script (lo escribe el instalador) y, si no hay nada, el valor por defecto.
@@ -78,6 +78,8 @@ function Diagnostico {
     $oc = "$HOME\.config\opencode\opencode.json"
     $opencode = (Test-Path $oc) -and (Select-String -Path $oc -Pattern '"figwright"' -Quiet)
     $flotante = @("$HOME\.claude.json", "$HOME\.codex\config.toml", $oc) | Where-Object { (Test-Path $_) -and (Select-String -Path $_ -Pattern 'figwright/mcp@latest' -Quiet) }
+    $local = Test-Path "$HOME\.alma\mcp\node_modules\@figwright\mcp\package.json"
+    Escribir $local "figwright instalado en ~\.alma\mcp (arranque rápido)" "Ejecuta: alma actualizar. Sin esto, cada agente lo baja con npx al arrancar (3-5 s más)."
     Escribir (-not $flotante) "figwright con versión fija (no @latest)" "Usa la misma versión que el plugin de Figma (ej. @figwright/mcp@0.6.0) en: $($flotante -join ', '). Con @latest el servidor se adelanta al plugin y la conexión falla."
     Write-Host ("  figwright registrado -> Claude Code: {0} | Codex: {1} | OpenCode: {2}" -f $(if ($claude) {'si'} else {'no'}), $(if ($codex) {'si'} else {'no'}), $(if ($opencode) {'si'} else {'no'}))
     Write-Host "       (basta con el agente que uses; ejemplos de configuracion en el README, seccion MCP por agente)"
@@ -117,6 +119,8 @@ function Recargar-Entorno {
     foreach ($k in [Environment]::GetEnvironmentVariables('User').Keys) {
         Set-Item -Path "env:$k" -Value ([Environment]::GetEnvironmentVariable($k, 'User'))
     }
+    # Path = sistema + usuario (sin esto quedaría solo el del usuario y se perderían System32, node, wt…)
+    $env:Path = (@([Environment]::GetEnvironmentVariable('Path', 'Machine'), [Environment]::GetEnvironmentVariable('Path', 'User')) | Where-Object { $_ }) -join ';'
 }
 # Ojo: dentro de los bloques de switch, $args ya no son los del script; por eso se copian antes.
 $accion = $args[0]
@@ -127,6 +131,16 @@ switch ($accion) {
         Recargar-Entorno
         if (Get-Command wt.exe -ErrorAction SilentlyContinue) { Start-Process wt.exe -ArgumentList '-d', "`"$objetivo`"" }
         else { Start-Process powershell.exe -WorkingDirectory $objetivo -ArgumentList '-NoExit' }
+        exit 0
+    }
+    'abrir-opencode' {
+        # --standalone: servidor propio con el entorno de esta terminal. El servicio de fondo de OpenCode puede
+        # haber arrancado antes de guardar la credencial y no la vería ({env:ALMA_..._AUTH} vacío).
+        Recargar-Entorno
+        if (-not (Get-Command opencode -ErrorAction SilentlyContinue)) { Write-Host 'No encuentro el comando "opencode".'; exit 3 }
+        # opencode es un .cmd de npm: se lanza dentro de PowerShell (wt no resuelve .cmd sin extensión)
+        if (Get-Command wt.exe -ErrorAction SilentlyContinue) { Start-Process wt.exe -ArgumentList '-d', "`"$objetivo`"", 'powershell.exe', '-NoExit', '-Command', 'opencode --standalone' }
+        else { Start-Process powershell.exe -WorkingDirectory $objetivo -ArgumentList '-NoExit', '-Command', 'opencode --standalone' }
         exit 0
     }
     'abrir-cursor' {
@@ -146,6 +160,8 @@ switch ($accion) {
         if (-not $valor) { $valor = [Console]::In.ReadLine() }
         if (-not $objetivo -or -not $valor) { Write-Host 'Falta el nombre o el valor.'; exit 3 }
         [Environment]::SetEnvironmentVariable($objetivo, $valor.Trim(), 'User')
+        # No se detiene el servicio de fondo de OpenCode (cortaría sesiones abiertas de otros proyectos):
+        # "Abrir OpenCode" usa --standalone y ve la credencial nueva.
         exit 0
     }
 }
@@ -159,7 +175,8 @@ if (-not (Panel-Existe)) {
 
 $argumentos = @(foreach ($a in $args) {
     if ($a -like '--archivo=*') {
-        $ruta = $a.Substring(10).Replace('\', '/')
+        # Ruta relativa (Design\lectura-borrador.json) → absoluta desde la carpeta donde está el agente
+        $ruta = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($a.Substring(10)).Replace('\', '/')
         '--archivo=' + (wsl -d $distro -- wslpath -a $ruta).Trim()
     } else { $a }
 })

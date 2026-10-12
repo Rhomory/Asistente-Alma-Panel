@@ -28,6 +28,11 @@ class Windows
         return self::puente('abrir-terminal', [$rutaWindows]);
     }
 
+    public static function abrirOpenCode(string $rutaWindows): bool
+    {
+        return self::puente('abrir-opencode', [$rutaWindows]);
+    }
+
     public static function abrirCursor(string $rutaWindows): bool
     {
         return self::puente('abrir-cursor', [$rutaWindows]);

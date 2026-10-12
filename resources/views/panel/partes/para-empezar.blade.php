@@ -41,9 +41,11 @@
                                 @elseif ($i === 2)
                                     <button class="btn chico p" type="button" data-texto="{{ $msgLeer }}"><x-ic n="copiar" c="sm" />Copiar primer mensaje</button>
                                     <form method="post" action="{{ route('proyecto.abrir', [$proyecto, 'terminal']) }}">@csrf<button class="btn chico" type="submit"><x-ic n="terminal" c="sm" />Abrir terminal</button></form>
+                                    <form method="post" action="{{ route('proyecto.abrir', [$proyecto, 'opencode']) }}">@csrf<button class="btn chico" type="submit"><x-ic n="terminal" c="sm" />Abrir OpenCode</button></form>
                                 @elseif ($primera)
                                     <button class="btn chico p" type="button" data-texto="{{ $msgConstruir }}"><x-ic n="copiar" c="sm" />Copiar mensaje para construir</button>
                                     <form method="post" action="{{ route('proyecto.abrir', [$proyecto, 'terminal']) }}">@csrf<button class="btn chico" type="submit"><x-ic n="terminal" c="sm" />Abrir terminal</button></form>
+                                    <form method="post" action="{{ route('proyecto.abrir', [$proyecto, 'opencode']) }}">@csrf<button class="btn chico" type="submit"><x-ic n="terminal" c="sm" />Abrir OpenCode</button></form>
                                 @endif
                             </div>
                             @if ($i >= 2)<p class="nota">Claude Code y OpenCode reparten el trabajo con sus subagentes; en Codex o Cursor abre una segunda terminal para el lector de Figma.</p>@endif

@@ -61,7 +61,7 @@ class CarpetaYDisenoTest extends TestCase
         $cursor = json_decode(file_get_contents("{$raiz}/.cursor/mcp.json"), true);
         $this->assertSame('${env:ALMA_COTA_AUTH}', $cursor['mcpServers']['elementor-cota']['headers']['Authorization']);
         $opencode = json_decode(file_get_contents("{$raiz}/opencode.json"), true);
-        $this->assertSame('{env:ALMA_COTA_AUTH}', $opencode['mcp']['elementor-cota']['headers']['Authorization']);
+        $this->assertSame('{env:ALMA_COTA_AUTH}', $opencode['mcp']['servers']['elementor-cota']['headers']['Authorization']);
         $this->assertStringContainsString('env_http_headers = { "Authorization" = "ALMA_COTA_AUTH" }', file_get_contents("{$raiz}/.codex/config.toml"));
         $this->assertStringContainsString('Trabajas únicamente en **Cota**', file_get_contents("{$raiz}/AGENTS.md"));
 

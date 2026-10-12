@@ -20,6 +20,9 @@ class EntornoWP
     public const ENLACE_ELEMENTOR = 'https://wordpress.org/plugins/elementor/#developers';
 
     private const TIMEOUT = 4;          // s por petición; en paralelo, el total ronda este valor
+    private const CONECTAR_MS = 2000;   // conexión a un sitio en internet
+    private const CONECTAR_LOCAL_MS = 700; // host de Windows: en la misma máquina responde en ms; si el firewall
+                                           // descarta el paquete, no tiene sentido esperar más
     private const CACHE_OK = 6 * 3600;  // versiones publicadas: 6 h
     private const CACHE_FALLO = 600;    // si WordPress.org no respondió: reintentar a los 10 min
 
@@ -60,7 +63,7 @@ class EntornoWP
             }
         }
         if ($reintento) {
-            $resp = array_merge($resp, self::multi($reintento));
+            $resp = array_merge($resp, self::multi($reintento, self::TIMEOUT, self::CONECTAR_LOCAL_MS));
         }
 
         foreach ($conexiones as $c) {
@@ -119,7 +122,7 @@ class EntornoWP
      * Ejecuta varias GET en paralelo. $peticiones = [clave => [url, resolver[]]].
      * Devuelve [clave => cuerpo|null] (null si falló o respondió fuera de 2xx/3xx).
      */
-    private static function multi(array $peticiones, int $timeout = self::TIMEOUT): array
+    private static function multi(array $peticiones, int $timeout = self::TIMEOUT, int $conectarMs = self::CONECTAR_MS): array
     {
         $mh = curl_multi_init();
         $handles = [];
@@ -127,7 +130,7 @@ class EntornoWP
             $ch = curl_init($url);
             curl_setopt_array($ch, [
                 CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => true, CURLOPT_MAXREDIRS => 3,
-                CURLOPT_TIMEOUT => $timeout, CURLOPT_CONNECTTIMEOUT => 2,
+                CURLOPT_TIMEOUT => $timeout, CURLOPT_CONNECTTIMEOUT_MS => $conectarMs,
                 CURLOPT_USERAGENT => 'AsistenteAlma-Panel/1.0',
                 CURLOPT_RESOLVE => $resolver,
             ]);

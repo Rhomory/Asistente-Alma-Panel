@@ -33,9 +33,11 @@ class RolesAgentes
 
         $archivos = [];
         foreach ($roles as $rol => [$descripcion, $cuerpo]) {
-            $desc = str_replace('"', "'", $descripcion);
-            $archivos[".claude/agents/{$rol}.md"] = "---\nname: {$rol}\ndescription: \"{$desc}\"\n---\n\n{$cuerpo}";
-            $archivos[".opencode/agents/{$rol}.md"] = "---\ndescription: \"{$desc}\"\nmode: subagent\n---\n\n{$cuerpo}";
+            // YAML entre comillas simples: ahí \ es literal (con comillas dobles, "Design\vN\secciones" rompía el
+            // frontmatter y OpenCode cargaba el rol sin descripción y como agente principal).
+            $desc = "'" . str_replace("'", "''", $descripcion) . "'";
+            $archivos[".claude/agents/{$rol}.md"] = "---\nname: {$rol}\ndescription: {$desc}\n---\n\n{$cuerpo}";
+            $archivos[".opencode/agents/{$rol}.md"] = "---\ndescription: {$desc}\nmode: subagent\n---\n\n{$cuerpo}";
             $archivos[".alma/roles/{$rol}.md"] = "# Rol: {$rol}\n\n{$descripcion}\n\n{$cuerpo}";
         }
 
@@ -48,7 +50,7 @@ class RolesAgentes
             '{PROYECTO}' => $p->nombre,
             '{MCP}'      => $p->conexion?->nombre_mcp ?? PromptElementor::nombreSugerido($p->nombre),
             '{VAR}'      => PromptElementor::variableAuth($p->nombre),
-            '{ALMA}'     => 'powershell -NoProfile -File "$HOME\.alma\alma.ps1"',
+            '{ALMA}'     => 'powershell -NoProfile -ExecutionPolicy Bypass -File "$HOME\.alma\alma.ps1"',
             '{FIGMA}'    => $p->archivo_figma ?: 'el archivo de Figma del proyecto',
             '{VERSION}'  => (string) config('alma.figwright', '0.6.0'),
         ];
@@ -76,7 +78,7 @@ class RolesAgentes
         Trabajas solo en el proyecto **{PROYECTO}**. Lees el Figma y preparas la información; **no usas {MCP} ni registras secciones**: eso lo hace el constructor.
 
         ## Si no hay diseño en uso (o te piden releer)
-        Sigue la skill `alma-figma` (en Claude Code se activa sola; en otros agentes lee `$HOME\.agents\skills\alma-figma\SKILL.md`): inventario en modo económico, guardado con `diseno:guardar` y capturas en `Design\vN\capturas`.
+        Sigue la skill `alma-figma` (en Claude Code y OpenCode se carga sola; en Codex o Cursor lee `$HOME\.agents\skills\alma-figma\SKILL.md`): inventario en modo económico, guardado con `diseno:guardar` y capturas en `Design\vN\capturas`.
 
         ## Preparar secciones para construir
         1. Pide la guía de la página: `{ALMA} guia:prompt "{PROYECTO}" "<Página>"`. Trae la versión en uso (vN) y el plan con el ID de Figma de cada sección.

@@ -70,7 +70,9 @@ $b64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes('usuario:xxxx xx
 **Claude Code** (`~/.claude.json`, por comandos):
 
 ```powershell
-claude mcp add figwright --scope user -- cmd /c npx -y '@figwright/mcp@0.6.0'
+# Con la instalación rápida (la deja el instalador en %USERPROFILE%\.alma\mcp):
+claude mcp add figwright --scope user -- node "$HOME\.alma\mcp\node_modules\@figwright\mcp\dist\index.mjs"
+# Sin ella (más lento, 3-5 s por arranque): claude mcp add figwright --scope user -- cmd /c npx -y '@figwright/mcp@0.6.0'
 # Elementor: pega el prompt que generó Elementor dentro de la carpeta del cliente (lo registra solo). Comprueba con:
 claude mcp list
 ```
@@ -288,10 +290,11 @@ En Ubuntu se usan con `php artisan …`; desde Windows, con
 
 | Comando | Para qué |
 |---|---|
-| `guia:prompt "<Proyecto>" "<Página>"` | Guía actualizada: tokens, plan de secciones con su ID de Figma y reglas |
-| `diseno:guardar "<Proyecto>" --archivo=figma.json` | Guardar la lectura del Figma como nueva versión (`Design/vN`) |
+| `guia:prompt "<Proyecto>" "<Página>"` | Guía actualizada: tokens, plan de secciones con su ID de Figma, estado de cada una y reglas |
+| `guia:prompt "<Proyecto>" "<Página>" --siguiente` | Solo la próxima sección (correcciones primero), para retomar con poco contexto |
+| `diseno:guardar "<Proyecto>" --archivo=Design\lectura-borrador.json` | Guardar la lectura del Figma como nueva versión (`Design/vN`); avisa lo que omite y no duplica versiones iguales |
 | `registro:figma "<Proyecto>" --archivo=figma.json` | Cargar una lectura directo al panel, sin versionar |
-| `registro:add "<Proyecto>" "<Página>" "<Sección>" <min> --asistente=<min> --dev=<min>` | Registrar una sección construida |
+| `registro:add "<Proyecto>" "<Página>" "<Sección>" <min> --asistente=<min> --dev=<min>` | Registrar una sección construida (la página debe existir; `--nueva-pagina` para crear otra) |
 | `registro:cola "<Proyecto>"` | Correcciones pendientes de ese proyecto |
 | `… --forzar-variante` | En `registro:add/figma/paginas/tokens`: crear un proyecto aunque se parezca a otro (solo con confirmación) |
 | `proyecto:restaurar [respaldo]` | Lista los respaldos de proyectos eliminados o restaura uno (páginas, secciones, tiempos, tokens y versiones del diseño) |
@@ -300,17 +303,24 @@ En Ubuntu se usan con `php artisan …`; desde Windows, con
 
 **Eliminar un proyecto.** El diálogo permite guardar un respaldo (`.json.gz` de pocos KB en
 `AlmaProyectos\_archivo\`, sin contraseñas ni capturas), borrar también su carpeta y quitar su credencial de Windows.
-La carpeta solo se borra si está dentro de la carpeta de proyectos. Para recuperarlo: `alma proyecto:restaurar`.
+La carpeta solo se borra si está dentro de la carpeta de proyectos. Para recuperarlo: en el inicio del panel, "Proyectos
+eliminados con respaldo" › Restaurar (o `alma proyecto:restaurar`). La credencial no viaja en el respaldo: se vuelve a pegar el prompt.
 
 ## 6. Problemas frecuentes
 
 - **Primero, siempre:** `alma.ps1 diagnostico`. Revisa distro, ruta del panel, extensiones de PHP, web del panel,
   figwright y skills, y dice qué hacer con cada fallo.
 - **figwright no conecta:** abre Figma de escritorio y ejecuta el plugin figwright; luego reinicia tu agente.
-  No lances `npx @figwright/mcp` a mano: si su proceso se cae, reinicia el agente.
+  No lances `npx @figwright/mcp` a mano ni dejes "abierto el puerto 3055" con otro comando: lo inicia el agente al
+  abrirse en la carpeta del proyecto. Si el agente no tiene sus herramientas, se abrió en otra carpeta (en OpenCode,
+  usa "Abrir OpenCode" del proyecto).
 - **Las herramientas de figwright no aparecen en el agente:** está mal registrado para ese agente; revisa el formato en la sección 2.1.
-- **"is a PAGE, not a frame/layer":** `get_design_context` no acepta páginas. La skill actualizada lee primero los marcos
-  de cada página (`scan_nodes_by_types` con la página como raíz) y luego sus secciones.
+- **"is a PAGE, not a frame/layer":** `get_design_context` no acepta páginas. La skill pide pulsar Ctrl+A en la página
+  de Figma y lee la selección (marcos y secciones en una llamada); en archivos chicos usa `scan_nodes_by_types`.
+- **"la ejecución de scripts está deshabilitada":** el proyecto se creó antes del 11/10. Pulsa "Actualizar archivos"
+  en su tarjeta: los comandos nuevos llevan `-ExecutionPolicy Bypass`.
+- **OpenCode: el servidor de Elementor da 401:** OpenCode se abrió con su servicio de fondo antes de guardar la
+  credencial. Ciérralo y ábrelo con "Abrir OpenCode" (usa `--standalone`).
 - **El agente no encuentra la skill:** debe estar en una carpeta propia (`skills\alma-figma\SKILL.md`), no suelta en
   `skills\`. Vuelve a ejecutar el instalador, que lo corrige.
 - **Las secciones salen "0 de 0" tras leer el Figma:** se usó la skill anterior, que enviaba solo el número de secciones.

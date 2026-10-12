@@ -20,6 +20,10 @@ del Proyecto de Mejora):
    Programado a diario vía cron (21:30).
 6. **Control de versiones limpio:** `.env` y `database.sqlite` están en
    `.gitignore` (default de Laravel); el repositorio no contiene secretos.
+7. **Respaldo por proyecto al eliminarlo:** un `.json.gz` de pocos KB en
+   `AlmaProyectos\_archivo\`, sin contraseñas ni capturas. Se restaura desde el
+   inicio del panel o con `proyecto:restaurar`; la credencial se vuelve a pegar.
+   Quitar la credencial de Windows solo acepta variables `ALMA_<PROYECTO>_AUTH`.
 
 Restaurar un respaldo:
 ```bash

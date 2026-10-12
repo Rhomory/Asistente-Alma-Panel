@@ -8,15 +8,19 @@ Laravel 13 + SQLite, PHP 8.3, sin build de front (CSS plano en `public/css/panel
 `resources/views`). Corre en WSL Ubuntu: `php artisan serve` → http://127.0.0.1:8090. Uso local, sin login.
 
 La consola (el agente: Claude Code, Codex, Cursor…) escribe; el panel supervisa, aprueba y administra:
-- `registro:add`, `registro:cola`, `registro:paginas`, `registro:tokens`, `registro:figma`, `guia:prompt`,
-  `conexion:comprobar`, `diseno:guardar`, `jev:sugerencias` (`app/Console/Commands`).
+- `registro:add`, `registro:cola`, `registro:paginas`, `registro:tokens`, `registro:figma`, `guia:prompt` (con
+  `--siguiente`), `conexion:comprobar`, `diseno:guardar`, `proyecto:restaurar`, `jev:sugerencias` (`app/Console/Commands`).
 - Controladores: `PanelController` (inicio, proyecto, registro), `FlujoController` (página, plan, aprobación,
   QA), `GestionController` (catálogo, eliminar proyecto), `ConexionController`, `GuiaController`, `EstadoController`
   (huella para la recarga en vivo).
 - Lógica de apoyo en `app/Support`: `EntornoWP` (versiones de WP/Elementor/JetEngine en paralelo),
   `PromptElementor` (sanea el prompt de Elementor y extrae la credencial), `PromptGuia` (guía, prompt y AGENTS.md del cliente),
   `CarpetaProyecto` (carpeta de cada proyecto en Windows), `ConfigAgentes` (MCP de Claude Code, Codex, Cursor y OpenCode),
-  `CargaFigma` y `Disenos` (lectura del Figma y sus versiones Design/vN), `Windows` (puente alma.ps1 por interop).
+  `CargaFigma` y `Disenos` (lectura del Figma y sus versiones Design/vN), `LecturaFigma` (normaliza el JSON que
+  escribe el agente), `RolesAgentes` (subagentes alma-conexion y alma-figma-lector), `NombresProyecto` (nombres únicos
+  y búsqueda sin tildes), `ArchivoProyecto` (respaldo .json.gz al eliminar), `Windows` (puente alma.ps1 por interop).
+- `ConfigAgentes` lanza figwright con `node` desde `%USERPROFILE%\.alma\mcp` si está en la versión fija (si no, npx) y
+  escribe `opencode.json` en formato v2 (`mcp.servers`, `codemode: false`, permisos que dejan solo lo de lectura).
 - Las carpetas de proyectos viven FUERA de este repo (`ALMA_PROYECTOS_DIR`); en pruebas se usa una carpeta temporal.
 
 ## Reglas al cambiar código
